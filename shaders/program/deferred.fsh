@@ -3,6 +3,7 @@
 #include "/lib/trace.glsl"
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex0;
+uniform sampler2D dhDepthTex1;
 uniform mat4 dhProjectionInverse;
 #endif
 uniform sampler2D colortex0,colortex1,colortex2,depthtex0;
@@ -23,7 +24,9 @@ void main(){
     vec3 scene=texture(colortex0,texcoord).rgb;
     bool isDH=false;
     #ifdef DISTANT_HORIZONS
-    float dhDepth=texture(dhDepthTex0,texcoord).r;
+    float dhSolidD=texture(dhDepthTex0,texcoord).r;
+    float dhTransD=texture(dhDepthTex1,texcoord).r;
+    float dhDepth=min(dhSolidD,dhTransD);
     if(depth>=0.999999 && dhDepth<1.0){
         isDH=true;
         vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
@@ -34,43 +37,46 @@ void main(){
     #endif
     if(depth>=0.999999 && !isDH) {
         vec3 sky = skyRadiance(rd);
-        #if defined(VOLUMETRIC_CLOUDS) && !defined(NETHER) && !defined(END)
+        #if CLOUDS == 2 && !defined(NETHER) && !defined(END)
         scene = renderClouds(rd, sky, gl_FragCoord.xy);
-        #elif defined(FAST_CLOUDS) && !defined(NETHER) && !defined(END)
+        #elif CLOUDS == 1 && !defined(NETHER) && !defined(END)
         scene = renderFastClouds(rd, sky);
         #else
         scene = sky;
         #endif
     }
+    #if defined(SSAO) || defined(SSGI) || defined(SSR)
     else if(!isDH) {
         vec4 mat=texture(colortex2,texcoord);
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
         if(mat.a<0.5) {
             float distToCam=length(vp);
+            #if defined(SSAO) || defined(SSGI)
+            float rotation=ignDither(gl_FragCoord.xy)*6.2831853;
+            #endif
             #ifdef SSAO
-            float rotation=hash12(gl_FragCoord.xy)*6.283;
             if(distToCam<48.0) {
                 float occ=0.0;
                 vec2 projScale=vec2(gbufferProjection[0][0],gbufferProjection[1][1])/max(-vp.z,1.0)*0.5;
-                for(int i=0;i<8;i++) {
+                for(int i=0;i<SSAO_SAMPLES;i++) {
                     float angle=float(i)*2.39996+rotation;
-                    float radius=1.5*sqrt((float(i)+0.5)/8.0);
+                    float radius=1.5*sqrt((float(i)+0.5)/float(SSAO_SAMPLES));
                     vec2 uv=texcoord+vec2(cos(angle),sin(angle))*(radius*projScale);
-                    if(any(lessThan(uv,vec2(0)))||any(greaterThan(uv,vec2(1)))) continue;
+                    if(any(lessThan(uv,vec2(0.0)))||any(greaterThan(uv,vec2(1.0)))) continue;
                     float d=texture(depthtex0,uv).r;
                     vec3 diff=viewPosition(uv,d)-vp;
                     float len=length(diff);
                     occ+=max(dot(N,diff/max(len,0.001))-0.10,0.0)*(1.0-smoothstep(0.1,2.4,len))*step(d,0.99999);
                 }
                 float aoFade=1.0-smoothstep(32.0,48.0,distToCam);
-                scene*=1.0-occ*0.105*(1.0-mat.b)*aoFade;
+                scene*=1.0-(occ/float(SSAO_SAMPLES))*0.84*(1.0-mat.b)*aoFade;
             }
             #endif
             #ifdef SSGI
             if(distToCam<42.0) {
                 float distWeight=1.0-smoothstep(24.0,42.0,distToCam);
-                vec3 tangent=normalize(cross(N,abs(N.y)<0.9?vec3(0,1,0):vec3(1,0,0)));
-                vec3 bitangent=cross(N,tangent); vec3 bounce=vec3(0);
+                vec3 tangent=normalize(cross(N,abs(N.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0)));
+                vec3 bitangent=cross(N,tangent); vec3 bounce=vec3(0.0);
                 for(int i=0;i<GI_SAMPLES;i++) {
                     float angle=rotation+float(i)*2.39996;
                     float z=sqrt((float(i)+0.5)/float(GI_SAMPLES));
@@ -80,7 +86,7 @@ void main(){
                     if(traceScreen(depthtex0,vp+N*0.08,dir,0.18,10,hit)) {
                         vec3 incoming=texture(colortex0,hit).rgb;
                         vec3 hitN=normalize(texture(colortex1,hit).xyz*2.0-1.0);
-                        bounce+=min(incoming,vec3(3))*max(dot(hitN,-dir),0.0)*edgeFade(hit);
+                        bounce+=min(incoming,vec3(3.0))*max(dot(hitN,-dir),0.0)*edgeFade(hit);
                     }
                 }
                 scene+=bounce/float(GI_SAMPLES)*GI_STRENGTH*sqrt(max(scene,vec3(0.015)))*distWeight;
@@ -97,7 +103,8 @@ void main(){
             #endif
         }
     }
-    color=vec4(max(scene,vec3(0)),1); opaqueCopy=color;
+    #endif
+    color=vec4(max(scene,vec3(0.0)),1.0); opaqueCopy=color;
 }
 
 

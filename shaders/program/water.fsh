@@ -21,8 +21,8 @@ vec3 waterNormal(){
     // Smooth distance fade to keep distant water calm and free of shimmering aliasing
     float distFade=clamp(1.0-dist*0.0030,0.12,1.0);
     vec2 slope=vec2(0.0); float frequency=0.60, amplitude=0.038*distFade*WATER_WAVES;
-    // 5 harmonious octaves: 38% faster than 8 octaves and visually far smoother
-    for(int i=0;i<5;i++) {
+    // Water wave octaves: scalable from 2 (potato) to 7 (ultra)
+    for(int i=0;i<WATER_OCTAVES;i++) {
         float angle=0.65+float(i)*2.39996;
         vec2 direction=vec2(cos(angle),sin(angle));
         float phase=dot(p,direction)*frequency-time*(1.1+float(i)*0.32);
@@ -39,7 +39,7 @@ void main(){
     vec4 tex=texture(gtexture,texcoord)*glcolor;
     if(tex.a<0.001) discard;
     if(abs(materialId-1003.0)>0.5){
-        vec3 albedo=pow(max(tex.rgb,vec3(0)),vec3(2.2));
+        vec3 albedo=pow(max(tex.rgb,vec3(0.0)),vec3(2.2));
         color=vec4(shadeSurface(albedo,normalize(viewNormal),viewPos,lmcoord,0.24,0.0,0.0,vec3(0.04)),tex.a); return;
     }
     vec2 screenUV=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
@@ -57,21 +57,27 @@ void main(){
     }
     #endif
     float thickness=min(length(behind-viewPos),80.0);
+    #ifdef WATER_REFRACTION
     vec2 refractUV=clamp(screenUV+N.xy*min(thickness,2.5)*0.003,vec2(0.001),vec2(0.999));
     float refractDepth=texture(depthtex1,refractUV).r;
     vec3 refractPos=viewPosition(refractUV,refractDepth);
     if(refractPos.z>viewPos.z+0.05) refractUV=screenUV;
     else thickness=min(length(refractPos-viewPos),80.0);
+    #else
+    vec2 refractUV=screenUV;
+    #endif
     vec3 transmitted=texture(colortex6,refractUV).rgb;
     vec3 absorption=vec3(0.27,0.075,0.035)/WATER_CLARITY;
     vec3 transmittance=exp(-absorption*thickness);
-    vec3 waterColor=vec3(0.008,0.070,0.090)*mix(0.12,1.0,daylight())*(0.2+lmcoord.y*0.8);
+    vec3 waterColor=vec3(0.02,0.14,0.24)*mix(0.12,1.0,daylight())*(0.2+lmcoord.y*0.8);
     transmitted=transmitted*transmittance+waterColor*(1.0-transmittance);
+    #ifdef WATER_CAUSTICS
     // Smooth natural underwater caustics
     float caustic1=sin(worldPos.x*2.0+frameTimeCounter)*0.5+0.5;
     float caustic2=cos(worldPos.z*2.2-frameTimeCounter*0.8)*0.5+0.5;
     float caustic=pow(caustic1*caustic2,4.0);
     transmitted+=vec3(0.04,0.075,0.065)*caustic*exp(-thickness*0.35)*daylight();
+    #endif
     vec3 reflected=environmentRadiance(worldDirection(R))*pow(lmcoord.y,2.0);
     #ifdef SSR
     vec2 hit;
@@ -90,12 +96,20 @@ void main(){
     float vis=shadowVisibility(worldPos-cameraPosition,worldDirection(N),sat(dot(N,L)),true);
     vec3 glint=specularBRDF(N,V,L,WATER_ROUGHNESS,vec3(0.0204))*lightColor()*vis*lmcoord.y*cloudShadow(worldPos);
     vec3 result=mix(transmitted,reflected,fresnel)+glint;
-    // Smooth shoreline blending without pixelated foam edge
+    #ifdef WATER_FOAM
+    // Smooth shoreline blending with 3D noise foam
     float shoreDepth=smoothstep(0.01,0.50,thickness);
-    float foamNoise=noise3(worldPos*3.5+frameTimeCounter*0.5)*0.5+0.5;
+    float foamNoise=noise3D(worldPos*3.5+frameTimeCounter*0.5)*0.5+0.5;
     float foam=(1.0-smoothstep(0.04,0.32,thickness))*foamNoise*0.16*shoreDepth;
     result=mix(result,vec3(0.65)*mix(0.15,1.0,daylight()),foam);
-    color=vec4(max(result,vec3(0)),1.0);
+    #else
+    // Fast analytical shore edge foam for potato devices (pure sine, 0 noise cost!)
+    float shoreDepth=smoothstep(0.01,0.30,thickness);
+    float shoreWave=sin(worldPos.x*2.8+worldPos.z*2.4+frameTimeCounter*1.8)*0.5+0.5;
+    float fastFoam=(1.0-smoothstep(0.02,0.18,thickness))*shoreWave*0.13*shoreDepth;
+    result=mix(result,vec3(0.70)*mix(0.20,1.0,daylight()),fastFoam);
+    #endif
+    color=vec4(max(result,vec3(0.0)),1.0);
 }
 
 

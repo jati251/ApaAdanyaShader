@@ -6,7 +6,7 @@ in vec2 texcoord;
 layout(location=0) out vec4 color;
 void main(){
     float shadow=1.0;
-    #if defined(CLOUD_SHADOWS) && defined(VOLUMETRIC_CLOUDS) && !defined(NETHER) && !defined(END)
+    #if defined(CLOUD_SHADOWS) && (CLOUDS == 2) && !defined(NETHER) && !defined(END)
     vec3 ld=worldDirection(shadowLightPosition);
     if(ld.y>0.04){
         vec2 origin=floor(cameraPosition.xz/128.0)*128.0;
@@ -17,5 +17,5 @@ void main(){
         shadow=mix(0.48,1.0,exp(-optical*0.035));
     }
     #endif
-    color=vec4(shadow,0,0,1);
+    color=vec4(shadow,0.0,0.0,1.0);
 }

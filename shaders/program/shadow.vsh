@@ -13,7 +13,7 @@ void main(){
     #ifdef WAVING_FOLIAGE
     world+=waveOffset(world,materialId,step(texcoord.y,mc_midTexCoord.y));
     #endif
-    p=shadowProjection*shadowModelView*vec4(world-cameraPosition,1);
+    p=shadowProjection*shadowModelView*vec4(world-cameraPosition,1.0);
     p.xyz=distortShadow(p.xyz/p.w)*p.w; gl_Position=p;
     #else
     gl_Position=vec4(2.0,2.0,2.0,1.0); // Outside NDC: clipped instantly before rasterization

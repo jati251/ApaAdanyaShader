@@ -8,28 +8,31 @@ vec3 skyRadiance(vec3 rd) {
     return mix(vec3(0.016, 0.009, 0.035), vec3(0.07, 0.035, 0.12), exp(-abs(rd.y) * 5.0));
     #else
     vec3 sd = sunDirection(); float day = daylight();
-    float horizon = pow(1.0 - max(rd.y, 0.0), 5.0);
-    vec3 sky = mix(vec3(0.025, 0.125, 0.34), vec3(0.30, 0.43, 0.56), horizon);
-    float sunset = exp(-abs(sd.y) * 10.0);
-    float facing = pow(sat(dot(rd, sd) * 0.5 + 0.5), 8.0);
-    sky = mix(sky, vec3(0.9, 0.24, 0.065), sunset * horizon * (0.22 + facing * 0.65));
-    sky *= mix(0.25, 1.0, smoothstep(-0.08, 0.25, sd.y));
+    float horizon = pow(1.0 - max(rd.y, 0.0), 3.5);
+    vec3 zenithCol = vec3(0.06, 0.24, 0.72);
+    vec3 horizonCol = vec3(0.48, 0.72, 0.94);
+    vec3 sky = mix(zenithCol, horizonCol, horizon);
+    float sunset = exp(-abs(sd.y) * 8.5);
+    float facing = pow(sat(dot(rd, sd) * 0.5 + 0.5), 6.0);
+    vec3 sunsetCol = vec3(1.35, 0.42, 0.08);
+    sky = mix(sky, sunsetCol, sunset * horizon * (0.28 + facing * 0.72));
+    sky *= mix(0.20, 1.0, smoothstep(-0.08, 0.25, sd.y));
     sky = mix(vec3(0.0018, 0.0035, 0.009) + vec3(0.008, 0.012, 0.024) * horizon, sky, day);
     sky = mix(sky, vec3(dot(sky, vec3(0.2126, 0.7152, 0.0722))) * 0.75, rainStrength * 0.8);
     float sunDot = dot(rd, sd), moonDot = dot(rd, -sd);
+    #ifdef SUN_MOON_GLOW
     sky += vec3(12.0, 9.5, 6.5) * smoothstep(0.99994, 0.999975, sunDot) * day * (1.0 - rainStrength);
     sky += vec3(0.22, 0.30, 0.48) * smoothstep(0.99982, 0.9999, moonDot) * (1.0 - day);
     sky += lightColor() * pow(sat(sunDot), 512.0) * 0.055;
+    #endif
+    #ifdef STARS
     vec3 starCell = floor(rd * 650.0);
     sky += vec3(pow(hash13(starCell), 950.0)) * smoothstep(0.02, 0.3, rd.y) * (1.0 - day) * (1.0 - rainStrength) * 0.5;
+    #endif
     return sky;
     #endif
 }
 
-// Interleaved Gradient Noise for grain-free dithering
-float ignDither(vec2 p) {
-    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
-}
 
 // Fast 2D noise
 float noise2D(vec2 p) {
@@ -58,7 +61,7 @@ float cloudFractal(vec2 p) {
 }
 
 // Natural elevated cumulus altitude (high above mountains & Distant Horizons terrain)
-const float CLOUD_ALT_BASE = 360.0;
+const float CLOUD_ALT_BASE = CLOUD_ALTITUDE;
 const float CLOUD_ALT_THICK = 110.0;
 
 // Organic, realistic 3D cumulus density field
@@ -91,21 +94,21 @@ float sampleCloudDensity(vec3 p, bool detail) {
     float density = smoothstep(threshold - 0.04, threshold + 0.16, fbm) * baseFade * topFade;
 
     // Subtle 3D fractal cauliflower billow texturing
+    #ifdef CLOUD_DETAIL
     if (detail && density > 0.01) {
         vec3 q = (p + vec3(wind.x, 0.0, wind.y)) * 0.016;
-        float n1 = noise3(q);
-        float n2 = noise3(q * 2.3 + vec3(1.3, 2.1, 0.7));
+        float n1 = noise3D(q);
+        float n2 = noise3D(q * 2.3 + vec3(1.3, 2.1, 0.7));
         float fluff = n1 * 0.65 + n2 * 0.35;
         density = clamp(density - (1.0 - fluff) * 0.22 * smoothstep(0.08, 0.85, h), 0.0, 1.0);
     }
+    #endif
 
     return density;
 }
 
-float cloudDensity(vec3 p) { return sampleCloudDensity(p, true); }
-
 vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
-    #ifdef VOLUMETRIC_CLOUDS
+    #if CLOUDS == 2
     #if !defined(NETHER) && !defined(END)
     // Smooth horizon fade
     if (rd.y < 0.015) return background;
@@ -202,20 +205,40 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
 
 vec3 renderFastClouds(vec3 rd, vec3 background) {
     #if !defined(NETHER) && !defined(END)
-    if (rd.y < 0.03) return background;
-    float planeDist = (360.0 - cameraPosition.y) / max(rd.y, 0.03);
+    if (rd.y < 0.02) return background;
+    float planeDist = (CLOUD_ALTITUDE - cameraPosition.y) / max(rd.y, 0.02);
     if (planeDist < 0.0) return background;
-    vec2 cloudUV = (cameraPosition.xz + rd.xz * planeDist) * 0.00028 + vec2(frameTimeCounter * 0.0012, 0.0);
-    float n = noise3(vec3(cloudUV * 3.5, 0.0)) * 0.65 + noise3(vec3(cloudUV * 7.0, 1.0)) * 0.35;
-    float density = smoothstep(0.48, 0.76, n) * CLOUD_COVERAGE * 1.6;
-    if (density > 0.01) {
+    vec2 wind = vec2(frameTimeCounter * 1.2, frameTimeCounter * 0.5);
+    vec2 pos = (cameraPosition.xz + rd.xz * planeDist + wind) * 0.00030;
+    float fbm = cloudFractal(pos);
+    float threshold = 0.54 - CLOUD_COVERAGE * 0.22;
+    float density = smoothstep(threshold, threshold + 0.16, fbm);
+    if (density > 0.005) {
+        vec3 sd = sunDirection();
         float day = daylight();
         vec3 sunCol = lightColor();
-        vec3 cloudCol = mix(vec3(0.012, 0.018, 0.035) * NIGHT_BRIGHTNESS, vec3(0.92, 0.94, 0.98), day);
-        float sunAngle = max(dot(rd, worldDirection(shadowLightPosition)), 0.0);
-        cloudCol += sunCol * pow(sunAngle, 8.0) * 0.25 * day;
-        float fade = smoothstep(0.03, 0.12, rd.y);
-        return mix(background, cloudCol, min(density * fade, 0.85));
+
+        // Pseudo-volumetric self-shadowing: sample slightly towards the sun
+        float fbmSun = cloudFractal(pos + sd.xz * 0.012);
+        float shade = clamp(1.0 - (fbmSun - threshold) * 2.4, 0.42, 1.0);
+
+        // Forward Mie scattering (silver lining highlight facing sun)
+        float sunTheta = dot(rd, sd);
+        float silver = pow(sat(sunTheta * 0.5 + 0.5), 10.0) * 1.6 * day;
+
+        // Realistic ambient: soft blue from sky + warm sunlight bounce
+        vec3 ambientCloud = mix(vec3(0.012, 0.018, 0.035) * NIGHT_BRIGHTNESS, vec3(0.70, 0.78, 0.90), day);
+        vec3 directCloud = (sunCol * 0.40 + silver * sunCol) * shade;
+        vec3 cloudCol = ambientCloud + directCloud;
+
+        // Sunset horizon golden glow
+        float horizon = pow(1.0 - max(rd.y, 0.0), 3.0);
+        float sunset = exp(-abs(sd.y) * 8.0) * horizon;
+        cloudCol = mix(cloudCol, vec3(1.15, 0.45, 0.12), sunset * 0.70);
+
+        // Horizon distance fade
+        float fade = smoothstep(0.02, 0.12, rd.y) * (1.0 - smoothstep(1200.0, 3600.0, planeDist));
+        return mix(background, cloudCol, min(density * fade, 0.90));
     }
     #endif
     return background;

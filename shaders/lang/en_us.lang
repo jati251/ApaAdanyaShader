@@ -1,50 +1,100 @@
-screen.LIGHTING=Lighting & Indirect Light
-screen.WATER=Water & Ray-Traced Reflections
-screen.SKY=Atmosphere & Clouds
-screen.SHADOWS=Shadow Quality
-screen.POST=Color & Camera
-screen.MATERIALS=Materials & Foliage
-profile.POTATO=Potato (160+ FPS)
+# Screen Titles
+screen.LIGHTING=Lighting & Atmosphere
+screen.SHADOWS=Shadow Configuration
+screen.SKY=Sky & Clouds
+screen.WATER=Water & Reflections
+screen.WORLD=World & Vegetation
+screen.POST=Post-Processing & Camera
+
+# Profiles
+profile.POTATO=Potato (180+ FPS)
 profile.LOW=Low (High FPS)
 profile.MEDIUM=Medium (Balanced)
 profile.HIGH=High (Realistic)
 profile.ULTRA=Ultra (Showcase)
-profile.comment=Potato: Extreme FPS (160+ FPS, no shadows, no raymarching) | Low: Fast 1-tap shadows & 2D clouds | Medium: Ray-traced water reflections & 3D clouds | High: SSGI & Godrays | Ultra: Maximum visual fidelity.
+profile.comment=Potato: Maximum FPS for low-end / integrated GPUs. Skips all raymarching, shadows, and heavy buffers | Low: Fast 1-sample shadows & 2D planar clouds | Medium: SSR water reflections & 3D volumetric clouds | High: SSGI, godrays, and high-res shadows | Ultra: Full visual fidelity.
+
+# Lighting Options
+option.SSAO=Screen-Space Ambient Occlusion
+option.SSAO.comment=Shades occluded crevices and contact points in screen space. Turn off to save depth buffer bandwidth.
+option.SSAO_SAMPLES=SSAO Sample Count
+option.SSAO_SAMPLES.comment=Number of depth samples used to compute ambient occlusion. Lower values give more performance on potato devices.
+option.SSGI=Screen-Space Indirect Light
+option.SSGI.comment=Traces short hemisphere rays for visible-surface light bounce. Turn off on low-end GPUs.
+option.GI_SAMPLES=Indirect Light Rays
+option.GI_STRENGTH=Indirect Light Intensity
+option.VOLUMETRIC_LIGHT=Volumetric God Rays
+option.VOLUMETRIC_LIGHT.comment=Renders light shafts through the atmosphere based on sunlight and shadows.
+option.VL_SAMPLES=God Ray Sample Steps
+option.NIGHT_BRIGHTNESS=Moonlight Brightness
+option.CAVE_BRIGHTNESS=Cave & Ambient Brightness
+option.CAVE_BRIGHTNESS.comment=Minimum ambient light level in caves and dark interiors.
+option.TORCH_BRIGHTNESS=Torch & Lantern Brightness
+
+# Shadow Options
 option.SHADOWS=Real-Time Dynamic Shadows
 option.SHADOWS.comment=Renders real-time sun and moon shadows. Disabling dynamic shadows gives the biggest FPS boost.
-option.SSAO=Screen-Space Ambient Occlusion
-option.SSAO.comment=Shades occluded crevices in screen-space. Turn off to save depth buffer bandwidth.
-option.FAST_CLOUDS=Fast 2D Clouds
-option.FAST_CLOUDS.comment=Planar procedural clouds. Very fast fallback when Volumetric Clouds is disabled.
-option.SHADOW_ALPHA_TEST=Shadow Alpha Cutouts
-option.SHADOW_ALPHA_TEST.comment=Allows leaves and plants to cast detailed cutout shadows. Disabling this enables GPU double-rate depth rasterization.
-option.SSR=Screen-Space Ray-Traced Reflections
-option.SSR.comment=Traces reflections against visible scene depth. Objects outside the screen use a sky fallback. Does not use RTX hardware or full-world path tracing.
-option.SSR_STEPS=Reflection Ray Steps
-option.SSGI=Screen-Space Indirect Light
-option.SSGI.comment=Traces short hemisphere rays for visible-surface light bounce. Higher sample counts cost GPU time. Off-screen lights are not traced.
-option.GI_SAMPLES=Indirect Light Rays
-option.GI_STRENGTH=Indirect Light Strength
-option.VOLUMETRIC_CLOUDS=Volumetric Clouds
-option.CLOUD_STEPS=Cloud Ray Steps
-option.CLOUD_COVERAGE=Cloud Coverage
-option.VOLUMETRIC_LIGHT=Volumetric Light Shafts
-option.FOG_DENSITY=Atmospheric Haze
-option.WATER_WAVES=Water Wave Strength
-option.WATER_CLARITY=Water Clarity
-option.WATER_CLARITY.comment=Higher values allow light to travel farther through water.
-option.shadowMapResolution=Shadow Resolution
+option.shadowMapResolution=Shadow Map Resolution
 option.shadowDistance=Shadow Distance
-option.SHADOW_SAMPLES=Soft Shadow Samples
-option.EXPOSURE=Exposure
-option.BLOOM=Bloom
-option.BLOOM_STRENGTH=Bloom Strength
-option.FXAA=Edge Anti-Aliasing
-option.WAVING_FOLIAGE=Wind in Plants & Leaves
-option.RESOURCE_NORMALS=Resource Pack Normal Maps
-option.RESOURCE_NORMALS.comment=Enable only with a compatible tangent-space normal-map resource pack. No parallax mapping or full labPBR material decoding.
-option.NIGHT_BRIGHTNESS=Moonlight Brightness
+option.SHADOW_SAMPLES=Shadow Softness & Samples
+option.SHADOW_SAMPLES.comment=1 sample produces crisp, instantaneous hard shadows (optimal for potato/low devices). Higher samples produce smooth penumbra.
+option.SHADOW_ALPHA_TEST=Shadow Alpha Cutouts
+option.SHADOW_ALPHA_TEST.comment=Allows leaves and plants to cast cutout shadows. Disabling this enables GPU double-rate depth rasterization.
+option.CLOUD_SHADOWS=Moving Cloud Shadows
+option.sunPathRotation=Sun Angle & Path Rotation
+
+# Sky Options
+option.CLOUDS=Clouds
+value.CLOUDS.0=Off
+value.CLOUDS.1=Fast 2D
+value.CLOUDS.2=Volumetric 3D
+option.CLOUDS.comment=Cloud rendering mode. Fast 2D is ultra lightweight for potato and low-end devices. Volumetric 3D gives realistic raymarched clouds.
+option.CLOUD_DETAIL=Cloud Billow Detail (3D Noise)
+option.CLOUD_DETAIL.comment=Adds fine cauliflower billow micro-texture to clouds. Disable on low-end devices to skip 3D noise calculations.
+option.CLOUD_STEPS=Cloud Raymarch Steps
+option.CLOUD_COVERAGE=Cloud Coverage
+option.CLOUD_ALTITUDE=Cloud Base Altitude
+option.STARS=Night Sky Stars
+option.SUN_MOON_GLOW=Sun & Moon Corona Glow
+option.FOG_ENABLED=Atmospheric Fog
+option.FOG_DENSITY=Fog Density
+
+# Water Options
+option.WATER_REFRACTION=Underwater Optical Refraction
+option.WATER_REFRACTION.comment=Refracts light passing through water surfaces. Disable on potato devices to avoid double depth buffer sampling.
+option.WATER_CAUSTICS=Underwater Caustics
+option.WATER_CAUSTICS.comment=Animated dancing sunlight patterns on riverbeds and ocean floors.
+option.WATER_FOAM=Shoreline Wave Foam
+option.WATER_FOAM.comment=Procedural white foam along shorelines. Disable on potato devices to skip noise lookups.
+option.SSR=Screen-Space Water Reflections
+option.SSR.comment=Traces raymarched reflections of blocks and entities onto water.
+option.SSR_STEPS=Reflection Ray Steps
+option.WATER_OCTAVES=Wave Detail Octaves
+option.WATER_OCTAVES.comment=Number of wave frequencies computed for water normals. Set to 2 for maximum FPS on potato devices.
+option.WATER_WAVES=Wave Height & Strength
+option.WATER_CLARITY=Water Clarity
 option.WATER_ROUGHNESS=Water Surface Roughness
+
+# World & Materials Options
+option.WAVING_FOLIAGE=Master Foliage Wind Animation
+option.WAVING_PLANTS=Waving Grass, Flowers & Crops
+option.WAVING_LEAVES=Waving Tree Leaves
+option.WIND_SPEED=Wind Speed
+option.RAIN_PUDDLES=Rain Puddles & Wet Surfaces
+option.RAIN_PUDDLES.comment=Creates glossy water puddles on ground blocks during rainfall. Turn off to boost rain performance.
+option.RESOURCE_NORMALS=Resource Pack Normal Maps
+
+# Post-Processing Options
+option.BLOOM=Bloom Glow Effect
+option.BLOOM.comment=Produces soft glowing halos around bright lights. Bypassed entirely when disabled.
+option.BLOOM_STRENGTH=Bloom Intensity
+option.FXAA=Fast Approximate Anti-Aliasing
+option.VIGNETTE=Camera Lens Vignette
+option.VIGNETTE_STRENGTH=Vignette Intensity
+option.TONEMAP_OPERATOR=Color Tonemapping Curve
+value.TONEMAP_OPERATOR.0=Filmic (ACES-like)
+value.TONEMAP_OPERATOR.1=Linear (Vanilla)
 option.COLOR_SATURATION=Color Saturation
 option.COLOR_CONTRAST=Color Contrast
-option.CLOUD_SHADOWS=Moving Cloud Shadows
+option.EXPOSURE=Camera Exposure
+option.COLOR_DITHERING=Temporal Color Dithering

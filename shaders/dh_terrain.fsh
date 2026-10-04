@@ -30,13 +30,22 @@ void main() {
     #endif
     if (tex.a < 0.1) discard;
 
+    // Linearize texture albedo exactly like vanilla terrain (surface.fsh)
     vec3 albedo = pow(max(tex.rgb, vec3(0.0)), vec3(2.2));
     vec3 N = normalize(viewNormal);
-    float roughness = 0.82;
+    float roughness = 0.78;
 
-    vec3 shaded = shadeSurface(albedo, N, viewPos, lmcoord, roughness, 0.0, 0.0, vec3(0.04));
+    // Robust light coordinate handling for Iris DH:
+    // DHTerrainTransformer stores SkyLight in .x and BlockLight in .y.
+    // Clamping max ensures skyLight is ~0.97 in daylight, perfectly matching vanilla lmcoord.y.
+    float skyLight = clamp(max(lmcoord.x, lmcoord.y), 0.0, 1.0);
+    float blockLight = clamp(min(lmcoord.x, lmcoord.y), 0.0, 1.0);
+    vec2 lm = vec2(blockLight, skyLight);
+
+    // Call standard surface shading for 100% mathematical parity with vanilla chunks
+    vec3 shaded = shadeSurface(albedo, N, viewPos, lm, roughness, 0.0, 0.0, vec3(0.04));
 
     color = vec4(shaded, 1.0);
     normalData = vec4(N * 0.5 + 0.5, 1.0);
-    materialData = vec4(roughness, lmcoord.y, 0.0, 0.0);
+    materialData = vec4(roughness, skyLight, 0.0, 0.0);
 }

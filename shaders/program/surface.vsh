@@ -14,7 +14,7 @@ void main() {
     viewNormal=normalize(gl_NormalMatrix*gl_Normal);
     tangent=vec4(normalize(gl_NormalMatrix*at_tangent.xyz),at_tangent.w);
     viewPos=(gl_ModelViewMatrix*gl_Vertex).xyz;
-    worldPos=(gbufferModelViewInverse*vec4(viewPos,1)).xyz+cameraPosition;
+    worldPos=(gbufferModelViewInverse*vec4(viewPos,1.0)).xyz+cameraPosition;
     materialId=0.0;
     #if defined(TERRAIN) || defined(WATER)
     materialId=mc_Entity.x;
@@ -23,5 +23,5 @@ void main() {
     worldPos+=offset; viewPos+=mat3(gbufferModelView)*offset;
     #endif
     #endif
-    gl_Position=gl_ProjectionMatrix*vec4(viewPos,1);
+    gl_Position=gl_ProjectionMatrix*vec4(viewPos,1.0);
 }

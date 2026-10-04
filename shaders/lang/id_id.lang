@@ -1,47 +1,100 @@
-screen.LIGHTING=Pencahayaan & Pantulan Cahaya
-screen.WATER=Air & Refleksi Ray Tracing
+# Judul Layar
+screen.LIGHTING=Pencahayaan & Atmosfer
+screen.SHADOWS=Konfigurasi Bayangan
 screen.SKY=Langit & Awan
-screen.SHADOWS=Kualitas Bayangan
-screen.POST=Warna & Kamera
-screen.MATERIALS=Material & Tumbuhan
-profile.POTATO=Potato (160+ FPS)
+screen.WATER=Air & Refleksi
+screen.WORLD=Dunia & Tumbuhan
+screen.POST=Pasca-Proses & Kamera
+
+# Profil
+profile.POTATO=Potato (180+ FPS)
 profile.LOW=Rendah (FPS Tinggi)
 profile.MEDIUM=Sedang (Seimbang)
 profile.HIGH=Tinggi (Realistis)
 profile.ULTRA=Ultra (Maksimal)
-profile.comment=Potato: FPS Maksimal (160+ FPS, tanpa bayangan & raymarch) | Rendah: Bayangan 1-tap & awan 2D ringan | Sedang: Refleksi air SSR & awan 3D | Tinggi: SSGI & Godrays | Ultra: Kualitas visual puncak.
-option.SHADOWS=Bayangan Real-Time
-option.SHADOWS.comment=Membuat bayangan dinamis matahari dan bulan. Mematikan bayangan memberikan lonjakan FPS paling besar.
+profile.comment=Potato: FPS Maksimal untuk PC / laptop kentang & GPU internal. Melewati seluruh raymarching, bayangan, dan buffer berat | Rendah: Bayangan cepat 1-sample & awan 2D | Sedang: Refleksi SSR & awan volumetrik 3D | Tinggi: SSGI, godrays, bayangan tajam | Ultra: Kualitas visual puncak.
+
+# Opsi Pencahayaan
 option.SSAO=Screen-Space Ambient Occlusion
-option.SSAO.comment=Memberikan bayangan di sudut dan celah. Matikan untuk menghemat bandwidth GPU.
-option.FAST_CLOUDS=Awan Cepat 2D
-option.FAST_CLOUDS.comment=Awan prosedural datar 2D yang sangat ringan saat awan volumetrik dimatikan.
-option.SHADOW_ALPHA_TEST=Uji Alpha Bayangan
-option.SHADOW_ALPHA_TEST.comment=Memungkinkan daun dan rumput membentuk bayangan berlubang detail. Matikan untuk mempercepat rendering kedalaman GPU.
-option.SSR=Refleksi Ray Tracing Berbasis Layar
-option.SSR.comment=Melacak kedalaman objek yang terlihat di layar. Objek di luar layar menggunakan refleksi langit; bukan hardware RTX atau full path tracing.
-option.SSR_STEPS=Langkah Ray Refleksi
-option.SSGI=Pantulan Cahaya Berbasis Layar
+option.SSAO.comment=Memberikan bayangan gelap pada sudut dan celah objek. Matikan untuk menghemat bandwidth GPU kentang.
+option.SSAO_SAMPLES=Jumlah Sampel SSAO
+option.SSAO_SAMPLES.comment=Banyaknya sampel kedalaman untuk menghitung oklusi. Nilai rendah lebih ramah untuk perangkat kentang.
+option.SSGI=Screen-Space Indirect Light
+option.SSGI.comment=Melacak pantulan cahaya antar permukaan objek. Matikan di GPU kelas bawah.
 option.GI_SAMPLES=Jumlah Ray Cahaya
 option.GI_STRENGTH=Kekuatan Pantulan Cahaya
-option.VOLUMETRIC_CLOUDS=Awan Volumetrik
-option.CLOUD_STEPS=Langkah Ray Awan
-option.CLOUD_COVERAGE=Kepadatan Awan
-option.VOLUMETRIC_LIGHT=Berkas Cahaya Volumetrik
-option.FOG_DENSITY=Kepadatan Kabut
-option.WATER_WAVES=Kekuatan Riak Air
-option.WATER_CLARITY=Kejernihan Air
-option.shadowMapResolution=Resolusi Bayangan
-option.shadowDistance=Jarak Bayangan
-option.SHADOW_SAMPLES=Sampel Bayangan Lembut
-option.EXPOSURE=Eksposur
-option.BLOOM=Bloom
-option.BLOOM_STRENGTH=Kekuatan Bloom
-option.FXAA=Penghalusan Tepi
-option.WAVING_FOLIAGE=Gerakan Daun & Rumput
-option.RESOURCE_NORMALS=Normal Map Resource Pack
+option.VOLUMETRIC_LIGHT=Berkas Cahaya (God Rays)
+option.VOLUMETRIC_LIGHT.comment=Menampilkan sorot cahaya matahari di udara.
+option.VL_SAMPLES=Langkah Sampel God Ray
 option.NIGHT_BRIGHTNESS=Kecerahan Cahaya Bulan
+option.CAVE_BRIGHTNESS=Kecerahan Gua & Interior
+option.CAVE_BRIGHTNESS.comment=Tingkat kecerahan minimal di dalam gua atau ruangan tertutup agar tidak gelap gulita.
+option.TORCH_BRIGHTNESS=Kecerahan Obor & Lentera
+
+# Opsi Bayangan
+option.SHADOWS=Bayangan Real-Time
+option.SHADOWS.comment=Membuat bayangan dinamis matahari dan bulan. Mematikan fitur ini memberikan lonjakan FPS terbesar.
+option.shadowMapResolution=Resolusi Peta Bayangan
+option.shadowDistance=Jarak Bayangan
+option.SHADOW_SAMPLES=Kelembutan Sampel Bayangan
+option.SHADOW_SAMPLES.comment=1 sampel menghasilkan bayangan tajam seketika (sangat optimal untuk perangkat kentang). Sampel lebih tinggi menghasilkan gradasi halus.
+option.SHADOW_ALPHA_TEST=Uji Alpha Bayangan (Cutout)
+option.SHADOW_ALPHA_TEST.comment=Memungkinkan daun dan rumput membentuk bayangan tembus cahaya detail. Matikan untuk mempercepat rendering GPU.
+option.CLOUD_SHADOWS=Bayangan Awan Bergerak
+option.sunPathRotation=Sudut Rotasi Matahari
+
+# Opsi Langit & Awan
+option.CLOUDS=Awan
+value.CLOUDS.0=Mati
+value.CLOUDS.1=Cepat 2D
+value.CLOUDS.2=Volumetrik 3D
+option.CLOUDS.comment=Mode render awan. Cepat 2D sangat ringan dan mulus untuk perangkat kentang/low-end. Volumetrik 3D memberikan awan raymarch yang megah dan realistis.
+option.CLOUD_DETAIL=Detail Gumpalan Awan (Noise 3D)
+option.CLOUD_DETAIL.comment=Menambahkan mikro-tekstur gumpalan detail pada awan. Matikan pada perangkat kentang untuk melewati kalkulasi noise 3D.
+option.CLOUD_STEPS=Langkah Raymarch Awan
+option.CLOUD_COVERAGE=Kepadatan Awan
+option.CLOUD_ALTITUDE=Ketinggian Dasar Awan
+option.STARS=Bintang Langit Malam
+option.SUN_MOON_GLOW=Pendar Korona Matahari & Bulan
+option.FOG_ENABLED=Kabut Atmosfer
+option.FOG_DENSITY=Kepadatan Kabut
+
+# Opsi Air
+option.WATER_REFRACTION=Pembiasan Cahaya di Bawah Air
+option.WATER_REFRACTION.comment=Membias permukaan di bawah air. Matikan pada perangkat kentang untuk menghindari pembacaan ganda buffer kedalaman.
+option.WATER_CAUSTICS=Pola Kaustik Dasar Air
+option.WATER_CAUSTICS.comment=Pola gelombang pantulan sinar matahari di dasar sungai dan laut.
+option.WATER_FOAM=Busa Ombak Pesisir
+option.WATER_FOAM.comment=Busa putih di tepi air. Matikan pada perangkat kentang untuk menghemat komputasi noise.
+option.SSR=Refleksi Air Ray Tracing (SSR)
+option.SSR.comment=Melacak pantulan blok dan mob di permukaan air.
+option.SSR_STEPS=Langkah Ray Refleksi
+option.WATER_OCTAVES=Oktaf Gelombang Air
+option.WATER_OCTAVES.comment=Banyaknya frekuensi gelombang air. Gunakan 2 oktaf untuk FPS maksimal pada perangkat kentang.
+option.WATER_WAVES=Kekuatan Riak Gelombang Air
+option.WATER_CLARITY=Kejernihan Air
 option.WATER_ROUGHNESS=Kekasaran Permukaan Air
+
+# Opsi Dunia & Tumbuhan
+option.WAVING_FOLIAGE=Gerakan Angin Tanaman
+option.WAVING_PLANTS=Goyangan Rumput, Bunga & Tanaman
+option.WAVING_LEAVES=Goyangan Daun Pohon
+option.WIND_SPEED=Kecepatan Angin
+option.RAIN_PUDDLES=Genangan Air Hujan Dinamis
+option.RAIN_PUDDLES.comment=Membuat genangan basah mengkilap saat hujan. Matikan untuk meningkatkan FPS saat cuaca hujan.
+option.RESOURCE_NORMALS=Normal Map Resource Pack
+
+# Opsi Pasca-Proses
+option.BLOOM=Efek Pendaran Cahaya (Bloom)
+option.BLOOM.comment=Memberikan pendaran lembut di sekitar sumber cahaya terang. Otomatis dilewati saat dimatikan.
+option.BLOOM_STRENGTH=Kekuatan Bloom
+option.FXAA=Penghalusan Tepi (FXAA)
+option.VIGNETTE=Vignette Lensa
+option.VIGNETTE_STRENGTH=Kekuatan Vignette
+option.TONEMAP_OPERATOR=Kurva Tonemapping Warna
+value.TONEMAP_OPERATOR.0=Filmic (Gaya Sinematik)
+value.TONEMAP_OPERATOR.1=Linear (Gaya Asli/Vanilla)
 option.COLOR_SATURATION=Saturasi Warna
 option.COLOR_CONTRAST=Kontras Warna
-option.CLOUD_SHADOWS=Bayangan Awan Bergerak
+option.EXPOSURE=Pencahayaan Kamera (Exposure)
+option.COLOR_DITHERING=Dithering Warna Temporal

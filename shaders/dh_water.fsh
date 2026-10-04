@@ -17,6 +17,8 @@ layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 
 void main() {
+    if (length(viewPos) < 24.0) discard;
+
     float vanillaSolidDepth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
     float vanillaWaterDepth = texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).r;
     if (vanillaSolidDepth < 0.999999 || vanillaWaterDepth < 0.999999) discard;
@@ -34,31 +36,26 @@ void main() {
     vec3 nw = normalize(vec3(-slope.x, 1.0, -slope.y));
     vec3 N = normalize(mat3(gbufferModelView) * nw);
 
-    // Physical Fresnel reflectance
+    // Robust sky light retrieval regardless of Iris transformer coordinate packing
+    float skyLight = clamp(max(lmcoord.x, lmcoord.y), 0.0, 1.0);
+
+    // Physical Fresnel reflectance matching vanilla water
     float NdotV = sat(dot(N, V));
     float fresnel = 0.0204 + 0.9796 * pow(1.0 - NdotV, 5.0);
 
-    // Environment reflections (sky & clouds)
+    // Environment reflections (sky & clouds) matching vanilla water
     vec3 R = reflect(-V, N);
-    vec3 skyReflect = environmentRadiance(worldDirection(R)) * pow(lmcoord.y, 2.0);
+    vec3 skyReflect = environmentRadiance(worldDirection(R)) * pow(skyLight, 2.0);
 
-    // Direct sun / moon specular highlight
+    // Direct sun / moon specular highlight matching vanilla water
     vec3 L = normalize(shadowLightPosition);
-    float NdotL = sat(dot(N, L));
-    vec3 glint = specularBRDF(N, V, L, WATER_ROUGHNESS, vec3(0.0204)) * lightColor() * NdotL * lmcoord.y;
+    vec3 glint = specularBRDF(N, V, L, WATER_ROUGHNESS, vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
 
-    // Deep ocean water scattering
-    vec3 deepWater = vec3(0.008, 0.060, 0.088) * mix(0.12, 1.0, daylight()) * lmcoord.y;
-    vec3 waterColor = mix(deepWater, skyReflect, fresnel) + glint;
+    // Deep water equilibrium color matching vanilla water (water.fsh)
+    vec3 deepWater = vec3(0.02, 0.14, 0.24) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
+    vec3 waterResult = mix(deepWater, skyReflect, fresnel) + glint;
 
-    // Distance atmospheric fog blend: seamlessly unites DH water with horizon sky
-    float dist = length(viewPos);
-    vec3 rd = worldDirection(-V);
-    vec3 fog = skyRadiance(normalize(vec3(rd.x, 0.035, rd.z)));
-    float fogAmount = 1.0 - exp(-dist * 0.00028 * FOG_DENSITY);
-    waterColor = mix(waterColor, fog, fogAmount);
-
-    color = vec4(waterColor, mix(0.85, 1.0, fresnel));
+    color = vec4(max(waterResult, vec3(0.0)), 1.0);
     normalData = vec4(N * 0.5 + 0.5, 1.0);
-    materialData = vec4(WATER_ROUGHNESS, lmcoord.y, 0.0, 0.0);
+    materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.0);
 }

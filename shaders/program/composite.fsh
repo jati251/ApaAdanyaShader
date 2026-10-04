@@ -6,6 +6,7 @@
 #include "/lib/lighting.glsl"
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex0;
+uniform sampler2D dhDepthTex1;
 uniform mat4 dhProjectionInverse;
 #endif
 uniform sampler2D colortex0,colortex2,depthtex0;
@@ -19,7 +20,9 @@ void main(){
     float dist=depth>=0.999999?far:min(length(vp),far);
     bool isDH=false;
     #ifdef DISTANT_HORIZONS
-    float dhDepth=texture(dhDepthTex0,texcoord).r;
+    float dhSolidD=texture(dhDepthTex0,texcoord).r;
+    float dhTransD=texture(dhDepthTex1,texcoord).r;
+    float dhDepth=min(dhSolidD,dhTransD);
     if(depth>=0.999999 && dhDepth<1.0){
         isDH=true;
         vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
@@ -36,18 +39,29 @@ void main(){
     }else if(isEyeInWater==2){
         c=mix(c,vec3(2.0,0.22,0.012),1.0-exp(-dist*1.5));
     }else if(!hand){
-        float density=(0.00022+rainStrength*0.0025)*FOG_DENSITY;
-        float heightAttenuation=exp(-max(cameraPosition.y+rd.y*dist*0.5-64.0,0.0)*0.008);
-        float amount=1.0-exp(-dist*density*heightAttenuation);
-        #ifdef NETHER
-        amount=1.0-exp(-dist*0.016*FOG_DENSITY);
-        #elif defined(END)
-        amount=1.0-exp(-dist*0.002*FOG_DENSITY);
-        #endif
-        if((depth<0.999999 || isDH) && amount>0.001){
-            vec3 fog=skyRadiance(normalize(vec3(rd.x,0.035,rd.z)));
-            c=mix(c,fog,amount);
+        #ifdef FOG_ENABLED
+        if(FOG_DENSITY > 0.001){
+            float altitude=cameraPosition.y+rd.y*dist*0.5;
+            float heightFactor=clamp(exp(-max(altitude-110.0,0.0)*0.003),0.55,1.0);
+            float fogOpt=pow(dist*0.00062*FOG_DENSITY,1.22)*heightFactor;
+            if(rainStrength>0.01) fogOpt+=dist*rainStrength*0.0035;
+            float amount=1.0-exp(-fogOpt);
+            #ifdef NETHER
+            amount=1.0-exp(-dist*0.016*FOG_DENSITY);
+            #elif defined(END)
+            amount=1.0-exp(-dist*0.002*FOG_DENSITY);
+            #endif
+            if((depth<0.999999 || isDH) && amount>0.001){
+                vec3 fog=skyRadiance(normalize(vec3(rd.x,max(rd.y,0.02),rd.z)));
+                #if !defined(NETHER) && !defined(END)
+                float sunDot=dot(rd,sunDirection());
+                float forwardScatter=pow(sat(sunDot*0.5+0.5),8.0)*daylight()*(1.0-rainStrength);
+                fog+=lightColor()*forwardScatter*0.30;
+                #endif
+                c=mix(c,fog,min(amount,0.98));
+            }
         }
+        #endif
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
         if(outdoor>0.001){
@@ -56,17 +70,17 @@ void main(){
             float lightFactor=phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
             if(lightFactor>0.0005){
                 float sum=0.0;
-                float jitter=hash12(gl_FragCoord.xy);
-                for(int i=0;i<8;i++){
-                    vec3 p=rd*rayLength*(float(i)+jitter)/8.0;
-                    sum+=shadowVisibility(p,vec3(0),1.0,false);
+                float jitter=ignDither(gl_FragCoord.xy);
+                for(int i=0;i<VL_SAMPLES;i++){
+                    vec3 p=rd*rayLength*(float(i)+jitter)/float(VL_SAMPLES);
+                    sum+=shadowVisibility(p,vec3(0.0),1.0,false);
                 }
-                c+=lightColor()*(sum/8.0)*lightFactor;
+                c+=lightColor()*(sum/float(VL_SAMPLES))*lightFactor;
             }
         }
         #endif
     }
-    color=vec4(max(c,vec3(0)),1);
+    color=vec4(max(c,vec3(0.0)),1.0);
 }
 
 
