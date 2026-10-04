@@ -3,6 +3,9 @@
 #include "/lib/common.glsl"
 #include "/lib/lighting.glsl"
 
+uniform sampler2D depthtex0;
+uniform sampler2D depthtex1;
+
 in vec2 texcoord, lmcoord;
 in vec4 glcolor;
 in vec3 viewNormal, viewPos, worldPos;
@@ -13,6 +16,13 @@ layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 
 void main() {
+    // Prevent DH LOD water from rendering near player or overlapping with vanilla trees/terrain/water
+    if (length(viewPos) < 24.0) discard;
+
+    float vanillaSolidDepth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
+    float vanillaWaterDepth = texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).r;
+    if (vanillaSolidDepth < 0.999999 || vanillaWaterDepth < 0.999999) discard;
+
     vec4 tex = glcolor;
     #ifdef DISTANT_HORIZONS
     if (dh_hasTexture()) {

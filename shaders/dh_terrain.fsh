@@ -3,6 +3,8 @@
 #include "/lib/common.glsl"
 #include "/lib/lighting.glsl"
 
+uniform sampler2D depthtex0;
+
 in vec2 texcoord, lmcoord;
 in vec4 glcolor;
 in vec3 viewNormal, viewPos, worldPos;
@@ -14,6 +16,12 @@ layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 
 void main() {
+    // Prevent DH LOD terrain from ever overlapping or clipping with near vanilla terrain
+    if (length(viewPos) < 24.0) discard;
+
+    float vanillaDepth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
+    if (vanillaDepth < 0.999999) discard;
+
     vec4 tex = glcolor;
     #ifdef DISTANT_HORIZONS
     if (dh_hasTexture()) {
