@@ -16,7 +16,6 @@ float noise3(vec3 p) {
     vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
     return mix(mix(mix(hash13(i),hash13(i+vec3(1,0,0)),f.x),mix(hash13(i+vec3(0,1,0)),hash13(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash13(i+vec3(0,0,1)),hash13(i+vec3(1,0,1)),f.x),mix(hash13(i+vec3(0,1,1)),hash13(i+vec3(1,1,1)),f.x),f.y),f.z);
 }
-float fbm(vec3 p) { return noise3(p)*0.57+noise3(p*2.03)*0.28+noise3(p*4.07)*0.15; }
 vec3 viewPosition(vec2 uv,float d) { vec4 p=gbufferProjectionInverse*vec4(uv*2.0-1.0,d*2.0-1.0,1); return p.xyz/p.w; }
 vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v); }
 vec3 sunDirection() { return worldDirection(sunPosition); }

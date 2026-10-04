@@ -61,12 +61,14 @@ vec3 shadeSurface(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emiss
     ambient=vec3(0.06,0.035,0.09);
     #endif
     vec3 torch=vec3(1.8,0.72,0.23)*pow(lm.x,3.0);
-    float subsurface=foliage*pow(sat(dot(-V,L)),5.0)*0.5;
     vec3 direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
     #if defined(NETHER) || defined(END)
     direct=vec3(0);
     #endif
-    return albedo*(ambient+torch+vec3(0.008)+(nl+subsurface)*direct*0.52)+specularBRDF(N,V,L,roughness,f0)*direct+albedo*emission*5.0;
+    float subsurface=foliage>0.5?pow(sat(dot(-V,L)),5.0)*0.5:0.0;
+    vec3 specular=vec3(0.0);
+    if(vis>0.001 && nl>0.0001) specular=specularBRDF(N,V,L,roughness,f0)*direct;
+    return albedo*(ambient+torch+vec3(0.008)+(nl+subsurface)*direct*0.52)+specular+albedo*emission*5.0;
 }
 #endif
 

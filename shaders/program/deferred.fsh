@@ -45,10 +45,11 @@ void main(){
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
         if(mat.a<0.5) {
             float occ=0.0; float rotation=hash12(gl_FragCoord.xy)*6.283;
+            vec2 projScale=vec2(gbufferProjection[0][0],gbufferProjection[1][1])/max(-vp.z,1.0)*0.5;
             for(int i=0;i<8;i++) {
                 float angle=float(i)*2.39996+rotation;
                 float radius=1.5*sqrt((float(i)+0.5)/8.0);
-                vec2 uv=texcoord+vec2(cos(angle),sin(angle))*radius*vec2(gbufferProjection[0][0],gbufferProjection[1][1])/max(-vp.z,1.0)*0.5;
+                vec2 uv=texcoord+vec2(cos(angle),sin(angle))*(radius*projScale);
                 if(any(lessThan(uv,vec2(0)))||any(greaterThan(uv,vec2(1)))) continue;
                 float d=texture(depthtex0,uv).r;
                 vec3 diff=viewPosition(uv,d)-vp;

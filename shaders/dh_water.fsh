@@ -54,7 +54,7 @@ void main() {
     // Distance atmospheric fog blend: seamlessly unites DH water with horizon sky
     float dist = length(viewPos);
     vec3 rd = worldDirection(-V);
-    vec3 fog = skyRadiance(vec3(rd.x, 0.035, rd.z) / length(vec3(rd.x, 0.035, rd.z)));
+    vec3 fog = skyRadiance(normalize(vec3(rd.x, 0.035, rd.z)));
     float fogAmount = 1.0 - exp(-dist * 0.00028 * FOG_DENSITY);
     waterColor = mix(waterColor, fog, fogAmount);
 

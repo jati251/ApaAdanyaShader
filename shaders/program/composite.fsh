@@ -36,7 +36,7 @@ void main(){
     }else if(isEyeInWater==2){
         c=mix(c,vec3(2.0,0.22,0.012),1.0-exp(-dist*1.5));
     }else if(!hand){
-        vec3 fog=skyRadiance(vec3(rd.x,0.035,rd.z)/length(vec3(rd.x,0.035,rd.z)));
+        vec3 fog=skyRadiance(normalize(vec3(rd.x,0.035,rd.z)));
         float density=(0.00022+rainStrength*0.0025)*FOG_DENSITY;
         float heightAttenuation=exp(-max(cameraPosition.y+rd.y*dist*0.5-64.0,0.0)*0.008);
         float amount=1.0-exp(-dist*density*heightAttenuation);
@@ -47,15 +47,17 @@ void main(){
         #endif
         if(depth<0.999999 || isDH) c=mix(c,fog,amount);
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
-        float rayLength=min(dist,100.0), sum=0.0;
-        float jitter=hash12(gl_FragCoord.xy);
-        for(int i=0;i<8;i++){
-            vec3 p=rd*rayLength*(float(i)+jitter)/8.0;
-            sum+=shadowVisibility(p,vec3(0),1.0,false);
-        }
-        float phase=0.025+pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0)*0.28;
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
-        c+=lightColor()*(sum/8.0)*phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
+        if(outdoor>0.001){
+            float rayLength=min(dist,100.0), sum=0.0;
+            float jitter=hash12(gl_FragCoord.xy);
+            for(int i=0;i<8;i++){
+                vec3 p=rd*rayLength*(float(i)+jitter)/8.0;
+                sum+=shadowVisibility(p,vec3(0),1.0,false);
+            }
+            float phase=0.025+pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0)*0.28;
+            c+=lightColor()*(sum/8.0)*phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
+        }
         #endif
     }
     color=vec4(max(c,vec3(0)),1);
