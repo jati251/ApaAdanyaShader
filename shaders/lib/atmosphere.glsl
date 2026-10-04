@@ -31,49 +31,65 @@ float ignDither(vec2 p) {
     return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
 }
 
-// High-contrast billow octave: transforms trilinear noise into rounded cauliflower lobes
-float billowOct(vec3 p) {
-    float n = noise3(p);
-    n = clamp((n - 0.18) * 1.5625, 0.0, 1.0); // stretch [0.18, 0.82] to full [0.0, 1.0]
-    return 1.0 - abs(n * 2.0 - 1.0);
+// 2D cloud coverage noise: defines distinct, natural cloud bodies across the sky
+float cloud2D(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash12(i);
+    float b = hash12(i + vec2(1.0, 0.0));
+    float c = hash12(i + vec2(0.0, 1.0));
+    float d = hash12(i + vec2(1.0, 1.0));
+    float n1 = mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+
+    vec2 p2 = p * 2.2 + vec2(1.7, 4.3);
+    vec2 i2 = floor(p2), f2 = fract(p2);
+    f2 = f2 * f2 * (3.0 - 2.0 * f2);
+    float a2 = hash12(i2);
+    float b2 = hash12(i2 + vec2(1.0, 0.0));
+    float c2 = hash12(i2 + vec2(0.0, 1.0));
+    float d2 = hash12(i2 + vec2(1.0, 1.0));
+    float n2 = mix(mix(a2, b2, f2.x), mix(c2, d2, f2.x), f2.y);
+
+    return n1 * 0.65 + n2 * 0.35;
 }
 
-// Elevated cloud altitude (high above mountains & terrain)
-const float CLOUD_ALT_BASE = 320.0;
-const float CLOUD_ALT_THICK = 90.0;
+// Elevated cloud altitude (majestic high ceiling, ~200 blocks above player)
+const float CLOUD_ALT_BASE = 300.0;
+const float CLOUD_ALT_THICK = 100.0;
 
-// High-fidelity 3D cumulus density field with natural sky-wide distribution
+// High-fidelity 3D cumulus dome density field
 float sampleCloudDensity(vec3 p, bool detail) {
-    float h = (p.y - CLOUD_ALT_BASE) / CLOUD_ALT_THICK;
+    // Earth curvature compensation: curves clouds over horizon, eliminating horizontal pancake stretching
+    vec2 camDist = p.xz - cameraPosition.xz;
+    float curvedY = p.y - dot(camDist, camDist) * 0.000008;
+
+    float h = (curvedY - CLOUD_ALT_BASE) / CLOUD_ALT_THICK;
     if (h <= 0.0 || h >= 1.0) return 0.0;
 
-    vec3 wind = vec3(frameTimeCounter * 1.2, 0.0, frameTimeCounter * 0.5);
-    vec3 q = (p + wind) * 0.0032;
+    vec2 wind = vec2(frameTimeCounter * 1.2, frameTimeCounter * 0.5);
+    vec2 pos2d = (p.xz + wind) * 0.0018;
 
-    // Multi-octave 3D billow FBM: creates fluffy, cauliflower-like puffy cumulus
-    float b1 = billowOct(q);
-    float b2 = billowOct(q * 2.2 + vec3(1.3, 0.7, 2.1));
-    float b3 = billowOct(q * 4.6 + vec3(3.1, 2.8, 1.4));
-    float base = b1 * 0.52 + b2 * 0.32 + b3 * 0.16;
+    float shape2D = cloud2D(pos2d);
+    float coverage = CLOUD_COVERAGE * 0.75 + rainStrength * 0.25;
+    float threshold = 0.50 - coverage * 0.35;
 
-    // Coverage threshold: well-distributed across entire sky, no giant empty gaps
-    float coverage = CLOUD_COVERAGE * 0.80 + rainStrength * 0.30;
-    float threshold = 0.61 - coverage * 0.25;
+    if (shape2D < threshold - 0.05) return 0.0;
 
-    if (base < threshold - 0.06) return 0.0;
+    // Cumulus dome: cloud height scales naturally with 2D cloud body core
+    float domeHeight = smoothstep(threshold - 0.05, threshold + 0.32, shape2D);
+    if (h > domeHeight) return 0.0;
 
-    // Vertical cumulus dome profile:
-    // Flat condensation base (dew point) + convective cauliflower domes that puff upwards
+    // Vertical profile: flat condensation base at dew point, rounded dome top
     float baseFade = smoothstep(0.0, 0.12, h);
-    float topFade = smoothstep(1.0, 0.22, h * (1.15 - base * 0.35));
-    float vertProfile = baseFade * topFade;
+    float topFade = smoothstep(domeHeight, domeHeight - 0.22, h);
+    float vert = baseFade * topFade;
 
-    float density = smoothstep(threshold - 0.06, threshold + 0.18, base) * vertProfile;
+    float density = vert * smoothstep(threshold - 0.05, threshold + 0.18, shape2D);
 
-    // Fine wispy cauliflower erosion
+    // 3D volumetric erosion: sculpts fluffy cauliflower billows into the dome sides
     if (detail && density > 0.01) {
-        float b4 = billowOct(q * 9.5 + vec3(5.2, 1.1, 4.6));
-        density = clamp(density - (1.0 - b4) * 0.18 * smoothstep(0.08, 0.90, h), 0.0, 1.0);
+        float n3d = noise3((p + vec3(wind.x, 0.0, wind.y)) * 0.010);
+        density = clamp(density - (1.0 - n3d) * 0.25 * smoothstep(0.08, 0.90, h), 0.0, 1.0);
     }
 
     return density;
@@ -85,8 +101,8 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     #ifdef VOLUMETRIC_CLOUDS
     #if !defined(NETHER) && !defined(END)
     // Horizon fade prevents artificial walls near distant horizon
-    if (rd.y < 0.015) return background;
-    float horizonFade = smoothstep(0.015, 0.08, rd.y);
+    if (rd.y < 0.018) return background;
+    float horizonFade = smoothstep(0.018, 0.09, rd.y);
 
     float a = (CLOUD_ALT_BASE - cameraPosition.y) / rd.y;
     float b = (CLOUD_ALT_BASE + CLOUD_ALT_THICK - cameraPosition.y) / rd.y;
@@ -94,15 +110,15 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     float leave = max(a, b);
     if (leave <= entry) return background;
 
-    // Clamp raymarching depth: prevents distant steps from stretching and creating static grain
-    float maxRayDist = min(leave - entry, 2400.0);
-    float distFade = 1.0 - smoothstep(1800.0, 3600.0, entry);
+    // Clamp raymarching depth: avoids distant step stretching and banding
+    float maxRayDist = min(leave - entry, 1800.0);
+    float distFade = 1.0 - smoothstep(1200.0, 2400.0, entry);
     float fadeWeight = horizonFade * distFade;
     if (fadeWeight <= 0.001) return background;
 
     float stepLen = maxRayDist / float(CLOUD_STEPS);
 
-    // High quality interleaved dither (smooth, no white noise speckle)
+    // High quality interleaved dither (smooth, no stepping lines)
     float dither = ignDither(pixel);
     float t = entry + stepLen * dither;
 
@@ -143,15 +159,15 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
             // Day: cool sky blue from above + warm ground bounce from below (creates deep 3D shading)
             // Night: dark silhouette matching starry night sky (no radioactive glowing fog)
             float hRel = sat((p.y - CLOUD_ALT_BASE) / CLOUD_ALT_THICK);
-            vec3 skyAmbient = vec3(0.18, 0.28, 0.42) * (0.25 + hRel * 0.75);
-            vec3 groundBounce = vec3(0.14, 0.13, 0.10) * (0.80 - hRel * 0.50);
+            vec3 skyAmbient = vec3(0.20, 0.30, 0.45) * (0.25 + hRel * 0.75);
+            vec3 groundBounce = vec3(0.15, 0.14, 0.11) * (0.80 - hRel * 0.50);
             vec3 dayAmbient = (skyAmbient + groundBounce) * (0.45 + 0.55 * exp(-density * 2.2));
             vec3 nightAmbient = vec3(0.0004, 0.0007, 0.0016) * NIGHT_BRIGHTNESS;
             vec3 ambient = mix(nightAmbient, dayAmbient, day);
 
             // Direct light: bright sunlit highlight vs soft moonlight rim
-            vec3 dayDirect = sunCol * (directShade * phase + 0.03 * exp(-optical * 0.02));
-            vec3 nightDirect = moonColor * (directShade * (0.04 + moonMie));
+            vec3 dayDirect = sunCol * (directShade * phase + 0.04 * exp(-optical * 0.02));
+            vec3 nightDirect = moonColor * (directShade * (0.03 + moonMie));
             vec3 directLight = mix(nightDirect, dayDirect, day);
 
             vec3 light = ambient + directLight;
@@ -165,7 +181,7 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     }
 
     // Atmospheric perspective haze
-    float aerial = 1.0 - exp(-entry * 0.0007);
+    float aerial = 1.0 - exp(-entry * 0.0010);
     cloudSum = mix(cloudSum, background * (1.0 - trans), aerial);
 
     vec3 result = background * trans + cloudSum;
