@@ -21,20 +21,29 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     #if defined(NETHER) || defined(END)
     return 1.0;
     #endif
+    if(dot(relativeWorld.xz, relativeWorld.xz) > shadowDistance * shadowDistance) return 1.0;
     vec3 biased=relativeWorld+normalWorld*(0.025+0.06*(1.0-ndl));
     vec4 clip=shadowProjection*shadowModelView*vec4(biased,1);
     vec3 sc=distortShadow(clip.xyz/clip.w)*0.5+0.5;
     if(any(lessThan(sc,vec3(0.002))) || any(greaterThan(sc,vec3(0.998)))) return 1.0;
     float bias=0.00008;
     if(!filtered) return step(sc.z-bias,texture(shadowtex0,sc.xy).r);
-    float total=0.0; float rotation=hash12(floor(relativeWorld.xz*24.0))*6.283;
-    for(int i=0;i<SHADOW_SAMPLES;i++) {
+    float filterRadius=1.65/float(shadowMapResolution);
+    float s0=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(-filterRadius,-filterRadius)).r);
+    float s1=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(filterRadius,-filterRadius)).r);
+    float s2=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(-filterRadius,filterRadius)).r);
+    float s3=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(filterRadius,filterRadius)).r);
+    float quickSum=s0+s1+s2+s3;
+    if(quickSum==4.0) return 1.0;
+    float fade=smoothstep(shadowDistance*0.8,shadowDistance,length(relativeWorld.xz));
+    if(quickSum==0.0) return mix(0.0,1.0,fade);
+    float total=quickSum; float rotation=hash12(floor(relativeWorld.xz*24.0))*6.283;
+    for(int i=4;i<SHADOW_SAMPLES;i++) {
         float r=sqrt((float(i)+0.5)/float(SHADOW_SAMPLES));
         float angle=float(i)*2.39996+rotation;
-        vec2 offset=vec2(cos(angle),sin(angle))*r*1.65/float(shadowMapResolution);
+        vec2 offset=vec2(cos(angle),sin(angle))*r*filterRadius;
         total+=step(sc.z-bias,texture(shadowtex0,sc.xy+offset).r);
     }
-    float fade=smoothstep(shadowDistance*0.8,shadowDistance,length(relativeWorld.xz));
     return mix(total/float(SHADOW_SAMPLES),1.0,fade);
 }
 vec3 fresnelSchlick(float cosine,vec3 f0) { return f0+(1.0-f0)*pow(1.0-sat(cosine),5.0); }
@@ -52,7 +61,10 @@ vec3 shadeSurface(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emiss
     vec3 nw=worldDirection(N), rel=(gbufferModelViewInverse*vec4(vp,1)).xyz;
     vec3 L=normalize(shadowLightPosition), V=normalize(-vp);
     float nl=max(dot(N,L),0.0);
-    float vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
+    float vis=0.0;
+    if((nl>0.0001 || foliage>0.5) && lm.y>0.05) {
+        vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
+    }
     vec3 ambient=mix(vec3(0.018,0.028,0.055)*NIGHT_BRIGHTNESS,vec3(0.16,0.21,0.29),daylight());
     ambient*=pow(lm.y,2.0)*(0.55+0.45*max(nw.y,0.0));
     #ifdef NETHER
@@ -61,7 +73,8 @@ vec3 shadeSurface(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emiss
     ambient=vec3(0.06,0.035,0.09);
     #endif
     vec3 torch=vec3(1.8,0.72,0.23)*pow(lm.x,3.0);
-    vec3 direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
+    vec3 direct=vec3(0.0);
+    if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
     #if defined(NETHER) || defined(END)
     direct=vec3(0);
     #endif

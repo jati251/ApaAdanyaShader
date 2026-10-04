@@ -182,8 +182,10 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
             float opacity = 1.0 - exp(-density * stepLen * 0.07);
             cloudSum += trans * light * opacity;
             trans *= (1.0 - opacity);
+            t += stepLen;
+        } else {
+            t += stepLen * 1.6;
         }
-        t += stepLen;
         if (trans < 0.015) break;
     }
 

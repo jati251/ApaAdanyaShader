@@ -49,14 +49,18 @@ void main(){
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
         if(outdoor>0.001){
-            float rayLength=min(dist,100.0), sum=0.0;
-            float jitter=hash12(gl_FragCoord.xy);
-            for(int i=0;i<8;i++){
-                vec3 p=rd*rayLength*(float(i)+jitter)/8.0;
-                sum+=shadowVisibility(p,vec3(0),1.0,false);
-            }
+            float rayLength=min(dist,100.0);
             float phase=0.025+pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0)*0.28;
-            c+=lightColor()*(sum/8.0)*phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
+            float lightFactor=phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
+            if(lightFactor>0.0005){
+                float sum=0.0;
+                float jitter=hash12(gl_FragCoord.xy);
+                for(int i=0;i<8;i++){
+                    vec3 p=rd*rayLength*(float(i)+jitter)/8.0;
+                    sum+=shadowVisibility(p,vec3(0),1.0,false);
+                }
+                c+=lightColor()*(sum/8.0)*lightFactor;
+            }
         }
         #endif
     }
