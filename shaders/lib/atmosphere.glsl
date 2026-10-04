@@ -57,9 +57,9 @@ float cloudFractal(vec2 p) {
     return n / 1.875;
 }
 
-// Natural cumulus altitude
-const float CLOUD_ALT_BASE = 250.0;
-const float CLOUD_ALT_THICK = 100.0;
+// Natural elevated cumulus altitude (high above mountains & Distant Horizons terrain)
+const float CLOUD_ALT_BASE = 360.0;
+const float CLOUD_ALT_THICK = 110.0;
 
 // Organic, realistic 3D cumulus density field
 float sampleCloudDensity(vec3 p, bool detail) {
@@ -118,8 +118,8 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     if (leave <= entry) return background;
 
     // Clamp raymarching depth: avoids distant step stretching
-    float maxRayDist = min(leave - entry, 2000.0);
-    float distFade = 1.0 - smoothstep(1400.0, 2600.0, entry);
+    float maxRayDist = min(leave - entry, 2400.0);
+    float distFade = 1.0 - smoothstep(2200.0, 4200.0, entry);
     float fadeWeight = horizonFade * distFade;
     if (fadeWeight <= 0.001) return background;
 
