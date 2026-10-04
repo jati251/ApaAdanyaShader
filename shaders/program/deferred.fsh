@@ -32,7 +32,14 @@ void main(){
         rd=worldDirection(normalize(vp));
     }
     #endif
-    if(depth>=0.999999 && !isDH) scene=environmentRadiance(rd);
+    if(depth>=0.999999 && !isDH) {
+        vec3 sky = skyRadiance(rd);
+        #if defined(VOLUMETRIC_CLOUDS) && !defined(NETHER) && !defined(END)
+        scene = renderClouds(rd, sky, gl_FragCoord.xy);
+        #else
+        scene = sky;
+        #endif
+    }
     else if(!isDH) {
         vec4 mat=texture(colortex2,texcoord);
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
