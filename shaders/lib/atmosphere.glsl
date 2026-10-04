@@ -1,6 +1,17 @@
 #ifndef AA_ATMOSPHERE
 #define AA_ATMOSPHERE
 
+// Fast 2D noise
+float noise2D(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash12(i);
+    float b = hash12(i + vec2(1.0, 0.0));
+    float c = hash12(i + vec2(0.0, 1.0));
+    float d = hash12(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 vec3 skyRadiance(vec3 rd) {
     #ifdef NETHER
     return pow(fogColor, vec3(2.2)) * 0.6 + vec3(0.018, 0.003, 0.001);
@@ -21,9 +32,83 @@ vec3 skyRadiance(vec3 rd) {
     sky = mix(sky, vec3(dot(sky, vec3(0.2126, 0.7152, 0.0722))) * 0.75, rainStrength * 0.8);
     float sunDot = dot(rd, sd), moonDot = dot(rd, -sd);
     #ifdef SUN_MOON_GLOW
-    sky += vec3(12.0, 9.5, 6.5) * smoothstep(0.99994, 0.999975, sunDot) * day * (1.0 - rainStrength);
-    sky += vec3(0.22, 0.30, 0.48) * smoothstep(0.99982, 0.9999, moonDot) * (1.0 - day);
-    sky += lightColor() * pow(sat(sunDot), 512.0) * 0.055;
+    // ==================== [ REALISTIC PROCEDURAL SUN ] ====================
+    if (day > 0.001 && sunDot > 0.60) {
+        float sunElev = smoothstep(-0.06, 0.35, sd.y);
+        float sunsetFactor = 1.0 - sunElev;
+
+        // Dynamic sun size: subtle atmospheric expansion near horizon
+        float sunCos = mix(0.99965, 0.99935, sunsetFactor);
+        float disc = smoothstep(sunCos - 0.00030, sunCos, sunDot);
+
+        if (disc > 0.0001) {
+            // Solar limb darkening: intense blazing core with warm golden limb
+            float limb = sat((sunDot - sunCos) / max(1.0 - sunCos, 0.00001));
+            float coreBright = pow(limb, 0.35);
+
+            vec3 noonCore = vec3(95.0, 92.0, 84.0);
+            vec3 noonRim  = vec3(42.0, 34.0, 20.0);
+            vec3 sunsetCore = vec3(58.0, 22.0, 4.0);
+            vec3 sunsetRim  = vec3(28.0, 7.0, 0.8);
+
+            vec3 coreCol = mix(noonCore, sunsetCore, sunsetFactor);
+            vec3 rimCol  = mix(noonRim, sunsetRim, sunsetFactor);
+            vec3 sunCol  = mix(rimCol, coreCol, coreBright);
+
+            sky += sunCol * disc * day * (1.0 - rainStrength);
+        }
+
+        // --- Multi-layer Atmospheric Solar Corona & Mie Glow ---
+        // 1. Radiant inner corona hugging the solar disc
+        float innerHalo = pow(sat(sunDot), 140.0);
+        vec3 innerCol = mix(vec3(6.5, 5.2, 3.4), vec3(8.5, 2.8, 0.5), sunsetFactor);
+        sky += innerCol * innerHalo * 1.35 * day * (1.0 - rainStrength);
+
+        // 2. Wide atmospheric Mie scattering halo
+        float midHalo = pow(sat(sunDot), 28.0);
+        vec3 midCol = mix(vec3(0.85, 0.72, 0.50), vec3(2.2, 0.70, 0.15), sunsetFactor);
+        sky += midCol * midHalo * 0.90 * day * (1.0 - rainStrength * 0.7);
+
+        // 3. Broad sky forward-scatter (golden warmth across the solar quadrant)
+        float wideHalo = pow(sat(sunDot * 0.5 + 0.5), 8.0);
+        vec3 wideCol = mix(vec3(0.20, 0.18, 0.14), vec3(0.65, 0.25, 0.05), sunsetFactor);
+        sky += wideCol * wideHalo * 0.50 * day * (1.0 - rainStrength * 0.8);
+
+        // 4. Subtle optical diffraction flare / starburst spikes
+        vec3 sunUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 sunRight = normalize(cross(sd, sunUp));
+        vec3 sunRealUp = cross(sunRight, sd);
+        vec2 sunUV = vec2(dot(rd, sunRight), dot(rd, sunRealUp));
+        float angle = atan(sunUV.y, sunUV.x);
+        float rays1 = sin(angle * 6.0) * 0.5 + 0.5;
+        float rays2 = sin(angle * 10.0 + 1.25) * 0.5 + 0.5;
+        float spikePattern = pow(rays1 * 0.60 + rays2 * 0.40, 2.0);
+        float glare = pow(sat(sunDot), 72.0) * spikePattern;
+        sky += mix(vec3(3.2, 2.6, 1.6), vec3(4.5, 1.4, 0.25), sunsetFactor) * glare * 0.45 * day * (1.0 - rainStrength);
+    }
+
+    // ==================== [ REALISTIC PROCEDURAL MOON ] ====================
+    if (day < 0.95 && moonDot > 0.70) {
+        float moonCos = 0.99976;
+        float disc = smoothstep(moonCos - 0.00025, moonCos, moonDot);
+
+        if (disc > 0.0001) {
+            // Lunar maria (procedural dark basaltic plains on the Moon surface)
+            vec3 moonUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+            vec3 moonRight = normalize(cross(-sd, moonUp));
+            vec3 moonRealUp = cross(moonRight, -sd);
+            vec2 moonUV = vec2(dot(rd, moonRight), dot(rd, moonRealUp)) * 140.0;
+            float mare = clamp(noise2D(moonUV) * 0.35 + 0.68, 0.42, 1.0);
+
+            vec3 moonDiscColor = vec3(3.8, 4.3, 5.2) * mare;
+            sky += moonDiscColor * disc * (1.0 - day) * (1.0 - rainStrength);
+        }
+
+        // Soft nocturnal atmospheric lunar halo
+        float moonHalo = pow(sat(moonDot), 64.0) * 0.45 + pow(sat(moonDot), 14.0) * 0.12;
+        vec3 moonAura = vec3(0.05, 0.09, 0.18) * NIGHT_BRIGHTNESS * moonHalo;
+        sky += moonAura * (1.0 - day) * (1.0 - rainStrength * 0.8);
+    }
     #endif
     #ifdef STARS
     vec3 starCell = floor(rd * 650.0);
@@ -31,18 +116,6 @@ vec3 skyRadiance(vec3 rd) {
     #endif
     return sky;
     #endif
-}
-
-
-// Fast 2D noise
-float noise2D(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    float a = hash12(i);
-    float b = hash12(i + vec2(1.0, 0.0));
-    float c = hash12(i + vec2(0.0, 1.0));
-    float d = hash12(i + vec2(1.0, 1.0));
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
 // Rotated fractal noise: breaks grid alignment, producing organic fluid cloud shapes
