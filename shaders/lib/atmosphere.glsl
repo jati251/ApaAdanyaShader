@@ -33,11 +33,12 @@ float sampleCloudDensity(vec3 p,bool detail) {
     float coverage=CLOUD_COVERAGE+rainStrength*0.14;
     float base=noise3(q)*0.62+noise3(q*2.03+vec3(11.2))*0.26+noise3(q*4.13)*0.12;
     float threshold=0.70-coverage*0.46+(h*h)*0.25-weather*0.09;
-    float shape=sat((base-threshold)*5.0);
-    // High-frequency erosion makes rounded cloud edges and visible internal detail.
-    float erosion=detail?(noise3(q*7.1)*0.65+noise3(q*14.3)*0.35):0.5;
-    shape=max(shape-(1.0-erosion)*0.26,0.0);
-    return shape*smoothstep(0.0,0.10,h)*(1.0-smoothstep(0.75,1.0,h));
+    // Smooth hermite density profile eliminates stair-stepping and hard boundaries
+    float shape=smoothstep(threshold-0.12,threshold+0.16,base);
+    // Soft organic billow erosion without high-frequency noisy sparkle
+    float erosion=detail?(noise3(q*3.2)*0.70+noise3(q*6.4)*0.30):0.5;
+    shape=clamp(shape-(1.0-erosion)*0.22,0.0,1.0);
+    return shape*smoothstep(0.0,0.12,h)*(1.0-smoothstep(0.70,1.0,h));
 }
 float cloudDensity(vec3 p){return sampleCloudDensity(p,true);}
 vec3 renderClouds(vec3 rd,vec3 background,vec2 pixel) {
@@ -48,27 +49,27 @@ vec3 renderClouds(vec3 rd,vec3 background,vec2 pixel) {
     float entry=max(min(a,b),0.0), leave=min(max(a,b),7000.0);
     if(leave<=entry) return background;
     float stepLen=(leave-entry)/float(CLOUD_STEPS);
-    float t=entry+hash12(pixel)*stepLen;
+    // Interleaved spatial dither for uniform smooth ray progression
+    float dither=fract(sin(dot(floor(pixel),vec2(12.9898,78.233)))*43758.5453);
+    float t=entry+dither*stepLen;
     float trans=1.0; vec3 sum=vec3(0);
     vec3 ld=worldDirection(shadowLightPosition);
-    float silver=pow(sat(dot(rd,ld)),24.0);
+    float silver=pow(sat(dot(rd,ld)),16.0);
     for(int i=0;i<CLOUD_STEPS;i++) {
         vec3 p=cameraPosition+rd*t;
         float density=cloudDensity(p);
         if(density>0.001) {
-            float optical=0.0;
-            for(int j=0;j<4;j++) {
-                float distanceToSample=9.0+float(j*j)*12.0;
-                optical+=sampleCloudDensity(p+ld*distanceToSample,false)*(12.0+float(j)*8.0);
-            }
+            // Highly optimized 2-sample shadow raymarch (2x faster than 4-sample loop)
+            float optical=sampleCloudDensity(p+ld*16.0,false)*32.0
+                         +sampleCloudDensity(p+ld*54.0,false)*58.0;
             float shade=exp(-optical*0.11);
             float heightLight=sat((p.y-190.0)/115.0);
             vec3 ambient=mix(vec3(0.006,0.01,0.024),vec3(0.055,0.08,0.13),daylight())*(0.60+heightLight);
-            vec3 lighting=ambient+lightColor()*(shade*(0.50+silver*0.6)+0.045*exp(-optical*0.018));
-            float opacity=1.0-exp(-density*stepLen*0.070);
+            vec3 lighting=ambient+lightColor()*(shade*(0.50+silver*0.65)+0.045*exp(-optical*0.018));
+            float opacity=1.0-exp(-density*stepLen*0.052);
             sum+=trans*lighting*opacity; trans*=1.0-opacity;
         }
-        t+=stepLen; if(trans<0.008) break;
+        t+=stepLen; if(trans<0.01) break;
     }
     float aerial=1.0-exp(-entry*0.00008);
     sum=mix(sum,background*(1.0-trans),aerial);
