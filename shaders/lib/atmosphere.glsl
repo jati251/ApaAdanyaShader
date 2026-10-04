@@ -33,23 +33,23 @@ vec3 skyRadiance(vec3 rd) {
     float sunDot = dot(rd, sd), moonDot = dot(rd, -sd);
     #ifdef SUN_MOON_GLOW
     // ==================== [ REALISTIC PROCEDURAL SUN ] ====================
-    if (day > 0.001 && sunDot > 0.60) {
+    if (day > 0.001) {
         float sunElev = smoothstep(-0.06, 0.35, sd.y);
         float sunsetFactor = 1.0 - sunElev;
 
-        // Dynamic sun size: subtle atmospheric expansion near horizon
-        float sunCos = mix(0.99965, 0.99935, sunsetFactor);
-        float disc = smoothstep(sunCos - 0.00030, sunCos, sunDot);
+        // Dynamic sun size: subtle atmospheric expansion near horizon (~1.3 - 1.8 deg)
+        float sunCos = mix(0.99972, 0.99945, sunsetFactor);
+        float disc = smoothstep(sunCos - 0.00025, sunCos, sunDot);
 
-        if (disc > 0.0001) {
+        if (disc > 0.0) {
             // Solar limb darkening: intense blazing core with warm golden limb
-            float limb = sat((sunDot - sunCos) / max(1.0 - sunCos, 0.00001));
-            float coreBright = pow(limb, 0.35);
+            float limb = sat((sunDot - (sunCos - 0.00025)) / max(1.0 - (sunCos - 0.00025), 0.00001));
+            float coreBright = pow(limb, 0.50);
 
-            vec3 noonCore = vec3(95.0, 92.0, 84.0);
-            vec3 noonRim  = vec3(42.0, 34.0, 20.0);
-            vec3 sunsetCore = vec3(58.0, 22.0, 4.0);
-            vec3 sunsetRim  = vec3(28.0, 7.0, 0.8);
+            vec3 noonCore = vec3(110.0, 105.0, 95.0);
+            vec3 noonRim  = vec3(42.0, 32.0, 16.0);
+            vec3 sunsetCore = vec3(65.0, 22.0, 4.0);
+            vec3 sunsetRim  = vec3(28.0, 6.5, 0.8);
 
             vec3 coreCol = mix(noonCore, sunsetCore, sunsetFactor);
             vec3 rimCol  = mix(noonRim, sunsetRim, sunsetFactor);
@@ -58,41 +58,39 @@ vec3 skyRadiance(vec3 rd) {
             sky += sunCol * disc * day * (1.0 - rainStrength);
         }
 
-        // --- Multi-layer Atmospheric Solar Corona & Mie Glow ---
-        // 1. Radiant inner corona hugging the solar disc
-        float innerHalo = pow(sat(sunDot), 140.0);
-        vec3 innerCol = mix(vec3(6.5, 5.2, 3.4), vec3(8.5, 2.8, 0.5), sunsetFactor);
-        sky += innerCol * innerHalo * 1.35 * day * (1.0 - rainStrength);
+        // --- Multi-layer Atmospheric Solar Corona & Mie Glow (Seamless & Continuous) ---
+        // 1. Radiant inner corona hugging the solar disc (smoothly fades within ~5 degrees)
+        float innerHalo = pow(sat(sunDot), 180.0);
+        vec3 innerCol = mix(vec3(7.0, 5.5, 3.6), vec3(8.5, 2.8, 0.5), sunsetFactor);
+        sky += innerCol * innerHalo * 1.40 * day * (1.0 - rainStrength);
 
-        // 2. Wide atmospheric Mie scattering halo
-        float midHalo = pow(sat(sunDot), 28.0);
-        vec3 midCol = mix(vec3(0.85, 0.72, 0.50), vec3(2.2, 0.70, 0.15), sunsetFactor);
-        sky += midCol * midHalo * 0.90 * day * (1.0 - rainStrength * 0.7);
+        // 2. Wide atmospheric Mie scattering halo (smoothly decays across ~25 degrees without hard boundaries)
+        float midHalo = pow(sat(sunDot), 36.0);
+        vec3 midCol = mix(vec3(0.90, 0.75, 0.50), vec3(2.0, 0.65, 0.14), sunsetFactor);
+        sky += midCol * midHalo * 0.85 * day * (1.0 - rainStrength * 0.75);
 
-        // 3. Broad sky forward-scatter (golden warmth across the solar quadrant)
-        float wideHalo = pow(sat(sunDot * 0.5 + 0.5), 8.0);
-        vec3 wideCol = mix(vec3(0.20, 0.18, 0.14), vec3(0.65, 0.25, 0.05), sunsetFactor);
-        sky += wideCol * wideHalo * 0.50 * day * (1.0 - rainStrength * 0.8);
-
-        // 4. Subtle optical diffraction flare / starburst spikes
-        vec3 sunUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-        vec3 sunRight = normalize(cross(sd, sunUp));
-        vec3 sunRealUp = cross(sunRight, sd);
-        vec2 sunUV = vec2(dot(rd, sunRight), dot(rd, sunRealUp));
-        float angle = atan(sunUV.y, sunUV.x);
-        float rays1 = sin(angle * 6.0) * 0.5 + 0.5;
-        float rays2 = sin(angle * 10.0 + 1.25) * 0.5 + 0.5;
-        float spikePattern = pow(rays1 * 0.60 + rays2 * 0.40, 2.0);
-        float glare = pow(sat(sunDot), 72.0) * spikePattern;
-        sky += mix(vec3(3.2, 2.6, 1.6), vec3(4.5, 1.4, 0.25), sunsetFactor) * glare * 0.45 * day * (1.0 - rainStrength);
+        // 3. Subtle optical diffraction flare / starburst spikes (smooth hermite fade, exactly 0 at 0.94)
+        if (sunDot > 0.94) {
+            vec3 sunUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+            vec3 sunRight = normalize(cross(sd, sunUp));
+            vec3 sunRealUp = cross(sunRight, sd);
+            vec2 sunUV = vec2(dot(rd, sunRight), dot(rd, sunRealUp));
+            float angle = atan(sunUV.y, sunUV.x);
+            float rays1 = sin(angle * 6.0) * 0.5 + 0.5;
+            float rays2 = sin(angle * 10.0 + 1.25) * 0.5 + 0.5;
+            float spikePattern = pow(rays1 * 0.60 + rays2 * 0.40, 2.0);
+            float flareFade = smoothstep(0.94, 0.985, sunDot);
+            float glare = pow(sat(sunDot), 72.0) * spikePattern * flareFade;
+            sky += mix(vec3(3.2, 2.6, 1.6), vec3(4.5, 1.4, 0.25), sunsetFactor) * glare * 0.40 * day * (1.0 - rainStrength);
+        }
     }
 
     // ==================== [ REALISTIC PROCEDURAL MOON ] ====================
-    if (day < 0.95 && moonDot > 0.70) {
+    if (day < 0.95) {
         float moonCos = 0.99976;
         float disc = smoothstep(moonCos - 0.00025, moonCos, moonDot);
 
-        if (disc > 0.0001) {
+        if (disc > 0.0) {
             // Lunar maria (procedural dark basaltic plains on the Moon surface)
             vec3 moonUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
             vec3 moonRight = normalize(cross(-sd, moonUp));
@@ -104,8 +102,8 @@ vec3 skyRadiance(vec3 rd) {
             sky += moonDiscColor * disc * (1.0 - day) * (1.0 - rainStrength);
         }
 
-        // Soft nocturnal atmospheric lunar halo
-        float moonHalo = pow(sat(moonDot), 64.0) * 0.45 + pow(sat(moonDot), 14.0) * 0.12;
+        // Soft nocturnal atmospheric lunar halo (smooth continuous decay)
+        float moonHalo = pow(sat(moonDot), 48.0) * 0.35;
         vec3 moonAura = vec3(0.05, 0.09, 0.18) * NIGHT_BRIGHTNESS * moonHalo;
         sky += moonAura * (1.0 - day) * (1.0 - rainStrength * 0.8);
     }
