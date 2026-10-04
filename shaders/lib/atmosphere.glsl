@@ -200,4 +200,25 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     return background;
 }
 
+vec3 renderFastClouds(vec3 rd, vec3 background) {
+    #if !defined(NETHER) && !defined(END)
+    if (rd.y < 0.03) return background;
+    float planeDist = (360.0 - cameraPosition.y) / max(rd.y, 0.03);
+    if (planeDist < 0.0) return background;
+    vec2 cloudUV = (cameraPosition.xz + rd.xz * planeDist) * 0.00028 + vec2(frameTimeCounter * 0.0012, 0.0);
+    float n = noise3(vec3(cloudUV * 3.5, 0.0)) * 0.65 + noise3(vec3(cloudUV * 7.0, 1.0)) * 0.35;
+    float density = smoothstep(0.48, 0.76, n) * CLOUD_COVERAGE * 1.6;
+    if (density > 0.01) {
+        float day = daylight();
+        vec3 sunCol = lightColor();
+        vec3 cloudCol = mix(vec3(0.012, 0.018, 0.035) * NIGHT_BRIGHTNESS, vec3(0.92, 0.94, 0.98), day);
+        float sunAngle = max(dot(rd, worldDirection(shadowLightPosition)), 0.0);
+        cloudCol += sunCol * pow(sunAngle, 8.0) * 0.25 * day;
+        float fade = smoothstep(0.03, 0.12, rd.y);
+        return mix(background, cloudCol, min(density * fade, 0.85));
+    }
+    #endif
+    return background;
+}
+
 #endif

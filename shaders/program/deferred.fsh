@@ -36,6 +36,8 @@ void main(){
         vec3 sky = skyRadiance(rd);
         #if defined(VOLUMETRIC_CLOUDS) && !defined(NETHER) && !defined(END)
         scene = renderClouds(rd, sky, gl_FragCoord.xy);
+        #elif !defined(NETHER) && !defined(END)
+        scene = renderFastClouds(rd, sky);
         #else
         scene = sky;
         #endif
