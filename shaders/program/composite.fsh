@@ -4,6 +4,10 @@
 #endif
 #include "/lib/atmosphere.glsl"
 #include "/lib/lighting.glsl"
+#ifdef DISTANT_HORIZONS
+uniform sampler2D dhDepthTex0;
+uniform mat4 dhProjectionInverse;
+#endif
 uniform sampler2D colortex0,colortex2,depthtex0;
 in vec2 texcoord;
 /* RENDERTARGETS: 0 */
@@ -13,6 +17,18 @@ void main(){
     float depth=texture(depthtex0,texcoord).r;
     vec3 vp=viewPosition(texcoord,depth), rd=worldDirection(normalize(vp));
     float dist=depth>=0.999999?far:min(length(vp),far);
+    bool isDH=false;
+    #ifdef DISTANT_HORIZONS
+    float dhDepth=texture(dhDepthTex0,texcoord).r;
+    if(depth>=0.999999 && dhDepth<1.0){
+        isDH=true;
+        vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
+        vec4 vpDH=dhProjectionInverse*clipDH;
+        vp=vpDH.xyz/vpDH.w;
+        rd=worldDirection(normalize(vp));
+        dist=length(vp);
+    }
+    #endif
     bool hand=texture(colortex2,texcoord).a>0.5 && depth<0.56;
     if(isEyeInWater==1){
         vec3 trans=exp(-vec3(0.24,0.08,0.045)*dist/WATER_CLARITY);
@@ -29,7 +45,7 @@ void main(){
         #elif defined(END)
         amount=1.0-exp(-dist*0.002*FOG_DENSITY);
         #endif
-        if(depth<0.999999) c=mix(c,fog,amount);
+        if(depth<0.999999 || isDH) c=mix(c,fog,amount);
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
         float rayLength=min(dist,100.0), sum=0.0;
         float jitter=hash12(gl_FragCoord.xy);

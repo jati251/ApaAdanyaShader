@@ -1,6 +1,10 @@
 #include "/lib/common.glsl"
 #include "/lib/environment.glsl"
 #include "/lib/trace.glsl"
+#ifdef DISTANT_HORIZONS
+uniform sampler2D dhDepthTex0;
+uniform mat4 dhProjectionInverse;
+#endif
 uniform sampler2D colortex0,colortex1,colortex2,depthtex0;
 in vec2 texcoord;
 /* RENDERTARGETS: 0,6 */
@@ -17,8 +21,19 @@ void main(){
     vec3 vp=viewPosition(texcoord,depth);
     vec3 rd=worldDirection(normalize(vp));
     vec3 scene=texture(colortex0,texcoord).rgb;
-    if(depth>=0.999999) scene=environmentRadiance(rd);
-    else {
+    bool isDH=false;
+    #ifdef DISTANT_HORIZONS
+    float dhDepth=texture(dhDepthTex0,texcoord).r;
+    if(depth>=0.999999 && dhDepth<1.0){
+        isDH=true;
+        vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
+        vec4 vpDH=dhProjectionInverse*clipDH;
+        vp=vpDH.xyz/vpDH.w;
+        rd=worldDirection(normalize(vp));
+    }
+    #endif
+    if(depth>=0.999999 && !isDH) scene=environmentRadiance(rd);
+    else if(!isDH) {
         vec4 mat=texture(colortex2,texcoord);
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
         if(mat.a<0.5) {

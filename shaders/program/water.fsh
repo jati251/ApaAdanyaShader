@@ -2,6 +2,10 @@
 #include "/lib/lighting.glsl"
 #include "/lib/environment.glsl"
 #include "/lib/trace.glsl"
+#ifdef DISTANT_HORIZONS
+uniform sampler2D dhDepthTex0;
+uniform mat4 dhProjectionInverse;
+#endif
 uniform sampler2D gtexture,colortex6,depthtex1;
 uniform float alphaTestRef;
 in vec2 texcoord,lmcoord;
@@ -42,6 +46,16 @@ void main(){
     vec3 N=waterNormal(),V=normalize(-viewPos),R=reflect(-V,N);
     float opaqueDepth=texture(depthtex1,screenUV).r;
     vec3 behind=viewPosition(screenUV,opaqueDepth);
+    #ifdef DISTANT_HORIZONS
+    if(opaqueDepth>=0.999999){
+        float dhD=texture(dhDepthTex0,screenUV).r;
+        if(dhD<1.0){
+            vec4 clipDH=vec4(screenUV*2.0-1.0,dhD*2.0-1.0,1.0);
+            vec4 vpDH=dhProjectionInverse*clipDH;
+            behind=vpDH.xyz/vpDH.w;
+        }
+    }
+    #endif
     float thickness=min(length(behind-viewPos),80.0);
     vec2 refractUV=clamp(screenUV+N.xy*min(thickness,2.5)*0.003,vec2(0.001),vec2(0.999));
     float refractDepth=texture(depthtex1,refractUV).r;
