@@ -45,8 +45,9 @@ void main(){
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
         if(mat.a<0.5) {
             float distToCam=length(vp);
+            float rotation=hash12(gl_FragCoord.xy)*6.283;
             if(distToCam<48.0) {
-                float occ=0.0; float rotation=hash12(gl_FragCoord.xy)*6.283;
+                float occ=0.0;
                 vec2 projScale=vec2(gbufferProjection[0][0],gbufferProjection[1][1])/max(-vp.z,1.0)*0.5;
                 for(int i=0;i<8;i++) {
                     float angle=float(i)*2.39996+rotation;
