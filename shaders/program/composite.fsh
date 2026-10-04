@@ -36,7 +36,6 @@ void main(){
     }else if(isEyeInWater==2){
         c=mix(c,vec3(2.0,0.22,0.012),1.0-exp(-dist*1.5));
     }else if(!hand){
-        vec3 fog=skyRadiance(normalize(vec3(rd.x,0.035,rd.z)));
         float density=(0.00022+rainStrength*0.0025)*FOG_DENSITY;
         float heightAttenuation=exp(-max(cameraPosition.y+rd.y*dist*0.5-64.0,0.0)*0.008);
         float amount=1.0-exp(-dist*density*heightAttenuation);
@@ -45,7 +44,10 @@ void main(){
         #elif defined(END)
         amount=1.0-exp(-dist*0.002*FOG_DENSITY);
         #endif
-        if(depth<0.999999 || isDH) c=mix(c,fog,amount);
+        if((depth<0.999999 || isDH) && amount>0.001){
+            vec3 fog=skyRadiance(normalize(vec3(rd.x,0.035,rd.z)));
+            c=mix(c,fog,amount);
+        }
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
         if(outdoor>0.001){

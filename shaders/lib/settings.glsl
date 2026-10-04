@@ -1,13 +1,17 @@
 #ifndef AA_SETTINGS
 #define AA_SETTINGS
+#define SHADOWS // Real-Time Dynamic Shadows
+#define SSAO // Screen-Space Ambient Occlusion
 #define SSR // Screen-Space Ray-Traced Reflections
 #define SSGI // Screen-Space Indirect Light
 #define CLOUD_SHADOWS // Moving Cloud Shadows
 #define VOLUMETRIC_CLOUDS // Volumetric Clouds
+#define FAST_CLOUDS // Lightweight 2D Clouds (Fallback)
 #define VOLUMETRIC_LIGHT // Volumetric Light Shafts
 #define WAVING_FOLIAGE // Wind in Plants & Leaves
 #define BLOOM // Bloom Glow Effect
 #define FXAA // Edge Anti-Aliasing
+#define SHADOW_ALPHA_TEST // Cutout Alpha Testing for Shadows
 //#define RESOURCE_NORMALS // Resource Pack Normal Maps
 #define SSR_STEPS 24 // [12 18 24 32 48 64]
 #define GI_SAMPLES 3 // [2 3 4 6 8]

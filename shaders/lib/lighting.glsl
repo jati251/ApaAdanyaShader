@@ -18,16 +18,16 @@ float cloudShadow(vec3 world){
     return 1.0;
 }
 float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool filtered) {
-    #if defined(NETHER) || defined(END)
+    #if !defined(SHADOWS) || defined(NETHER) || defined(END)
     return 1.0;
     #endif
-    if(dot(relativeWorld.xz, relativeWorld.xz) > shadowDistance * shadowDistance) return 1.0;
+    if(shadowDistance <= 0.0 || dot(relativeWorld.xz, relativeWorld.xz) > shadowDistance * shadowDistance) return 1.0;
     vec3 biased=relativeWorld+normalWorld*(0.025+0.06*(1.0-ndl));
     vec4 clip=shadowProjection*shadowModelView*vec4(biased,1);
     vec3 sc=distortShadow(clip.xyz/clip.w)*0.5+0.5;
     if(any(lessThan(sc,vec3(0.002))) || any(greaterThan(sc,vec3(0.998)))) return 1.0;
     float bias=0.00008;
-    if(!filtered) return step(sc.z-bias,texture(shadowtex0,sc.xy).r);
+    if(!filtered || SHADOW_SAMPLES <= 2) return step(sc.z-bias,texture(shadowtex0,sc.xy).r);
     float filterRadius=1.65/float(shadowMapResolution);
     float s0=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(-filterRadius,-filterRadius)).r);
     float s1=step(sc.z-bias,texture(shadowtex0,sc.xy+vec2(filterRadius,-filterRadius)).r);

@@ -38,9 +38,11 @@ void main() {
     if(materialId>1004.5 && materialId<1005.5) roughness=0.18;
     vec3 nw=worldDirection(N);
     float wet=wetness*smoothstep(0.90,0.98,lmcoord.y)*max(nw.y,0.0);
-    float puddle=smoothstep(0.40,0.65,noise3(vec3(worldPos.xz*0.23,0)))*wet;
-    roughness=mix(roughness,0.09,puddle*0.9);
-    albedo*=1.0-wet*0.25;
+    if(wet>0.001){
+        float puddle=smoothstep(0.40,0.65,noise3(vec3(worldPos.xz*0.23,0)))*wet;
+        roughness=mix(roughness,0.09,puddle*0.9);
+        albedo*=1.0-wet*0.25;
+    }
     color=vec4(shadeSurface(albedo,N,viewPos,lmcoord,roughness,emission,foliage,vec3(0.04)),tex.a);
     normalData=vec4(N*0.5+0.5,1.0);
     float hand=0.0;

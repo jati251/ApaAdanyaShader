@@ -18,8 +18,10 @@ void main() {
     materialId=0.0;
     #if defined(TERRAIN) || defined(WATER)
     materialId=mc_Entity.x;
+    #ifdef WAVING_FOLIAGE
     vec3 offset=waveOffset(worldPos,materialId,step(texcoord.y,mc_midTexCoord.y));
     worldPos+=offset; viewPos+=mat3(gbufferModelView)*offset;
+    #endif
     #endif
     gl_Position=gl_ProjectionMatrix*vec4(viewPos,1);
 }

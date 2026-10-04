@@ -36,7 +36,7 @@ void main(){
         vec3 sky = skyRadiance(rd);
         #if defined(VOLUMETRIC_CLOUDS) && !defined(NETHER) && !defined(END)
         scene = renderClouds(rd, sky, gl_FragCoord.xy);
-        #elif !defined(NETHER) && !defined(END)
+        #elif defined(FAST_CLOUDS) && !defined(NETHER) && !defined(END)
         scene = renderFastClouds(rd, sky);
         #else
         scene = sky;
@@ -47,6 +47,7 @@ void main(){
         vec3 N=normalize(texture(colortex1,texcoord).xyz*2.0-1.0);
         if(mat.a<0.5) {
             float distToCam=length(vp);
+            #ifdef SSAO
             float rotation=hash12(gl_FragCoord.xy)*6.283;
             if(distToCam<48.0) {
                 float occ=0.0;
@@ -64,6 +65,7 @@ void main(){
                 float aoFade=1.0-smoothstep(32.0,48.0,distToCam);
                 scene*=1.0-occ*0.105*(1.0-mat.b)*aoFade;
             }
+            #endif
             #ifdef SSGI
             if(distToCam<42.0) {
                 float distWeight=1.0-smoothstep(24.0,42.0,distToCam);
