@@ -1,4 +1,4 @@
 #version 330 compatibility
 #define NETHER
 
-#include "/program/composite3.fsh"
+#include "/program/dof_half.fsh"

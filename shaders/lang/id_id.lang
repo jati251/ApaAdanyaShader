@@ -130,3 +130,13 @@ option.POM_DEPTH=Kedalaman Parallax
 option.POM_DEPTH.comment=Kedalaman relatif terhadap satu ubin tekstur. Standar LabPBR adalah 0.25. Nilai nol mematikan perpindahan tekstur.
 option.POM_DISTANCE=Jarak Parallax (Blok)
 option.POM_DISTANCE.comment=Mulai memudar pada 65% jarak ini. Penelusuran tinggi dilewati setelah batas jarak.
+
+screen.PERFORMANCE=Performa & Rekonstruksi
+option.CLOUD_RECONSTRUCTION=Rekonstruksi Awan Volumetrik
+option.CLOUD_RECONSTRUCTION.comment=Hitung awan pada setengah lebar/tinggi; langit tetap resolusi asli. Matikan untuk pembanding resolusi penuh.
+option.TEMPORAL_CLOUDS=Riwayat Awan
+option.TEMPORAL_CLOUDS.comment=Proyeksikan ulang dan batasi sampel awan sebelumnya. Perlu rekonstruksi awan. Matikan jika terlihat jejak.
+option.HALF_RES_LIGHTING=Rekonstruksi Cahaya Tidak Langsung
+option.HALF_RES_LIGHTING.comment=AO/GI setengah resolusi dengan pemeriksaan kedalaman, normal, dan emisi. Tepi sulit dihitung penuh.
+option.HALF_RES_DOF=Rekonstruksi Blur Lensa
+option.HALF_RES_DOF.comment=Hitung bokeh besar pada setengah lebar/tinggi. Fokus, tangan, dan tepi kedalaman tetap ditangani pada resolusi asli.

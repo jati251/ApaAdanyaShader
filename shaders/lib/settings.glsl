@@ -79,6 +79,12 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define DOF_SAMPLES 16 // [8 16 24 32]
 #define DOF_MAX_RADIUS 12.0 // [6.0 8.0 12.0 16.0 24.0]
 
+// Effects are reconstructed independently; scene color stays at native resolution.
+#define CLOUD_RECONSTRUCTION // Half-resolution volumetric cloud layer
+#define TEMPORAL_CLOUDS // Reproject and clamp cloud history
+#define HALF_RES_LIGHTING // Bilateral SSAO/GI reconstruction
+#define HALF_RES_DOF // Bilateral lens reconstruction
+
 const float ambientOcclusionLevel = 0.65;
 const float wetnessHalflife = 90.0;
 const float drynessHalflife = 180.0;

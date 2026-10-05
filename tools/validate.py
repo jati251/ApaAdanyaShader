@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate real preset values and compile/link with macOS's OpenGL driver.
+"""Validate real preset values and compile/link with the local OpenGL driver.
 
 Compatibility builtins are bridged to core inputs, as Iris does at runtime.
 This catches GLSL errors, not Iris framebuffer/texture binding errors.
@@ -62,21 +62,10 @@ for directory in ('world-1','world1'):
 
 if '--static' in sys.argv:
     sys.exit(0)
-if sys.platform != 'darwin':
-    sys.exit('Driver compilation currently requires macOS; use --static elsewhere.')
-gl = c.CDLL('/System/Library/Frameworks/OpenGL.framework/OpenGL')
-def bind(name, restype, *argtypes):
-    fn = getattr(gl, name)
-    fn.restype, fn.argtypes = restype, argtypes
-    return fn
-choose = bind('CGLChoosePixelFormat', c.c_int, c.POINTER(c.c_int), c.POINTER(c.c_void_p), c.POINTER(c.c_int))
-create = bind('CGLCreateContext', c.c_int, c.c_void_p, c.c_void_p, c.POINTER(c.c_void_p))
-current = bind('CGLSetCurrentContext', c.c_int, c.c_void_p)
-pixel, context, count = c.c_void_p(), c.c_void_p(), c.c_int()
-assert choose((c.c_int * 5)(99, 0x3200, 73, 0, 0), c.byref(pixel), c.byref(count)) == 0
-assert create(pixel, None, c.byref(context)) == 0
-assert current(context) == 0
-bind('CGLDestroyPixelFormat', c.c_int, c.c_void_p)(pixel)
+from gl_context import GLContext
+driver = GLContext()
+bind = driver.bind
+CORE_VERSION = driver.version
 get_string = bind('glGetString', c.c_char_p, c.c_uint)
 print('GPU:', get_string(0x1F01).decode(), flush=True)
 create_shader = bind('glCreateShader', c.c_uint, c.c_uint)
@@ -107,7 +96,7 @@ def source(path, values, dh):
         else:
             code = re.sub(r'^(#define ' + re.escape(key) + r' )[^\n]*', lambda m: m[1] + value, code, flags=re.M)
             code = re.sub(r'(const (?:float|int) ' + re.escape(key) + r'\s*=\s*)[^;]+', lambda m: m[1] + value, code)
-    code = code.replace('#version 330 compatibility', '#version 410 core')
+    code = code.replace('#version 330 compatibility', '#version '+CORE_VERSION+' core')
     builtins = '''
 #define RGBA8 32856
 #define RGBA16F 34842
@@ -127,7 +116,7 @@ vec4 aa_ftransform() { return aa_Projection*aa_ModelView*aa_Vertex; }
             builtins += 'bool dh_hasTexture(){return false;}\nvec4 dh_sampleTexture(){return vec4(1.0);}\n'
     for old, new in {'gl_ModelViewMatrix':'aa_ModelView','gl_ProjectionMatrix':'aa_Projection','gl_TextureMatrix':'aa_TextureMatrix','gl_NormalMatrix':'aa_NormalMatrix','gl_Vertex':'aa_Vertex','gl_Color':'aa_Color','gl_MultiTexCoord0':'aa_MultiTexCoord0','gl_MultiTexCoord1':'aa_MultiTexCoord1','gl_Normal':'aa_Normal','ftransform':'aa_ftransform'}.items():
         code = re.sub(r'\b' + old + r'\b', new, code)
-    return code.replace('#version 410 core', '#version 410 core\n' + builtins, 1)
+    return code.replace('#version '+CORE_VERSION+' core', '#version '+CORE_VERSION+' core\n' + builtins, 1)
 
 def compile_one(path, values, dh):
     shader = create_shader(0x8B31 if path.suffix == '.vsh' else 0x8B30)
@@ -149,6 +138,9 @@ try:
     variants += [('POM_NO_NORMALS', dict(resolve('HIGH'), RESOURCE_NORMALS=False)),
                  ('POM_NO_SPECULAR', dict(resolve('HIGH'), RESOURCE_SPECULAR=False)),
                  ('POM_ZERO_DEPTH', dict(resolve('HIGH'), POM_DEPTH='0.0'))]
+    variants += [('FULL_RES_REFERENCE', dict(resolve('EXTREME'), CLOUD_RECONSTRUCTION=False, TEMPORAL_CLOUDS=False, HALF_RES_LIGHTING=False, HALF_RES_DOF=False)),
+                 ('NO_CLOUD_HISTORY', dict(resolve('HIGH'), TEMPORAL_CLOUDS=False)),
+                 ('AO_ONLY_RECONSTRUCTION', dict(resolve('HIGH'), SSGI=False))]
     if '--images-only' in sys.argv:
         variants = []
     for name, values in variants:
@@ -182,5 +174,4 @@ try:
     import pom_checks
     pom_checks.run(globals())
 finally:
-    current(None)
-    bind('CGLDestroyContext', c.c_int, c.c_void_p)(context)
+    driver.close()

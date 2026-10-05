@@ -2,6 +2,7 @@
 #include "/lib/bloom.glsl"
 uniform sampler2D colortex0,colortex5;
 #include "/lib/dof.glsl"
+#include "/lib/reconstruct_dof.glsl"
 in vec2 texcoord;
 /* RENDERTARGETS: 0 */
 layout(location=0) out vec4 color;
@@ -9,7 +10,11 @@ vec3 film(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0)
 void main(){
     vec3 c=texture(colortex0,texcoord).rgb;
     #ifdef DOF
+    #ifdef HALF_RES_DOF
+    c=reconstructDOF(texcoord,c);
+    #else
     c=depthOfField(texcoord,c);
+    #endif
     #endif
     #ifdef BLOOM
     c+=blurBloom(colortex5,texcoord,vec2(0.0,4.0/viewHeight))*BLOOM_STRENGTH;

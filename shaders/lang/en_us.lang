@@ -130,3 +130,13 @@ option.POM_DEPTH=Parallax Depth
 option.POM_DEPTH.comment=Maximum relief relative to a texture tile. LabPBR standard depth is 0.25. Zero disables displacement.
 option.POM_DISTANCE=Parallax Distance (Blocks)
 option.POM_DISTANCE.comment=Fades out starting at 65% of this distance and skips height tracing beyond it.
+
+screen.PERFORMANCE=Performance & Reconstruction
+option.CLOUD_RECONSTRUCTION=Reconstruct Volumetric Clouds
+option.CLOUD_RECONSTRUCTION.comment=March clouds at half width/height; preserve the native-resolution sky. Disable for the full-resolution reference.
+option.TEMPORAL_CLOUDS=Cloud History
+option.TEMPORAL_CLOUDS.comment=Reproject and clamp previous cloud samples. Requires cloud reconstruction. Disable if trails are visible.
+option.HALF_RES_LIGHTING=Reconstruct Indirect Lighting
+option.HALF_RES_LIGHTING.comment=Half-resolution AO/GI with depth, normal and emission rejection. Difficult edges use full-resolution sampling.
+option.HALF_RES_DOF=Reconstruct Lens Blur
+option.HALF_RES_DOF.comment=Gather large bokeh at half width/height. Focus, hands and depth edges retain full-resolution handling.

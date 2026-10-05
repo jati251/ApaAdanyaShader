@@ -180,24 +180,24 @@ float sampleCloudDensity(vec3 p, bool detail) {
     return density;
 }
 
-vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
+vec4 cloudLayer(vec3 rd, vec2 pixel) {
     #if CLOUDS == 2
     #if !defined(NETHER) && !defined(END)
     // Smooth horizon fade
-    if (abs(rd.y) < 0.015) return background;
+    if (abs(rd.y) < 0.015) return vec4(0.0);
     float horizonFade = smoothstep(0.015, 0.08, abs(rd.y));
 
     float a = (CLOUD_ALT_BASE - cameraPosition.y) / rd.y;
     float b = (CLOUD_ALT_BASE + CLOUD_ALT_THICK - cameraPosition.y) / rd.y;
     float entry = max(min(a, b), 0.0);
     float leave = max(a, b);
-    if (leave <= entry) return background;
+    if (leave <= entry) return vec4(0.0);
 
     // Clamp raymarching depth: avoids distant step stretching
     float maxRayDist = min(leave - entry, 2400.0);
     float distFade = 1.0 - smoothstep(2200.0, 4200.0, entry);
     float fadeWeight = horizonFade * distFade;
-    if (fadeWeight <= 0.001) return background;
+    if (fadeWeight <= 0.001) return vec4(0.0);
 
     float stepLen = maxRayDist / float(CLOUD_STEPS);
 
@@ -266,15 +266,16 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
         if (trans < 0.015) break;
     }
 
-    // Atmospheric perspective haze
-    float aerial = 1.0 - exp(-entry * 0.0010);
-    cloudSum = mix(cloudSum, background * (1.0 - trans), aerial);
+    float visibility = exp(-entry * 0.0010) * fadeWeight;
+    return vec4(cloudSum, 1.0 - trans) * visibility;
+    #endif
+    #endif
+    return vec4(0.0);
+}
 
-    vec3 result = background * trans + cloudSum;
-    return mix(background, result, fadeWeight);
-    #endif
-    #endif
-    return background;
+vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
+    vec4 layer = cloudLayer(rd, pixel);
+    return background * (1.0 - layer.a) + layer.rgb;
 }
 
 vec3 renderFastClouds(vec3 rd, vec3 background) {

@@ -28,6 +28,7 @@ def run(api):
     bind('glViewport',None,c.c_int,c.c_int,c.c_int,c.c_int)(0,0,w,h)
 
     def shader(kind,source):
+        source=source.replace('#version 410 core', '#version '+api['CORE_VERSION']+' core')
         result=api['create_shader'](kind)
         text=c.c_char_p(source.encode())
         api['shader_source'](result,1,c.byref(text),None)

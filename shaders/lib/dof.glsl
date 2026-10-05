@@ -31,8 +31,7 @@ float circleOfConfusion(float z,float focus) {
     return clamp(coc*viewHeight/0.048,-DOF_MAX_RADIUS,DOF_MAX_RADIUS);
 }
 
-vec3 depthOfField(vec2 uv,vec3 sharp) {
-    if(lensHand(uv)) return sharp;
+float lensFocus() {
     float focus=DOF_FOCUS_DISTANCE;
     #ifdef DOF_AUTOFOCUS
     focus=clamp(-viewPosition(vec2(0.5),centerDepthSmooth).z,0.5,10000.0);
@@ -40,6 +39,12 @@ vec3 depthOfField(vec2 uv,vec3 sharp) {
     if(centerDepthSmooth>=0.999999) focus=lensDepth(vec2(0.5));
     #endif
     #endif
+    return focus;
+}
+
+vec3 depthOfField(vec2 uv,vec3 sharp) {
+    if(lensHand(uv)) return sharp;
+    float focus=lensFocus();
     float centerZ=lensDepth(uv);
     float coc=circleOfConfusion(centerZ,focus);
     float radius=abs(coc);

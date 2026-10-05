@@ -1,3 +1,3 @@
 #version 330 compatibility
 
-#include "/program/composite3.fsh"
+#include "/program/dof_half.fsh"
