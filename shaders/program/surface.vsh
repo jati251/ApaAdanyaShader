@@ -24,7 +24,7 @@ void main() {
     viewPos=(gl_ModelViewMatrix*gl_Vertex).xyz;
     worldPos=(gbufferModelViewInverse*vec4(viewPos,1.0)).xyz+cameraPosition;
     materialId=0.0;
-    #if defined(TERRAIN) || defined(WATER)
+    #if defined(TERRAIN) || defined(WATER) || defined(HAND) || defined(ENTITY)
     materialId=mc_Entity.x;
     #ifdef WAVING_FOLIAGE
     if(materialId>1000.5 && materialId<1002.5){

@@ -75,7 +75,7 @@ void main(){
     N=normalize(tbn*tn);
     #endif
     float foliage=float(materialId>1000.5 && materialId<1002.5);
-    float emission=float(materialId>1003.5 && materialId<1004.5);
+    float emission=0.0;
     #ifdef EMISSIVE
     emission=1.0;
     #endif
@@ -138,6 +138,36 @@ void main(){
         shaded=flameRadiance(tex.rgb,worldPos,materialId>1006.5);
         emission=1.0;
         ambientFraction=0.0;
+    }
+    bool isLuminousBlock=(materialId>1003.5 && materialId<1004.5) || (materialId>1006.5 && materialId<1007.5);
+    #ifdef HAND
+    isLuminousBlock=isLuminousBlock || (heldBlockLightValue>0 || heldBlockLightValue2>0);
+    #endif
+    if(isLuminousBlock && !flame){
+        float maxVal=max(albedo.r,max(albedo.g,albedo.b));
+        float minVal=min(albedo.r,min(albedo.g,albedo.b));
+        bool isSoul=(materialId>1006.5) || (heldItemId==1007 || heldItemId2==1007);
+        bool isRedstone=(albedo.r>0.45 && albedo.r>albedo.g*2.2);
+        bool isFlamePixel=(albedo.r>0.38 && albedo.g>0.18 && albedo.r>albedo.b*1.3)
+                         || (isSoul && albedo.b>0.30 && albedo.g>0.25)
+                         || isRedstone
+                         || (maxVal>0.70);
+        if(isFlamePixel){
+            // Saturated chromatic glow: rich golden amber fire, cyan soul fire, ruby redstone (never pale white!)
+            vec3 chroma=albedo/max(maxVal,0.001);
+            chroma=pow(chroma,vec3(1.7));
+            vec3 flameColor=isSoul?vec3(0.06,1.35,2.2):(isRedstone?vec3(2.4,0.06,0.02):vec3(2.5,0.90,0.05));
+            shaded=mix(shaded,chroma*flameColor*1.65,0.95);
+            emission=0.80;
+            ambientFraction=0.0;
+        }else{
+            #ifdef HAND
+            // The wooden handle and player hand: illuminated with warm firelight spill from the flame
+            vec3 spillColor=isSoul?vec3(0.18,0.65,1.1):vec3(1.4,0.80,0.25);
+            shaded+=diffuseResponse(albedo,f0,metal)*spillColor*0.75;
+            #endif
+            emission=0.0;
+        }
     }
     color=vec4(shaded,tex.a);
     responseData=vec4(diffuseResponse(albedo,f0,metal)*materialAO,ambientFraction);

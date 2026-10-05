@@ -250,6 +250,17 @@ vec3 applyColorGrading(vec3 hdrColor, vec2 uv) {
         sdr = clamp(mix(sdr, sCurve, COLOR_CONTRAST - 1.0), 0.0, 1.0);
     }
 
+    #ifdef AUTO_EXPOSURE
+    // Scotopic human rod vision shift: subtle desaturation of deep dark tones in pitch black environments
+    float measuredDark = texelFetch(colortex16, ivec2(0), 0).r;
+    if(measuredDark > 1.8) {
+        float scotopicWeight = smoothstep(1.8, 2.9, measuredDark);
+        float luma = dot(sdr, vec3(0.2126, 0.7152, 0.0722));
+        vec3 rodTone = vec3(luma * 0.93, luma * 0.97, luma * 1.06);
+        sdr = mix(sdr, rodTone, scotopicWeight * 0.22 * (1.0 - smoothstep(0.04, 0.40, luma)));
+    }
+    #endif
+
     // 7. Natural Lens Vignette
     #ifdef VIGNETTE
     vec2 vigUV = uv * (1.0 - uv.yx);

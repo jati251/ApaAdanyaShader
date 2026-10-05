@@ -72,3 +72,30 @@ bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int co
     return traceScreen(depths,origin,direction,stride,count,hitUV,confidence);
 }
 float edgeFade(vec2 uv) { vec2 edge=min(uv,1.0-uv); return smoothstep(0.002,0.10,min(edge.x,edge.y)); }
+// Screen-Space Ray-Traced Shadow (RT Shadow): traces pixel-perfect contact shadows towards the light source.
+float traceScreenShadow(sampler2D depths,ivec2 depthSize,vec3 origin,vec3 lightDirV,float maxDist,int steps) {
+    if(lightDirV.z > 0.40) return 0.0;
+    vec4 clipOrigin = gbufferProjection * vec4(origin, 1.0);
+    vec4 clipDir = gbufferProjection * vec4(lightDirV, 0.0);
+    float stepStride = maxDist / float(steps);
+    float jitter = ignDither(gl_FragCoord.xy);
+    float t = stepStride * (0.4 + 0.6 * jitter);
+    for(int i = 0; i < 16; i++) {
+        if(i >= steps) break;
+        float rayZ = origin.z + lightDirV.z * t;
+        if(rayZ >= -near) break;
+        vec4 clip = clipOrigin + clipDir * t;
+        vec2 uv = clip.xy / clip.w * 0.5 + 0.5;
+        if(any(lessThan(uv, vec2(0.002))) || any(greaterThan(uv, vec2(0.998)))) break;
+        bool valid;
+        float d = traceSurfaceDepth(depths, depthSize, uv, valid);
+        float delta = d - rayZ;
+        float thickness = min(0.20 + t * 0.06, 0.75);
+        if(valid && delta > 0.004 && delta < thickness) {
+            float contactWeight = 1.0 - smoothstep(0.0, maxDist, t);
+            return contactWeight * edgeFade(uv);
+        }
+        t += stepStride;
+    }
+    return 0.0;
+}

@@ -83,6 +83,22 @@ void main(){
             vec4 response=textureScreen(colortex15,texcoord);
             scene*=mix(1.0,indirect.a,response.a);
             scene+=indirect.rgb*response.rgb;
+            #if !defined(NETHER) && !defined(END)
+            #ifdef SHADOWS
+            // Screen-Space Ray-Traced Contact Shadows (RT Shadows)
+            // Pixel-perfect contact occlusion for small geometry, grass, and crevices
+            vec3 lightDirV=normalize(shadowLightPosition);
+            float ndl=dot(N,lightDirV);
+            if(ndl>0.01 && response.a<0.88) {
+                ivec2 depthSize=screenTextureSize(depthtex0);
+                float rtShadow=traceScreenShadow(depthtex0,depthSize,vp+N*0.05,lightDirV,2.5,10);
+                if(rtShadow>0.001) {
+                    float directFraction=1.0-response.a;
+                    scene*=(1.0-directFraction*rtShadow*0.80);
+                }
+            }
+            #endif
+            #endif
             #endif
             #ifdef SSR
             if(mat.b<0.99) {

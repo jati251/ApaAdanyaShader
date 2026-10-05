@@ -29,7 +29,16 @@ void main(){
     #endif
     #endif
     #ifdef BLOOM
-    c+=textureScreen(colortex4,texcoord).rgb*BLOOM_STRENGTH;
+    float bloomScale = BLOOM_STRENGTH;
+    #ifdef AUTO_EXPOSURE
+    // Dynamic eye adaptation: radiant flare burst when stepping from dark caves into bright sunlight
+    float measuredExp = texelFetch(colortex16, ivec2(0), 0).r;
+    if(measuredExp > 1.15 && eyeBrightnessSmooth.y > 60) {
+        float flareBurst = smoothstep(1.15, 2.6, measuredExp) * smoothstep(60.0, 180.0, float(eyeBrightnessSmooth.y)) * daylight();
+        bloomScale *= (1.0 + flareBurst * 1.75);
+    }
+    #endif
+    c+=textureScreen(colortex4,texcoord).rgb*bloomScale;
     #endif
     c=applyColorGrading(c,texcoord);
     color=vec4(c,1.0);

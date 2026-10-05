@@ -10,6 +10,8 @@ uniform float frameTime;
 uniform int worldTime, isEyeInWater, frameCounter;
 uniform ivec2 eyeBrightnessSmooth;
 uniform vec4 lightningBoltPosition;
+uniform int heldBlockLightValue, heldBlockLightValue2;
+uniform int heldItemId, heldItemId2;
 #if UPSCALE_QUALITY == 1
 #define AA_RENDER_SCALE 0.76923077
 #elif UPSCALE_QUALITY == 2

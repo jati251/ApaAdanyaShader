@@ -146,6 +146,22 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #endif
     ambient+=stormFlash()*(lm.y*lm.y*lm.y)*(0.35+0.65*max(nw.y,0.0));
     vec3 torch=vec3(1.8,0.72,0.23)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
+    #if !defined(HAND)
+    int maxHeldLight=max(heldBlockLightValue,heldBlockLightValue2);
+    if(maxHeldLight>0){
+        float heldStrength=float(maxHeldLight)/15.0;
+        vec3 lightOffset=vp-vec3(0.25,-0.35,0.40);
+        float distToHand=length(lightOffset);
+        if(distToHand<15.0){
+            float atten=sat(1.0-distToHand/15.0);
+            float atten2=atten*atten;
+            float handNdl=sat(dot(N,-normalize(lightOffset)));
+            bool isSoul=(heldItemId==1007 || heldItemId2==1007);
+            vec3 handColor=isSoul?vec3(0.35,1.15,1.8):vec3(1.85,0.85,0.32);
+            torch+=handColor*(atten2*(handNdl*0.70+0.30)*(heldStrength*heldStrength)*1.5*TORCH_BRIGHTNESS);
+        }
+    }
+    #endif
     vec3 direct=vec3(0.0);
     #if !defined(NETHER) && !defined(END)
     if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
@@ -161,7 +177,9 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #ifndef SSR
     ambientTerm+=f0*metal*(ambient+torch)*materialAO*0.35;
     #endif
-    vec3 result=ambientTerm+diffuse*(nl*burleyDiffuse(N,V,L,roughness)+subsurface)*direct*0.60+specular+albedo*emission*5.0;
+    vec3 emitChroma=albedo/max(max(albedo.r,max(albedo.g,albedo.b)),0.001);
+    vec3 saturatedEmit=mix(albedo,emitChroma*albedo,0.35);
+    vec3 result=ambientTerm+diffuse*(nl*burleyDiffuse(N,V,L,roughness)+subsurface)*direct*0.60+specular+saturatedEmit*emission*5.0;
     // Screen AO may attenuate ambient light only, never direct sun or emission.
     const vec3 luminance=vec3(0.2126,0.7152,0.0722);
     ambientFraction=sat(dot(ambientTerm,luminance)/max(dot(result,luminance),1e-5));
