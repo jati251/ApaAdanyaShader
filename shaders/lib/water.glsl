@@ -1,22 +1,21 @@
 #ifndef AA_WATER
 #define AA_WATER
 
-// Photorealistic directional water simulation with wind-aligned Gerstner trochoidal crests
+// Photorealistic directional water simulation with 2D non-linear crescent wave synthesis
 vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
-    // Dominant wind-aligned wave spectrum (propagating forward along wind axis ~30 deg)
-    // Coherent forward propagation prevents cross-hatch grids and concentric fingerprint rings
+    // Multi-directional wind-aligned propagation: natural angular spread without parallel stripes
     const vec2 dirs[7] = vec2[7](
         vec2(0.8660, 0.5000),  // 30 deg: primary rolling ground swell (wind axis)
-        vec2(0.9205, 0.3907),  // 23 deg: secondary swell (-7 deg from wind)
-        vec2(0.7986, 0.6018),  // 37 deg: surface swell (+7 deg from wind)
-        vec2(0.9563, 0.2924),  // 17 deg: main wind chop (-13 deg)
-        vec2(0.7431, 0.6691),  // 42 deg: crossing chop (+12 deg)
+        vec2(0.9272, 0.3746),  // 22 deg: secondary lake swell (-8 deg)
+        vec2(0.7660, 0.6428),  // 40 deg: surface swell (+10 deg)
+        vec2(0.9659, 0.2588),  // 15 deg: wind chop (-15 deg)
+        vec2(0.6691, 0.7431),  // 48 deg: crossing chop (+18 deg)
         vec2(0.8910, 0.4540),  // 27 deg: capillary ripples (-3 deg)
-        vec2(0.8290, 0.5592)   // 34 deg: liquid micro-sheen (+4 deg)
+        vec2(0.7986, 0.6018)   // 37 deg: liquid micro-sheen (+7 deg)
     );
-    const float freq[7]   = float[7](0.085, 0.19, 0.45, 1.15, 2.90, 7.50, 19.0);
-    const float amp[7]    = float[7](0.40,  0.22, 0.10, 0.045, 0.018, 0.006, 0.002);
-    const float speeds[7] = float[7](0.24,  0.38, 0.62, 1.05, 1.80, 3.10, 5.00);
+    const float freq[7]   = float[7](0.085, 0.18, 0.42, 1.05, 2.70, 6.80, 16.5);
+    const float amp[7]    = float[7](0.32,  0.16, 0.075, 0.032, 0.013, 0.0045, 0.0015);
+    const float speeds[7] = float[7](0.26,  0.40, 0.65, 1.08, 1.75, 2.90, 4.60);
 
     vec2 slope = vec2(0.0);
     crest = 0.0;
@@ -27,11 +26,12 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
     float time = mod(frameTimeCounter, 6283.1853) * (0.85 * WIND_SPEED);
 
     // Organic swell envelope modulates height over space, preventing rigid repetition
-    float swellEnv = 0.82 + 0.18 * sin(dot(p, vec2(0.038, 0.024)) - time * 0.18);
+    float swellEnv = 0.85 + 0.15 * sin(dot(p, vec2(0.038, 0.024)) - time * 0.18);
     vec2 swellSlope = vec2(0.0);
 
     for(int i = 0; i < WATER_OCTAVES; i++) {
         vec2 d = dirs[i];
+        vec2 perp = vec2(-d.y, d.x);
         float k = freq[i];
 
         // Band-limiting based on pixel footprint prevents far-distance moiré / shimmering
@@ -39,30 +39,30 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
         float band = 1.0 - smoothstep(0.7, 2.8, footprint);
         if(band <= 0.001) continue;
 
-        // Hydrodynamic advection: higher-frequency ripples ride on the swell crests
-        vec2 pos = (i >= 2) ? (p + swellSlope * (0.06 / (1.0 + k * 0.08))) : p;
-
-        // Transverse crest vector: perpendicular to propagation
-        vec2 perp = vec2(-d.y, d.x);
-
-        // Organic wave crest curvature (gentle curved wavefronts like real rolling water)
-        float latPhase = dot(pos, perp) * (k * 0.28) + float(i) * 1.61803;
-        float latWave = sin(latPhase);
-        float latDeriv = cos(latPhase);
-
-        // Finite crest length envelope (wave packets that naturally rise and taper off)
-        float crestEnvelope = 0.70 + 0.30 * cos(dot(pos, perp) * (k * 0.20) + float(i) * 2.39996);
+        // Hydrodynamic advection: higher-frequency ripples ride on swell crests
+        vec2 pos = (i >= 2) ? (p + swellSlope * (0.05 / (1.0 + k * 0.06))) : p;
 
         float phaseSpeed = mod(speeds[i] * time, 628.31853);
-        float phase = dot(pos, d) * k + 0.32 * latWave - phaseSpeed + float(i) * 2.39996;
-        vec2 gradPhase = d * k + perp * (0.0896 * k * latDeriv);
+
+        // 2D Non-linear crescent wave:
+        // Transverse phase modulates longitudinal wave, transforming straight 1D lines
+        // into organic 2D crescent-shaped liquid ripples with zero parallel stripes or grid lines
+        float phaseLong  = dot(pos, d) * k - phaseSpeed + float(i) * 2.39996;
+        float phaseTrans = dot(pos, perp) * (k * 0.65) - phaseSpeed * 0.70 + float(i) * 1.61803;
+
+        float curve = sin(phaseTrans);
+        float psi = phaseLong + 0.75 * curve;
 
         // Gerstner / Trochoidal profile: sharp peaked crests and broad, glassy, calm troughs
-        float s = sin(phase);
+        float s = sin(psi);
         float profile = (1.0 + s) * 0.5;
         float peak = profile * profile;
-        float a = amp[i] * ((i < 2) ? swellEnv : 1.0) * crestEnvelope * band;
-        vec2 octaveSlope = gradPhase * (cos(phase) * (1.0 + s) * (a * 0.5));
+
+        // Analytical 2D gradient of crescent wave
+        vec2 gradPhase = d * k + perp * (k * (0.65 * 0.75) * cos(phaseTrans));
+        float a = amp[i] * ((i < 2) ? swellEnv : 1.0) * band;
+        vec2 octaveSlope = gradPhase * (cos(psi) * (1.0 + s) * (a * 0.5));
+
         slope += octaveSlope;
         if(i < 2) swellSlope += octaveSlope;
         crest += peak * a;
