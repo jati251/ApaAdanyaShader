@@ -11,10 +11,10 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
                 for(int i=0;i<SSAO_SAMPLES;i++) {
                     float angle=float(i)*2.39996+rotation;
                     float radius=1.5*sqrt((float(i)+0.5)/float(SSAO_SAMPLES));
-                    vec2 uv=uv+vec2(cos(angle),sin(angle))*(radius*projScale);
-                    if(any(lessThan(uv,vec2(0.0)))||any(greaterThan(uv,vec2(1.0)))) continue;
-                    float d=texture(depthtex0,uv).r;
-                    vec3 diff=viewPosition(uv,d)-vp;
+                    vec2 sampleUV=uv+vec2(cos(angle),sin(angle))*(radius*projScale);
+                    if(any(lessThan(sampleUV,vec2(0.0)))||any(greaterThan(sampleUV,vec2(1.0)))) continue;
+                    float d=texture(depthtex0,sampleUV).r;
+                    vec3 diff=viewPosition(sampleUV,d)-vp;
                     float len=length(diff);
                     occ+=max(dot(N,diff/max(len,0.001))-0.10,0.0)*(1.0-smoothstep(0.1,2.4,len))*step(d,0.99999);
                 }
