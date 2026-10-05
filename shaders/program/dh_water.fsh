@@ -52,8 +52,13 @@ void main(){
     vec3 L = normalize(shadowLightPosition);
     vec3 glint = specularBRDF(N, V, L, filteredRoughness(N,WATER_ROUGHNESS), vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
 
-    // Deep water equilibrium color matching vanilla water (water.fsh)
-    vec3 deepWater = vec3(0.02, 0.14, 0.24) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
+    // Distant sun and moon ocean glitter
+    float sunGlitter = pow(sat(dot(reflect(-L, N), V)), 140.0) * 0.50 * skyLight * daylight();
+    float moonGlitter = pow(sat(dot(reflect(-L, N), V)), 180.0) * 2.00 * skyLight * (1.0 - daylight()) * NIGHT_BRIGHTNESS;
+    glint += mix(vec3(0.35, 0.55, 0.85) * moonGlitter, vec3(sunGlitter), daylight());
+
+    // AC4 Caribbean deep water equilibrium color matching vanilla water (water.fsh)
+    vec3 deepWater = vec3(0.005, 0.038, 0.12) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
     vec3 waterResult = mix(deepWater, skyReflect, fresnel) + glint;
 
     color = vec4(max(waterResult, vec3(0.0)), 1.0);

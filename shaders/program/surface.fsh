@@ -100,6 +100,26 @@ void main(){
         float puddle=smoothstep(0.40,0.65,noise2D(worldPos.xz*0.23))*wet;
         roughness=mix(roughness,0.09,puddle*(1.0-porosity*0.65));
         albedo*=1.0-wet*(0.12+porosity*0.30);
+        #if !defined(NETHER) && !defined(END)
+        if(rainStrength > 0.04 && puddle > 0.01) {
+            vec2 ripPos = worldPos.xz * 2.4;
+            float rt = frameTimeCounter * 4.2;
+            vec2 ripGrad = vec2(0.0);
+            for(int r = 0; r < 2; r++) {
+                vec2 cell = floor(ripPos);
+                vec2 f = fract(ripPos) - 0.5;
+                float h = hash12(cell + float(r) * 19.31);
+                float age = fract(rt * 0.75 + h);
+                float dist = length(f);
+                float ring = sin(clamp(dist - age * 0.44, -0.2, 0.2) * 31.4159);
+                float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * smoothstep(age * 0.44 + 0.08, age * 0.44, dist);
+                ripGrad += normalize(f + 1e-4) * ring * fade;
+                ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
+            }
+            vec3 ripNormalW = normalize(vec3(-ripGrad.x * 0.16, 1.0, -ripGrad.y * 0.16));
+            N = normalize(mix(N, mat3(gbufferModelView) * ripNormalW, puddle * min(rainStrength * 1.4, 0.85)));
+        }
+        #endif
     }
     #endif
     roughness=filteredRoughness(N,roughness);

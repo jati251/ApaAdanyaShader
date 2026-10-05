@@ -133,9 +133,9 @@ float cloudFractal(vec2 p) {
 
 // Natural elevated cumulus altitude (high above mountains & Distant Horizons terrain)
 const float CLOUD_ALT_BASE = CLOUD_ALTITUDE;
-const float CLOUD_ALT_THICK = 110.0;
+const float CLOUD_ALT_THICK = 118.0;
 
-// Organic, realistic 3D cumulus density field
+// Organic, realistic 3D convective cumulus density field (RDR2 Atmospheric Model)
 float sampleCloudDensity(vec3 p, bool detail) {
     // Earth curvature compensation: prevents horizontal pancake distortion
     vec2 camDist = p.xz - cameraPosition.xz;
@@ -144,34 +144,38 @@ float sampleCloudDensity(vec3 p, bool detail) {
     float h = (curvedY - CLOUD_ALT_BASE) / CLOUD_ALT_THICK;
     if (h <= 0.0 || h >= 1.0) return 0.0;
 
-    vec2 wind = vec2(frameTimeCounter * 1.2, frameTimeCounter * 0.5);
+    vec2 wind = vec2(frameTimeCounter * 1.15, frameTimeCounter * 0.48);
     vec2 pos2d = (p.xz + wind) * 0.0016;
 
+    // Atmospheric domain warping (RDR2 wind-sheared turbulent advection)
+    vec2 warp = vec2(sin(pos2d.y * 3.4 + wind.y * 0.15), cos(pos2d.x * 3.4 + wind.x * 0.15)) * 0.055;
+    vec2 warpedPos = pos2d + warp;
+
     // Macro weather distribution: creates sunny clearings and cloud clusters
-    float weather = noise2D(pos2d * 0.32 + vec2(0.2, 0.7));
-    float coverage = CLOUD_COVERAGE * 0.75 + rainStrength * 0.25;
+    float weather = noise2D(warpedPos * 0.32 + vec2(0.2, 0.7));
+    float coverage = CLOUD_COVERAGE * 0.72 + rainStrength * 0.28;
 
-    float fbm = cloudFractal(pos2d);
-    fbm += (weather - 0.5) * 0.18;
+    float fbm = cloudFractal(warpedPos);
+    fbm += (weather - 0.5) * 0.22;
 
-    // Natural cumulus profile:
-    // Base threshold is low (wide flat condensation base at dew point)
-    // Threshold increases smoothly with altitude h (narrows into rounded cauliflower lobes at top)
-    float threshold = mix(0.44 - coverage * 0.18, 0.68 - coverage * 0.10, h);
-    if (fbm < threshold - 0.04) return 0.0;
+    // Natural RDR2 cumulus congestus profile:
+    // Base threshold is low (wide flat condensation base at lifting condensation level)
+    // Threshold increases smoothly with altitude h (sculpts rounded cauliflower lobes and towers)
+    float baseThreshold = mix(0.42 - coverage * 0.20, 0.70 - coverage * 0.12, h);
+    if (fbm < baseThreshold - 0.04) return 0.0;
 
-    float baseFade = smoothstep(0.0, 0.10, h);
-    float topFade = 1.0 - smoothstep(0.85, 1.0, h);
-    float density = smoothstep(threshold - 0.04, threshold + 0.16, fbm) * baseFade * topFade;
+    float baseFade = smoothstep(0.0, 0.09, h);
+    float topFade = 1.0 - smoothstep(0.82, 1.0, h);
+    float density = smoothstep(baseThreshold - 0.04, baseThreshold + 0.15, fbm) * baseFade * topFade;
 
     // Subtle 3D fractal cauliflower billow texturing
     #ifdef CLOUD_DETAIL
     if (detail && density > 0.01) {
-        vec3 q = (p + vec3(wind.x, 0.0, wind.y)) * 0.016;
+        vec3 q = (p + vec3(wind.x, 0.0, wind.y)) * 0.018;
         float n1 = noise3D(q);
-        float n2 = noise3D(q * 2.3 + vec3(1.3, 2.1, 0.7));
+        float n2 = noise3D(q * 2.2 + vec3(1.3, 2.1, 0.7));
         float fluff = n1 * 0.65 + n2 * 0.35;
-        density = clamp(density - (1.0 - fluff) * 0.22 * smoothstep(0.08, 0.85, h), 0.0, 1.0);
+        density = clamp(density - (1.0 - fluff) * 0.24 * smoothstep(0.06, 0.88, h), 0.0, 1.0);
     }
     #endif
 
@@ -192,8 +196,8 @@ vec4 cloudLayer(vec3 rd, vec2 pixel) {
     if (leave <= entry) return vec4(0.0);
 
     // Clamp raymarching depth: avoids distant step stretching
-    float maxRayDist = min(leave - entry, 2400.0);
-    float distFade = 1.0 - smoothstep(2200.0, 4200.0, entry);
+    float maxRayDist = min(leave - entry, 2500.0);
+    float distFade = 1.0 - smoothstep(2200.0, 4400.0, entry);
     float fadeWeight = horizonFade * distFade;
     if (fadeWeight <= 0.001) return vec4(0.0);
 
@@ -207,61 +211,78 @@ vec4 cloudLayer(vec3 rd, vec2 pixel) {
     float day = daylight();
     vec3 sunCol = lightColor();
 
-    // Dual-lobe Henyey-Greenstein scattering (silver lining facing sun)
+    // Dual-Lobe Henyey-Greenstein scattering (RDR2 Silver Lining + Glory backscatter)
     float sunTheta = dot(rd, sd);
-    float forwardMie = pow(sat(sunTheta * 0.5 + 0.5), 14.0) * 3.4;
-    float backScatter = pow(sat(-sunTheta * 0.5 + 0.5), 4.0) * 0.45;
-    float phase = 0.32 + forwardMie + backScatter;
+    // Forward Mie scattering (silver lining rim facing the sun)
+    float g1 = 0.80;
+    float hg1 = (1.0 - g1 * g1) / max(pow(1.0 + g1 * g1 - 2.0 * g1 * sunTheta, 1.5), 0.0001) * (1.0 / (4.0 * PI));
+    // Backward Glory scattering (luminous backscatter halo facing opposite the sun)
+    float g2 = -0.30;
+    float hg2 = (1.0 - g2 * g2) / max(pow(1.0 + g2 * g2 - 2.0 * g2 * sunTheta, 1.5), 0.0001) * (1.0 / (4.0 * PI));
+    float phase = 0.65 * hg1 + 0.25 * hg2 + 0.10 * (0.75 * (1.0 + sunTheta * sunTheta) / (4.0 * PI));
+    phase = clamp(phase * 3.5, 0.15, 3.8);
 
     // Night moonlight scattering
     vec3 md = -sd;
     float moonTheta = dot(rd, md);
-    float moonMie = pow(sat(moonTheta * 0.5 + 0.5), 16.0) * 1.6;
-    vec3 moonColor = vec3(0.006, 0.010, 0.022) * NIGHT_BRIGHTNESS;
+    float moonMie = pow(sat(moonTheta * 0.5 + 0.5), 18.0) * 1.5;
+    vec3 moonColor = vec3(0.005, 0.008, 0.018) * NIGHT_BRIGHTNESS;
 
     float trans = 1.0;
     vec3 cloudSum = vec3(0.0);
 
+    // Sun direct illumination only reaches clouds when sun is above the horizon
+    float sunDirectVis = smoothstep(-0.02, 0.08, sd.y);
+
     for (int i = 0; i < CLOUD_STEPS; i++) {
-        if(t>leave) break;
+        if(t > leave) break;
         vec3 p = cameraPosition + rd * t;
         float density = sampleCloudDensity(p, true);
         if (density > 0.003) {
-            // Shadow raymarch towards light source
-            vec3 ld = (day > 0.05) ? sd : md;
+            // Light source raymarch (optical depth sampling)
+            vec3 ld = (day > 0.05 && sd.y > -0.02) ? sd : md;
             float opt1 = sampleCloudDensity(p + ld * 12.0, false);
-            float opt2 = sampleCloudDensity(p + ld * 36.0, false);
-            float optical = opt1 * 26.0 + opt2 * 52.0;
+            float opt2 = sampleCloudDensity(p + ld * 38.0, false);
+            float optical = opt1 * 26.0 + opt2 * 54.0;
 
-            // Powder sugar multiple scattering effect
-            float powder = 1.0 - exp(-optical * 0.60);
-            float directShade = exp(-optical * 0.11) * (0.75 + powder * 0.45);
+            // RDR2 Powdered Sugar Multiple Scattering Model
+            float beer = exp(-optical * 0.11);
+            float powder = 1.0 - exp(-optical * 1.8);
+            float multiScatter = exp(-optical * 0.032) * 0.28;
+            float directShade = (beer + multiScatter) * (0.72 + powder * 0.48);
 
             // Realistic atmospheric ambient:
-            // Day: cool sky blue from above + warm ground bounce from below (creates deep 3D shading)
-            // Night: dark silhouette matching starry sky
+            // Day: cool zenith azure from above + warm terrain ground bounce from below
+            // Sunset: rich fiery amber glow on sun-facing rims, cool lavender-indigo shadows
             float hRel = sat((p.y - CLOUD_ALT_BASE) / CLOUD_ALT_THICK);
-            vec3 skyAmbient = vec3(0.22, 0.34, 0.50) * (0.30 + hRel * 0.70);
-            vec3 groundBounce = vec3(0.16, 0.15, 0.12) * (0.80 - hRel * 0.50);
-            vec3 dayAmbient = (skyAmbient + groundBounce) * (0.45 + 0.55 * exp(-density * 2.5));
-            vec3 nightAmbient = vec3(0.0004, 0.0007, 0.0016) * NIGHT_BRIGHTNESS;
-            vec3 ambient = mix(nightAmbient, dayAmbient, day);
+            vec3 skyAmbient = vec3(0.20, 0.32, 0.52) * (0.32 + hRel * 0.68);
+            vec3 groundBounce = vec3(0.16, 0.15, 0.11) * (0.78 - hRel * 0.48);
+            vec3 dayAmbient = (skyAmbient + groundBounce) * (0.42 + 0.58 * exp(-density * 2.4));
 
-            // Direct light: bright sunlit highlight vs soft moonlight rim
-            vec3 dayDirect = sunCol * (directShade * phase + 0.04 * exp(-optical * 0.022));
-            vec3 nightDirect = moonColor * (directShade * (0.03 + moonMie));
-            vec3 directLight = mix(nightDirect, dayDirect, day);
+            // Dramatic sunset rim warm tint (strictly when sun is at the horizon during sunset)
+            float sunsetFactor = exp(-abs(sd.y) * 8.5) * smoothstep(-0.02, 0.05, sd.y);
+            vec3 sunsetRim = vec3(1.4, 0.52, 0.12) * sunsetFactor * (0.4 + hRel * 0.6);
+            dayAmbient += sunsetRim * 0.35;
+
+            vec3 nightAmbient = vec3(0.0004, 0.0007, 0.0016) * NIGHT_BRIGHTNESS;
+            vec3 ambient = mix(nightAmbient, dayAmbient, day * sunDirectVis);
+
+            // Direct light: brilliant sunlit highlight by day vs gentle nocturnal moonlight rim by night
+            vec3 dayDirect = sunCol * (directShade * phase + 0.04 * exp(-optical * 0.022)) * sunDirectVis;
+            vec3 nightDirect = moonColor * (directShade * (0.025 + moonMie * 0.7));
+            vec3 directLight = mix(nightDirect, dayDirect, day * sunDirectVis);
 
             vec3 light = ambient + directLight;
 
-            float opacity = 1.0 - exp(-density * stepLen * 0.07);
+            float opacity = 1.0 - exp(-density * stepLen * 0.072);
             cloudSum += trans * light * opacity;
             trans *= (1.0 - opacity);
             t += stepLen;
         } else {
-            t += stepLen * 1.6;
+            // Adaptive step acceleration in empty air
+            t += stepLen * 1.65;
         }
-        if (trans < 0.015) break;
+        if (trans < 0.012) break;
     }
 
     float visibility = exp(-entry * 0.0010) * fadeWeight;

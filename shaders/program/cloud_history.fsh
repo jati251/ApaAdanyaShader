@@ -23,10 +23,10 @@ void main() {
     if(length(cameraPosition-previousCameraPosition)>8.0) return;
     if(abs(gbufferProjection[1][1]-gbufferPreviousProjection[1][1])>0.02) return;
     vec3 rd=worldDirection(viewPosition(texcoord,1.0));
-    if(abs(rd.y)<0.08) return;
-    float anchor=(CLOUD_ALTITUDE+55.0-cameraPosition.y)/rd.y;
+    if(abs(rd.y)<0.015) return;
+    float anchor=(CLOUD_ALTITUDE+55.0-cameraPosition.y)/max(abs(rd.y),0.015);
     // A single plane cannot reproject a cloud volume reliably from inside it.
-    if(anchor<110.0 || anchor>4200.0) return;
+    if(anchor<110.0 || anchor>5500.0) return;
     vec3 relative=rd*anchor+cameraPosition-previousCameraPosition;
     relative+=vec3(1.2,0.0,0.5)*frameTime;
     vec4 previous=gbufferPreviousProjection*(gbufferPreviousModelView*vec4(relative,1.0));
@@ -62,6 +62,7 @@ void main() {
     if(total<0.5) return;
     old/=total;
     float movement=length((uv-texcoord)*vec2(size));
-    float confidence=0.85*exp(-movement*0.06)*(1.0-smoothstep(0.05,0.25,abs(old.a-now.a)));
+    // Stabilized confidence: maintains temporal filtering across camera pans to avoid flashing raw noise
+    float confidence=clamp(0.88*exp(-movement*0.035),0.25,0.88)*(1.0-smoothstep(0.06,0.38,abs(old.a-now.a)));
     history=mix(now,clamp(old,lo,hi),confidence);
 }

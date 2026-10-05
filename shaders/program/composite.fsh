@@ -34,8 +34,20 @@ void main(){
     #endif
     bool hand=textureScreen(colortex2,texcoord).a>0.5 && depth<0.56;
     if(isEyeInWater==1){
-        vec3 trans=exp(-vec3(0.24,0.08,0.045)*dist/WATER_CLARITY);
-        c=c*trans+vec3(0.008,0.085,0.12)*mix(0.15,1.0,daylight())*(1.0-trans);
+        // AC4 Caribbean Underwater Optical Model: tropical absorption and submerged caustics
+        vec3 trans=exp(-vec3(0.24,0.075,0.038)*dist/WATER_CLARITY);
+        vec3 waterEquil=vec3(0.005,0.085,0.15)*mix(0.15,1.0,daylight());
+        if(depth<0.999999){
+            vec3 wPos=(gbufferModelViewInverse*vec4(vp,1.0)).xyz+cameraPosition;
+            float ct=frameTimeCounter*1.6;
+            float ca1=sin(wPos.x*2.2+wPos.z*1.5+ct*1.3);
+            float ca2=cos(wPos.x*1.7-wPos.z*2.4-ct*1.1);
+            float ca3=sin(wPos.x*3.5+wPos.z*0.9+ct*2.0);
+            float caustic=pow(sat(1.0-abs(ca1+ca2)*0.5),5.0)*0.7+pow(sat(1.0-abs(ca2+ca3)*0.5),4.0)*0.3;
+            float waterDepthFade=exp(-max(cameraPosition.y-wPos.y,0.0)*0.28);
+            c+=vec3(0.04,0.18,0.22)*caustic*waterDepthFade*daylight()*trans;
+        }
+        c=c*trans+waterEquil*(1.0-trans);
     }else if(isEyeInWater==2){
         c=mix(c,vec3(2.0,0.22,0.012),1.0-exp(-dist*1.5));
     }else if(!hand){
@@ -66,13 +78,16 @@ void main(){
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
         if(outdoor>0.001){
             float rayLength=min(dist,100.0);
-            float phase=0.025+pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0)*0.28;
+            float sunPhase=pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0);
+            float phase=0.025+sunPhase*0.28;
             float lightFactor=phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
             if(lightFactor>0.0005){
                 float sum=0.0;
                 float jitter=ignDither(gl_FragCoord.xy);
+                // Optimized exponential step clustering: concentrates precision near camera
                 for(int i=0;i<VL_SAMPLES;i++){
-                    vec3 p=rd*rayLength*(float(i)+jitter)/float(VL_SAMPLES);
+                    float stepFrac=pow((float(i)+jitter)/float(VL_SAMPLES),1.30);
+                    vec3 p=rd*rayLength*stepFrac;
                     sum+=shadowVisibility(p,vec3(0.0),1.0,false);
                 }
                 c+=lightColor()*(sum/float(VL_SAMPLES))*lightFactor;
