@@ -2,7 +2,9 @@
 #include "/lib/atmosphere.glsl"
 in vec2 texcoord;
 /* RENDERTARGETS: 8 */
-/* const int colortex8Format = R16F; */
+/*
+const int colortex8Format = R16F;
+*/
 layout(location=0) out vec4 color;
 void main(){
     float shadow=1.0;

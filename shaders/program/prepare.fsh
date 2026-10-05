@@ -2,7 +2,9 @@
 #include "/lib/atmosphere.glsl"
 in vec2 texcoord;
 /* RENDERTARGETS: 7 */
-/* const int colortex7Format = RGBA16F; */
+/*
+const int colortex7Format = RGBA16F;
+*/
 layout(location=0) out vec4 color;
 void main(){
     float azimuth=(texcoord.x-0.5)*2.0*PI,elevation=(texcoord.y-0.5)*PI;

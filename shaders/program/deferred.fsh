@@ -7,14 +7,23 @@ uniform sampler2D dhDepthTex1;
 uniform mat4 dhProjectionInverse;
 #endif
 uniform sampler2D colortex0,colortex1,colortex2,depthtex0;
+#ifdef RESOURCE_SPECULAR
+uniform sampler2D colortex3;
+/*
+const int colortex3Format=RGBA8;
+*/
+const vec4 colortex3ClearColor=vec4(0.04,0.04,0.04,0.0);
+#endif
 in vec2 texcoord;
 /* RENDERTARGETS: 0,6 */
 layout(location=0) out vec4 color;
 layout(location=1) out vec4 opaqueCopy;
-/* const int colortex0Format = RGBA16F; */
-/* const int colortex1Format = RGBA16F; */
-/* const int colortex2Format = RGBA8; */
-/* const int colortex6Format = RGBA16F; */
+/*
+const int colortex0Format = RGBA16F;
+const int colortex1Format = RGBA16F;
+const int colortex2Format = RGBA8;
+const int colortex6Format = RGBA16F;
+*/
 const vec4 colortex1ClearColor=vec4(0.5,0.5,1.0,0.0);
 const vec4 colortex2ClearColor=vec4(1.0,0.0,0.0,0.0);
 void main(){
@@ -96,8 +105,12 @@ void main(){
             if(mat.r<0.38) {
                 vec3 reflected=reflect(normalize(vp),N); vec2 hit;
                 vec3 reflection=environmentRadiance(worldDirection(reflected))*mat.g*mat.g;
-                if(traceScreen(depthtex0,vp+N*0.08,reflected,0.30,min(SSR_STEPS,48),hit)) reflection=mix(reflection,texture(colortex0,hit).rgb,edgeFade(hit));
-                float fresnel=0.04+0.96*pow(1.0-max(dot(N,normalize(-vp)),0.0),5.0);
+                if(traceScreen(depthtex0,vp+N*0.08,reflected,0.30,SSR_STEPS,hit)) reflection=mix(reflection,texture(colortex0,hit).rgb,edgeFade(hit));
+                vec3 f0=vec3(0.04);
+                #ifdef RESOURCE_SPECULAR
+                f0=texture(colortex3,texcoord).rgb;
+                #endif
+                vec3 fresnel=f0+(1.0-f0)*pow(1.0-max(dot(N,normalize(-vp)),0.0),5.0);
                 scene=mix(scene,reflection,fresnel*(1.0-mat.r));
             }
             #endif
@@ -106,6 +119,4 @@ void main(){
     #endif
     color=vec4(max(scene,vec3(0.0)),1.0); opaqueCopy=color;
 }
-
-
 

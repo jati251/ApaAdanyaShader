@@ -7,8 +7,16 @@ out vec4 glcolor;
 out vec3 viewNormal, viewPos, worldPos;
 out vec4 tangent;
 flat out float materialId;
+#if defined(POM) && defined(TERRAIN) && defined(RESOURCE_NORMALS)
+flat out vec4 atlasBounds;
+#endif
 void main() {
     texcoord=(gl_TextureMatrix[0]*gl_MultiTexCoord0).xy;
+    #if defined(POM) && defined(TERRAIN) && defined(RESOURCE_NORMALS)
+    vec2 mid=(gl_TextureMatrix[0]*vec4(mc_midTexCoord,0.0,1.0)).xy;
+    vec2 halfSize=abs(texcoord-mid);
+    atlasBounds=vec4(mid-halfSize,mid+halfSize);
+    #endif
     lmcoord=(gl_TextureMatrix[1]*gl_MultiTexCoord1).xy;
     glcolor=gl_Color;
     viewNormal=normalize(gl_NormalMatrix*gl_Normal);

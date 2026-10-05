@@ -7,12 +7,12 @@ screen.WORLD=Dunia & Tumbuhan
 screen.POST=Pasca-Proses & Kamera
 
 # Profil
-profile.POTATO=Potato (180+ FPS)
+profile.POTATO=Potato
 profile.LOW=Rendah (FPS Tinggi)
 profile.MEDIUM=Sedang (Seimbang)
 profile.HIGH=Tinggi (Realistis)
 profile.ULTRA=Ultra (Maksimal)
-profile.comment=Potato: FPS Maksimal untuk PC / laptop kentang & GPU internal. Melewati seluruh raymarching, bayangan, dan buffer berat | Rendah: Bayangan cepat 1-sample & awan 2D | Sedang: Refleksi SSR & awan volumetrik 3D | Tinggi: SSGI, godrays, bayangan tajam | Ultra: Kualitas visual puncak.
+profile.comment=Potato/Low: beban GPU rendah. Medium: refleksi air dan awan volumetrik. High/Ultra: cahaya pantul, DOF dan material. Extreme: setelan sinematik; performa bergantung GPU, resolusi dan dunia.
 
 # Opsi Pencahayaan
 option.SSAO=Screen-Space Ambient Occlusion
@@ -97,4 +97,36 @@ value.TONEMAP_OPERATOR.1=Linear (Gaya Asli/Vanilla)
 option.COLOR_SATURATION=Saturasi Warna
 option.COLOR_CONTRAST=Kontras Warna
 option.EXPOSURE=Pencahayaan Kamera (Exposure)
-option.COLOR_DITHERING=Dithering Warna Temporal
+option.COLOR_DITHERING=Dithering Warna Teratur
+
+screen.CAMERA=Lensa & Kedalaman Fokus
+screen.PARTICLES=Partikel & Cuaca
+profile.EXTREME=Extreme (Sinematik)
+option.RESOURCE_SPECULAR=Kilap & Emisi LabPBR
+option.RESOURCE_SPECULAR.comment=Membaca smoothness, F0, logam, hamburan bawah permukaan dan emisi. Logam memakai albedo sebagai F0. Peta tinggi diatur melalui POM; porositas belum digunakan.
+option.SPECULAR_AA=Kurangi Kedipan Kilap
+option.SPECULAR_AA.comment=Melebarkan kilap yang lebih kecil dari piksel agar air dan normal map tidak berkelip berlebihan.
+option.SOFT_PARTICLES=Pertemuan Partikel Halus
+option.SOFT_PARTICLES.comment=Memudarkan partikel transparan saat menyentuh blok padat. Tidak menambah partikel baru.
+option.PARTICLE_SOFTNESS=Jarak Pudar Partikel
+option.PARTICLE_LIGHTING=Cahaya & Bayangan Partikel
+option.WEATHER_OPACITY=Kepekatan Hujan & Salju
+option.DOF=Kedalaman Fokus (DOF)
+option.DOF.comment=Blur lensa sebelum pemetaan warna. Area fokus melewati proses blur. Matikan untuk gambar tajam dan beban GPU lebih rendah.
+option.DOF_AUTOFOCUS=Fokus Otomatis
+option.DOF_AUTOFOCUS.comment=Mengikuti jarak bidikan dengan transisi halus. Matikan untuk memilih jarak fokus tetap.
+option.DOF_FOCUS_DISTANCE=Jarak Fokus Manual (Blok)
+option.DOF_FOCAL_LENGTH=Panjang Fokus Lensa (mm)
+option.DOF_FSTOP=Bukaan Lensa (f-number)
+option.DOF_FSTOP.comment=Nilai kecil membuat latar lebih kabur. Tidak mengubah pencahayaan kamera.
+option.DOF_SAMPLES=Sampel Bokeh
+option.DOF_MAX_RADIUS=Radius Blur Maksimum (Piksel)
+
+option.POM=Tekstur Timbul (POM)
+option.POM.comment=Kedalaman dari alpha normal map LabPBR. Memerlukan Normal Map Resource Pack. Daun, tanaman dan LOD jauh dilewati. Tidak mengubah siluet atau kedalaman geometri.
+option.POM_STEPS=Langkah Parallax Maksimum
+option.POM_STEPS.comment=Jumlah sampel mengikuti sudut pandang, ditambah 3 sampel perbaikan. Nilai tinggi memperjelas celah sempit dengan beban GPU lebih besar.
+option.POM_DEPTH=Kedalaman Parallax
+option.POM_DEPTH.comment=Kedalaman relatif terhadap satu ubin tekstur. Standar LabPBR adalah 0.25. Nilai nol mematikan perpindahan tekstur.
+option.POM_DISTANCE=Jarak Parallax (Blok)
+option.POM_DISTANCE.comment=Mulai memudar pada 65% jarak ini. Penelusuran tinggi dilewati setelah batas jarak.

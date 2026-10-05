@@ -184,8 +184,8 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     #if CLOUDS == 2
     #if !defined(NETHER) && !defined(END)
     // Smooth horizon fade
-    if (rd.y < 0.015) return background;
-    float horizonFade = smoothstep(0.015, 0.08, rd.y);
+    if (abs(rd.y) < 0.015) return background;
+    float horizonFade = smoothstep(0.015, 0.08, abs(rd.y));
 
     float a = (CLOUD_ALT_BASE - cameraPosition.y) / rd.y;
     float b = (CLOUD_ALT_BASE + CLOUD_ALT_THICK - cameraPosition.y) / rd.y;
@@ -225,6 +225,7 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     vec3 cloudSum = vec3(0.0);
 
     for (int i = 0; i < CLOUD_STEPS; i++) {
+        if(t>leave) break;
         vec3 p = cameraPosition + rd * t;
         float density = sampleCloudDensity(p, true);
         if (density > 0.003) {

@@ -7,12 +7,12 @@ screen.WORLD=World & Vegetation
 screen.POST=Post-Processing & Camera
 
 # Profiles
-profile.POTATO=Potato (180+ FPS)
-profile.LOW=Low (High FPS)
+profile.POTATO=Potato
+profile.LOW=Low
 profile.MEDIUM=Medium (Balanced)
 profile.HIGH=High (Realistic)
 profile.ULTRA=Ultra (Showcase)
-profile.comment=Potato: Maximum FPS for low-end / integrated GPUs. Skips all raymarching, shadows, and heavy buffers | Low: Fast 1-sample shadows & 2D planar clouds | Medium: SSR water reflections & 3D volumetric clouds | High: SSGI, godrays, and high-res shadows | Ultra: Full visual fidelity.
+profile.comment=Potato/Low: reduced GPU cost. Medium: water SSR and volumetric clouds. High/Ultra: indirect light, lens blur and materials. Extreme: cinematic settings; performance depends on GPU, resolution and scene.
 
 # Lighting Options
 option.SSAO=Screen-Space Ambient Occlusion
@@ -37,9 +37,9 @@ option.SHADOWS.comment=Renders real-time sun and moon shadows. Disabling dynamic
 option.shadowMapResolution=Shadow Map Resolution
 option.shadowDistance=Shadow Distance
 option.SHADOW_SAMPLES=Shadow Softness & Samples
-option.SHADOW_SAMPLES.comment=1 sample produces crisp, instantaneous hard shadows (optimal for potato/low devices). Higher samples produce smooth penumbra.
+option.SHADOW_SAMPLES.comment=1 sample gives hard shadow edges. Higher counts filter shadow edges at additional GPU cost.
 option.SHADOW_ALPHA_TEST=Shadow Alpha Cutouts
-option.SHADOW_ALPHA_TEST.comment=Allows leaves and plants to cast cutout shadows. Disabling this enables GPU double-rate depth rasterization.
+option.SHADOW_ALPHA_TEST.comment=Preserves leaf and plant cutouts in shadows. Disable only if solid foliage silhouettes are acceptable.
 option.CLOUD_SHADOWS=Moving Cloud Shadows
 option.sunPathRotation=Sun Angle & Path Rotation
 
@@ -97,4 +97,36 @@ value.TONEMAP_OPERATOR.1=Linear (Vanilla)
 option.COLOR_SATURATION=Color Saturation
 option.COLOR_CONTRAST=Color Contrast
 option.EXPOSURE=Camera Exposure
-option.COLOR_DITHERING=Temporal Color Dithering
+option.COLOR_DITHERING=Ordered Color Dithering
+
+screen.CAMERA=Lens & Depth of Field
+screen.PARTICLES=Particles & Weather
+profile.EXTREME=Extreme (Cinematic)
+option.RESOURCE_SPECULAR=LabPBR Specular & Emission
+option.RESOURCE_SPECULAR.comment=Reads LabPBR smoothness, F0, metalness, subsurface and emission maps. Metals use albedo F0. Height maps are controlled separately by POM; porosity is not used.
+option.SPECULAR_AA=Filter Specular Shimmer
+option.SPECULAR_AA.comment=Broadens subpixel highlights to reduce sparkling on moving water and normal maps.
+option.SOFT_PARTICLES=Soft Particle Intersections
+option.SOFT_PARTICLES.comment=Fades translucent particles against opaque terrain. Does not generate new particles.
+option.PARTICLE_SOFTNESS=Particle Fade Distance
+option.PARTICLE_LIGHTING=Particle Sunlight & Shadows
+option.WEATHER_OPACITY=Rain & Snow Opacity
+option.DOF=Depth of Field
+option.DOF.comment=Lens blur before tone mapping. Focused pixels skip the blur loop. Disable for the sharpest gameplay and lower GPU cost.
+option.DOF_AUTOFOCUS=Autofocus
+option.DOF_AUTOFOCUS.comment=Uses smoothed crosshair depth. Disable to set a fixed focus distance.
+option.DOF_FOCUS_DISTANCE=Manual Focus Distance (Blocks)
+option.DOF_FOCAL_LENGTH=Focal Length (mm)
+option.DOF_FSTOP=Aperture (f-number)
+option.DOF_FSTOP.comment=Lower values produce more background blur. This controls blur independently of camera exposure.
+option.DOF_SAMPLES=Bokeh Samples
+option.DOF_MAX_RADIUS=Maximum Blur Radius (Pixels)
+
+option.POM=Parallax Occlusion Mapping (POM)
+option.POM.comment=Terrain relief from LabPBR normal-map alpha. Requires Resource Pack Normal Maps. Leaves, plants and distant LODs are excluded. Does not change silhouettes or geometry depth.
+option.POM_STEPS=Maximum Parallax Steps
+option.POM_STEPS.comment=Adaptive view-angle sample budget, followed by 3 refinement samples. Higher counts resolve narrow grooves at higher GPU cost.
+option.POM_DEPTH=Parallax Depth
+option.POM_DEPTH.comment=Maximum relief relative to a texture tile. LabPBR standard depth is 0.25. Zero disables displacement.
+option.POM_DISTANCE=Parallax Distance (Blocks)
+option.POM_DISTANCE.comment=Fades out starting at 65% of this distance and skips height tracing beyond it.

@@ -29,7 +29,7 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define STARS // Night Sky Stars
 #define SUN_MOON_GLOW // Celestial Body Atmospheric Corona
 #define FOG_ENABLED // Atmospheric Distance Fog
-#define FOG_DENSITY 1.0 // [0.0 0.25 0.5 0.75 1.0 1.5 2.0]
+#define FOG_DENSITY 1.0 // [0.0 0.25 0.5 0.65 0.75 0.80 1.0 1.5 2.0]
 
 // ========== [ WATER & REFLECTIONS ] ==========
 #define WATER_REFRACTION // Underwater Optical Distortion
@@ -49,6 +49,16 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define WIND_SPEED 1.0 // [0.5 0.75 1.0 1.25 1.5 2.0]
 #define RAIN_PUDDLES // Dynamic Rain Puddles & Wet Surfaces
 //#define RESOURCE_NORMALS // Tangent-Space Normal Maps
+//#define RESOURCE_SPECULAR // LabPBR smoothness, reflectance and emission
+//#define POM // LabPBR height-map parallax on terrain
+#define POM_STEPS 16 // [8 16 24 32 48]
+#define POM_DEPTH 0.25 // [0.0 0.05 0.10 0.15 0.25]
+#define POM_DISTANCE 24.0 // [8.0 16.0 24.0 32.0 48.0 64.0]
+#define SPECULAR_AA // Filter subpixel highlights
+#define SOFT_PARTICLES // Fade translucent particles at opaque surfaces
+#define PARTICLE_SOFTNESS 0.35 // [0.10 0.20 0.35 0.50 0.75]
+#define PARTICLE_LIGHTING // Directional light for particles
+#define WEATHER_OPACITY 0.65 // [0.25 0.40 0.65 0.80 1.0]
 
 // ========== [ POST-PROCESSING ] ==========
 #define BLOOM // Bloom Glow Effect
@@ -61,9 +71,17 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define COLOR_CONTRAST 1.04 // [0.90 1.0 1.04 1.08 1.15 1.25]
 #define EXPOSURE 1.0 // [0.6 0.8 1.0 1.2 1.4]
 #define COLOR_DITHERING // Temporal Gradient Dithering
+//#define DOF // Lens depth of field
+#define DOF_AUTOFOCUS // Smooth focus at the crosshair
+#define DOF_FOCUS_DISTANCE 8.0 // [1.0 2.0 3.0 5.0 8.0 12.0 24.0 48.0 128.0]
+#define DOF_FOCAL_LENGTH 50.0 // [24.0 35.0 50.0 70.0 85.0]
+#define DOF_FSTOP 2.8 // [1.4 2.0 2.8 4.0 5.6 8.0]
+#define DOF_SAMPLES 16 // [8 16 24 32]
+#define DOF_MAX_RADIUS 12.0 // [6.0 8.0 12.0 16.0 24.0]
 
 const float ambientOcclusionLevel = 0.65;
 const float wetnessHalflife = 90.0;
 const float drynessHalflife = 180.0;
+const float centerDepthHalflife = 0.5;
 
 #endif

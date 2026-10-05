@@ -102,15 +102,8 @@ void main(){
     float foamNoise=noise3D(worldPos*3.5+frameTimeCounter*0.5)*0.5+0.5;
     float foam=(1.0-smoothstep(0.04,0.32,thickness))*foamNoise*0.16*shoreDepth;
     result=mix(result,vec3(0.65)*mix(0.15,1.0,daylight()),foam);
-    #else
-    // Fast analytical shore edge foam for potato devices (pure sine, 0 noise cost!)
-    float shoreDepth=smoothstep(0.01,0.30,thickness);
-    float shoreWave=sin(worldPos.x*2.8+worldPos.z*2.4+frameTimeCounter*1.8)*0.5+0.5;
-    float fastFoam=(1.0-smoothstep(0.02,0.18,thickness))*shoreWave*0.13*shoreDepth;
-    result=mix(result,vec3(0.70)*mix(0.20,1.0,daylight()),fastFoam);
     #endif
     color=vec4(max(result,vec3(0.0)),1.0);
 }
-
 
 

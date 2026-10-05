@@ -22,9 +22,13 @@ vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v);
 vec3 sunDirection() { return worldDirection(sunPosition); }
 float daylight() { return smoothstep(-0.10,0.18,sunDirection().y); }
 vec3 lightColor() {
+    #if defined(NETHER) || defined(END)
+    return vec3(0.0);
+    #else
     float elev=abs(sunDirection().y);
     vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.85,2.52,2.05),smoothstep(0.02,0.38,elev));
     return mix(vec3(0.055,0.085,0.16)*NIGHT_BRIGHTNESS,day,daylight())*(1.0-rainStrength*0.78);
+    #endif
 }
 vec3 distortShadow(vec3 p) { p.xy/=0.15+length(p.xy)*0.85; p.z*=0.2; return p; }
 vec3 waveOffset(vec3 p, float id, float top) {
@@ -41,4 +45,3 @@ vec3 waveOffset(vec3 p, float id, float top) {
     return vec3(0.0);
 }
 #endif
-

@@ -1,3 +1,5 @@
 #version 330 compatibility
 
-#include "/program/surface.vsh"
+#define TRANSLUCENT
+#define WEATHER
+#include "/program/particles.vsh"
