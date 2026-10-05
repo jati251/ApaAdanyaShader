@@ -21,10 +21,12 @@ in vec3 viewNormal,viewPos,worldPos;
 in vec4 tangent;
 flat in float materialId;
 #ifdef RESOURCE_SPECULAR
-/* RENDERTARGETS: 0,1,2,3 */
+/* RENDERTARGETS: 0,1,2,3,15 */
 layout(location=3) out vec4 reflectanceData;
+layout(location=4) out vec4 responseData;
 #else
-/* RENDERTARGETS: 0,1,2 */
+/* RENDERTARGETS: 0,1,2,15 */
+layout(location=3) out vec4 responseData;
 #endif
 layout(location=0) out vec4 color;
 layout(location=1) out vec4 normalData;
@@ -39,8 +41,7 @@ void main(){
     #if defined(RESOURCE_NORMALS) && defined(TERRAIN)
     vec3 tangentVector=tangent.xyz-N*dot(tangent.xyz,N);
     bool validTangent=dot(tangentVector,tangentVector)>0.0001 && abs(tangent.w)>0.5;
-    vec3 fallbackT=normalize(cross(abs(N.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0),N));
-    vec3 T=validTangent?normalize(tangentVector):fallbackT;
+    vec3 T=validTangent?normalize(tangentVector):normalize(cross(abs(N.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0),N));
     mat3 tbn=mat3(T,cross(N,T)*(tangent.w<0.0?-1.0:1.0),N);
     #ifdef AA_POM
     bool plant=materialId>1000.5 && materialId<1002.5;
@@ -62,9 +63,9 @@ void main(){
     tex=glcolor;
     #endif
     if(tex.a<max(alphaTestRef,0.001)) discard;
-    vec3 albedo=pow(max(tex.rgb,vec3(0.0)),vec3(2.2));
+    vec3 albedo=srgbToLinear(tex.rgb);
     #ifdef ENTITY
-    albedo=mix(albedo,pow(max(entityColor.rgb,vec3(0.0)),vec3(2.2)),entityColor.a);
+    albedo=mix(albedo,srgbToLinear(entityColor.rgb),entityColor.a);
     #endif
     #if defined(RESOURCE_NORMALS) && defined(TERRAIN)
     vec4 normalMap=textureGrad(normals,materialUV,uvDx,uvDy);
@@ -73,8 +74,8 @@ void main(){
     materialAO*=normalMap.b;
     N=normalize(tbn*tn);
     #endif
-    float foliage=step(1000.5,materialId)*(1.0-step(1002.5,materialId));
-    float emission=step(1003.5,materialId)*(1.0-step(1004.5,materialId));
+    float foliage=float(materialId>1000.5 && materialId<1002.5);
+    float emission=float(materialId>1003.5 && materialId<1004.5);
     #ifdef EMISSIVE
     emission=1.0;
     #endif
@@ -86,13 +87,7 @@ void main(){
     #if defined(RESOURCE_SPECULAR) && defined(TERRAIN)
     vec4 spec=textureGrad(specular,materialUV,uvDx,uvDy);
     if(any(greaterThan(spec.rgb,vec3(0.0))) || (spec.a>0.0 && spec.a<0.999)) {
-        // BRDF squares perceptual roughness internally.
-        roughness=max(1.0-spec.r,0.045);
-        metal=step(229.5/255.0,spec.g);
-        f0=mix(vec3(spec.g),albedo,metal);
-        emission=max(emission,spec.a<0.999?spec.a*(255.0/254.0):0.0);
-        foliage=max(foliage,sat((spec.b*255.0-65.0)/190.0));
-        porosity=spec.b<=64.5/255.0?sat(spec.b*255.0/64.0):0.0;
+        decodeLabPBR(spec,albedo,roughness,f0,metal,emission,foliage,porosity);
     }
     #endif
     #ifdef RAIN_PUDDLES
@@ -100,10 +95,11 @@ void main(){
     float wet=wetness*smoothstep(0.90,0.98,lmcoord.y)*max(nw.y,0.0);
     if(wet>0.001){
         float puddle=smoothstep(0.40,0.65,noise2D(worldPos.xz*0.23))*wet;
-        roughness=mix(roughness,0.09,puddle*(1.0-porosity*0.65));
-        albedo*=1.0-wet*(0.12+porosity*0.30);
-        #if !defined(NETHER) && !defined(END)
-        if(rainStrength > 0.04 && puddle > 0.01) {
+        if(puddle>0.0001){
+            roughness=mix(roughness,0.09,puddle*(1.0-porosity*0.65));
+            albedo*=1.0-wet*(0.12+porosity*0.30);
+            #if !defined(NETHER) && !defined(END)
+            if(rainStrength > 0.04 && puddle > 0.01) {
             vec2 ripPos = worldPos.xz * 2.4;
             float rt = frameTimeCounter * 4.2;
             vec2 ripGrad = vec2(0.0);
@@ -122,10 +118,12 @@ void main(){
             N = normalize(mix(N, mat3(gbufferModelView) * ripNormalW, puddle * min(rainStrength * 1.4, 0.85)));
         }
         #endif
+        }
     }
     #endif
     roughness=filteredRoughness(N,roughness);
-    vec3 shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO);
+    float ambientFraction;
+    vec3 shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO,ambientFraction);
     bool flame=materialId>1005.5 && materialId<1007.5;
     #ifdef ENTITY
     flame=flame || entityId==1101;
@@ -133,8 +131,10 @@ void main(){
     if(flame){
         shaded=flameRadiance(tex.rgb,worldPos,materialId>1006.5);
         emission=1.0;
+        ambientFraction=0.0;
     }
     color=vec4(shaded,tex.a);
+    responseData=vec4(diffuseResponse(albedo,f0,metal)*materialAO,ambientFraction);
     #ifdef RESOURCE_SPECULAR
     reflectanceData=vec4(f0,metal);
     #endif

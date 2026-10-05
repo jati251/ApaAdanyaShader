@@ -24,13 +24,13 @@ vec3 temporalDecode(vec3 c) {
     return rgb/max(1.0-max(rgb.r,max(rgb.g,rgb.b)),0.0001);
 }
 vec3 applyTAA(vec2 uv,vec3 currentRGB,out float historyDepth) {
-    float depth=textureScreen(depthtex0,uv).r;
+    float depth=depthScreen(depthtex0,uv);
     float mask=textureScreen(colortex2,uv).a;
     bool sky=depth>=0.999999;
     vec3 vp=viewPosition(uv,depth);
     #ifdef DISTANT_HORIZONS
     if(sky) {
-        float dh=textureScreen(dhDepthTex0,uv).r;
+        float dh=depthScreen(dhDepthTex0,uv);
         if(dh<0.999999) {
             vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,dh*2.0-1.0,1.0);
             vp=p.xyz/p.w;

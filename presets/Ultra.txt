@@ -1,10 +1,10 @@
-# Profile: REALISM
-# Realism (Gameplay) / Realistis (Gameplay)
-# Natural gameplay at native resolution: 2048 shadows, 3 GI rays, 24 SSR steps, 16 cloud steps, mild haze/bloom. Temporal GI/AO, neutral tone mapping; DOF/motion blur off.
-# Gameplay natural pada resolusi native: bayangan 2048, 3 sinar GI, SSR 24 langkah, awan 16 langkah, haze/bloom ringan. GI/AO temporal dan tone mapping netral; DOF/motion blur mati.
+# Profile: ULTRA
+# Ultra (Detailed Gameplay) / Ultra (Gameplay Detail)
+# 2048 shadows, 4 GI rays, 32 SSR steps, 20 cloud steps, 24 POM steps. Temporal GI/AO and neutral tone mapping; lens blur off.
+# Bayangan 2048, 4 sinar GI, SSR 32 langkah, awan 20 langkah dan POM 24 langkah. GI/AO temporal dan tone mapping netral; blur lensa mati.
 AUTO_EXPOSURE=true
 BLOOM=true
-BLOOM_STRENGTH=0.02
+BLOOM_STRENGTH=0.08
 CAVE_BRIGHTNESS=1.0
 CA_STRENGTH=1.0
 CHROMATIC_ABERRATION=false
@@ -14,7 +14,7 @@ CLOUD_COVERAGE=0.48
 CLOUD_DETAIL=true
 CLOUD_RECONSTRUCTION=true
 CLOUD_SHADOWS=true
-CLOUD_STEPS=16
+CLOUD_STEPS=20
 COLOR_CONTRAST=1.0
 COLOR_DITHERING=true
 COLOR_PROFILE=0
@@ -33,11 +33,11 @@ DOF_SAMPLES=8
 EXPOSURE=1.0
 FILM_GRAIN=false
 FILM_GRAIN_STRENGTH=0.03
-FOG_DENSITY=0.65
+FOG_DENSITY=0.75
 FOG_ENABLED=true
 FXAA=true
-GI_SAMPLES=3
-GI_STRENGTH=0.45
+GI_SAMPLES=4
+GI_STRENGTH=0.50
 HALF_RES_DOF=false
 HALF_RES_LIGHTING=true
 MOTION_BLUR=false
@@ -45,32 +45,32 @@ MOTION_BLUR_HAND=false
 MOTION_BLUR_LOW_LATENCY=false
 MOTION_BLUR_SAMPLES=4
 MOTION_BLUR_STRENGTH=0.50
-NIGHT_BRIGHTNESS=1.0
+NIGHT_BRIGHTNESS=1.5
 PARTICLE_LIGHTING=true
 PARTICLE_SOFTNESS=0.35
 POM=true
 POM_DEPTH=0.25
-POM_DISTANCE=24.0
-POM_STEPS=16
+POM_DISTANCE=32.0
+POM_STEPS=24
 RAIN_PUDDLES=true
 RESOURCE_NORMALS=true
 RESOURCE_SPECULAR=true
 SHADOWS=true
 SHADOW_ALPHA_TEST=true
-SHADOW_SAMPLES=6
+SHADOW_SAMPLES=8
 SOFT_PARTICLES=true
 SPECULAR_AA=true
 SSAO=true
-SSAO_SAMPLES=6
+SSAO_SAMPLES=8
 SSGI=true
 SSR=true
-SSR_STEPS=24
+SSR_STEPS=32
 STARS=true
 SUN_MOON_GLOW=true
 TAA=true
-TAA_BLEND=0.80
+TAA_BLEND=0.85
 TAA_SHARPENING=false
-TAA_SHARPEN_STRENGTH=0.40
+TAA_SHARPEN_STRENGTH=0.45
 TEMPORAL_CLOUDS=true
 TEMPORAL_INDIRECT=true
 TONEMAP_OPERATOR=2
@@ -92,6 +92,6 @@ WAVING_LEAVES=true
 WAVING_PLANTS=true
 WEATHER_OPACITY=0.65
 WIND_SPEED=1.0
-shadowDistance=144.0
+shadowDistance=176.0
 shadowMapResolution=2048
 sunPathRotation=-25.0

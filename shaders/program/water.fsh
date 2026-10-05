@@ -1,11 +1,12 @@
 #include "/lib/common.glsl"
 #include "/lib/lighting.glsl"
 #include "/lib/environment.glsl"
-#include "/lib/trace.glsl"
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex0;
+uniform sampler2D dhDepthTex1;
 uniform mat4 dhProjectionInverse;
+#define AA_TRACE_DH
 #endif
+#include "/lib/trace.glsl"
 uniform sampler2D gtexture,colortex6,depthtex1;
 uniform float alphaTestRef;
 in vec2 texcoord,lmcoord;
@@ -29,11 +30,11 @@ vec3 waterNormal(out float waveCrest){
 }
 
 vec3 opaquePosition(vec2 uv,out bool valid) {
-    float depth=textureScreen(depthtex1,uv).r;
+    float depth=depthScreen(depthtex1,uv);
     valid=depth<0.999999;
     if(valid) return viewPosition(uv,depth);
     #ifdef DISTANT_HORIZONS
-    float dhD=textureScreen(dhDepthTex0,uv).r;
+    float dhD=depthScreen(dhDepthTex1,uv);
     if(dhD<1.0){
         valid=true;
         vec4 pos=dhProjectionInverse*vec4(uv*2.0-1.0,dhD*2.0-1.0,1.0);
@@ -41,6 +42,43 @@ vec3 opaquePosition(vec2 uv,out bool valid) {
     }
     #endif
     return viewPos+normalize(viewPos)*80.0;
+}
+
+float worldUpDelta(vec3 v) {
+    return dot(vec3(gbufferModelViewInverse[0][1], gbufferModelViewInverse[1][1], gbufferModelViewInverse[2][1]), v);
+}
+
+bool waterReflectionAboveSurface(vec2 hit,bool underwater) {
+    if(underwater) return true;
+    bool valid;
+    vec3 position=opaquePosition(hit,valid);
+    // Ocean reflection cannot originate from a submerged bed or underwater plant.
+    return valid && worldUpDelta(position-viewPos)>=-0.02;
+}
+
+vec3 waterReflectionSample(vec2 hit,float roughness) {
+    vec3 center=textureScreen(colortex6,hit).rgb;
+    if(roughness<=0.08) return center;
+    bool centerValid;
+    float centerZ=traceSurfaceDepth(depthtex1,hit,centerValid);
+    vec2 radius=max(vec2(roughness*0.004),1.5/vec2(viewWidth,viewHeight));
+    const vec2 offsets[4]=vec2[4](vec2(-1,0),vec2(1,0),vec2(0,-1),vec2(0,1));
+    vec3 sum=center*0.40;
+    float weight=0.40;
+    for(int i=0;i<4;i++) {
+        vec2 uv=hit+offsets[i]*radius;
+        if(any(lessThan(uv,vec2(0.001))) || any(greaterThan(uv,vec2(0.999)))) continue;
+        bool valid;
+        float z=traceSurfaceDepth(depthtex1,uv,valid);
+        // Roughness integrates sky coverage around foliage; rejecting those taps
+        // preserves hard black/sky speckles instead of filtering the silhouette.
+        if(!valid || (centerValid && abs(z-centerZ)<max(0.15,abs(centerZ)*0.02)
+            && waterReflectionAboveSurface(uv,isEyeInWater==1))) {
+            sum+=textureScreen(colortex6,uv).rgb*0.15;
+            weight+=0.15;
+        }
+    }
+    return sum/weight;
 }
 
 void main(){
@@ -51,15 +89,28 @@ void main(){
     vec4 tex=texture(gtexture,texcoord)*glcolor;
     if(tex.a<0.001) discard;
     if(abs(materialId-1003.0)>0.5){
-        vec3 albedo=pow(max(tex.rgb,vec3(0.0)),vec3(2.2));
+        vec3 albedo=srgbToLinear(tex.rgb);
         color=vec4(shadeSurface(albedo,normalize(viewNormal),viewPos,lmcoord,0.24,0.0,0.0,vec3(0.04)),tex.a); return;
     }
     vec2 screenUV=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
+    bool underwater=isEyeInWater==1;
     float waveCrest=0.0;
-    vec3 N=waterNormal(waveCrest),V=normalize(-viewPos),R=reflect(-V,N);
-    float roughness=filteredRoughness(N,WATER_ROUGHNESS);
+    vec3 N=waterNormal(waveCrest),V=normalize(-viewPos);
+    vec3 meshN=normalize(viewNormal);
+    if(dot(meshN,V)<0.0) meshN=-meshN;
+    if(dot(N,V)<0.0) N=-N;
     bool validBehind;
     vec3 behind=opaquePosition(screenUV,validBehind);
+    float bottomDepth=validBehind?max(worldUpDelta(viewPos-behind),0.0):80.0;
+    // Large ocean slopes flatten continuously near solid banks and shallow steps.
+    float shoreWaves=underwater?1.0:smoothstep(0.05,1.25,bottomDepth);
+    N=normalize(mix(meshN,N,shoreWaves));
+    vec3 R=reflect(-V,N);
+    if(dot(R,meshN)<0.02) R=normalize(R+meshN*(0.02-dot(R,meshN)));
+    // Unresolved capillary waves broaden highlights rather than vanish into a mirror.
+    float footprint=max(length(dFdx(worldPos.xz)),length(dFdy(worldPos.xz)));
+    float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
+        +0.012*smoothstep(0.15,2.0,footprint)));
     float thickness=validBehind?clamp(length(behind-viewPos),0.0,80.0):80.0;
     vec2 refractUV=screenUV;
     #ifdef WATER_REFRACTION
@@ -71,7 +122,12 @@ void main(){
     if(projected.w>0.0 && all(greaterThan(candidate,vec2(0.001))) && all(lessThan(candidate,vec2(0.999)))) {
         bool validRefracted;
         vec3 refractPos=opaquePosition(candidate,validRefracted);
-        if(!validRefracted || refractPos.z<viewPos.z-0.02) {
+        vec3 candidateRay=normalize(viewPosition(candidate,0.5));
+        float planeDenom=dot(meshN,candidateRay);
+        float planeDistance=dot(meshN,viewPos)/min(planeDenom,-0.0001);
+        bool behindPlane=validRefracted && dot(refractPos,candidateRay)>planeDistance+0.02;
+        bool submerged=!validRefracted || worldUpDelta(viewPos-refractPos)>0.01;
+        if((!validRefracted || behindPlane) && (underwater || submerged)) {
             refractUV=candidate;
             behind=refractPos;
             validBehind=validRefracted;
@@ -83,14 +139,14 @@ void main(){
     vec3 transmitted=textureScreen(colortex6,refractUV).rgb;
 
     // Wavelength-dependent absorption through the water column.
-    vec3 absorption = vec3(0.24, 0.048, 0.016) / WATER_CLARITY;
+    // Above-surface terrain/sky is reached through air. Eye-to-surface water
+    // absorption is applied once by composite, not again using the air distance.
+    vec3 absorption = underwater?vec3(0.0):waterAbsorption();
     vec3 transmittance = exp(-absorption * thickness);
 
     // Caribbean Gradient: Crystal Turquoise Shallows -> Deep Oceanic Sapphire
     float day = daylight();
-    vec3 deepWater = vec3(0.005, 0.038, 0.12) * mix(0.12, 1.0, day) * (0.2 + lmcoord.y * 0.8);
-    vec3 shallowWater = vec3(0.02, 0.28, 0.36) * mix(0.15, 1.0, day) * (0.25 + lmcoord.y * 0.75);
-    vec3 waterColor = mix(shallowWater, deepWater, smoothstep(1.5, 16.0, thickness));
+    vec3 waterColor = waterBodyColor(thickness,lmcoord.y);
 
     transmitted = transmitted * transmittance + waterColor * (1.0 - transmittance);
 
@@ -99,32 +155,41 @@ void main(){
     vec3 L = normalize(shadowLightPosition);
     float sunScatterLobe = pow(sat(dot(V, -L)), 4.0) * 0.70 + pow(sat(dot(V, -L) * 0.5 + 0.5), 2.0) * 0.30;
     vec3 sssColor = vec3(0.02, 0.46, 0.42);
-    vec3 waveSSS = sssColor * lightColor() * sunScatterLobe * (1.0 - transmittance.g) * min(thickness, 4.0) * 0.14 * lmcoord.y;
-    transmitted += waveSSS;
+    float sssCrest = 0.50 + 0.80 * sat(waveCrest);
+    vec3 waveSSS = sssColor * lightColor() * sunScatterLobe * (1.0 - transmittance.g) * min(thickness, 4.0) * 0.16 * lmcoord.y * sssCrest;
+    if(!underwater) transmitted += waveSSS;
+
+    // Gentle natural foam in shallow shoreline wash
+    if(!underwater && validBehind && bottomDepth < 0.38) {
+        float foamNoise = hash12(floor(worldPos.xz * 3.5));
+        float foamEdge = smoothstep(0.35, 0.03, bottomDepth);
+        float foamWave = smoothstep(0.20, 0.65, waveCrest + foamEdge * 0.35);
+        float foam = foamEdge * foamWave * (0.65 + 0.35 * foamNoise);
+        vec3 foamCol = vec3(0.85, 0.93, 0.98) * (lightColor() * 0.85 + 0.15) * lmcoord.y;
+        transmitted = mix(transmitted, foamCol, foam * 0.72);
+    }
     #endif
 
     #ifdef WATER_CAUSTICS
-    // Focused Dual-Interference Prism Caustics on submerged surfaces
+    // Focused organic cellular caustics on submerged surfaces
     vec2 cPos = ((gbufferModelViewInverse*vec4(behind,1.0)).xyz+cameraPosition).xz;
-    float ct = frameTimeCounter * 1.6;
-    float caustA = sin(cPos.x * 2.2 + cPos.y * 1.6 + ct * 1.4);
-    float caustB = cos(cPos.x * 1.8 - cPos.y * 2.3 - ct * 1.2);
-    float caustC = sin(cPos.x * 3.6 + cPos.y * 1.1 + ct * 2.1);
-    float causticWave = pow(sat(1.0 - abs(caustA + caustB) * 0.5), 5.0) * 0.7 + pow(sat(1.0 - abs(caustB + caustC) * 0.5), 4.0) * 0.3;
-    vec3 caustColor = vec3(0.04, 0.14, 0.16) * causticWave * exp(-thickness * 0.28) * day * lmcoord.y;
-    if(validBehind) transmitted += caustColor * transmittance;
+    float causticWave = waterCaustic(cPos, frameTimeCounter * (0.65 * WIND_SPEED));
+    float causticFootprint=max(length(dFdx(cPos)),length(dFdy(cPos)))*3.6;
+    float causticFilter=1.0-smoothstep(0.7,2.8,causticFootprint);
+    vec3 caustColor = vec3(0.04, 0.16, 0.18) * causticWave * causticFilter * exp(-thickness * 0.28) * day * lmcoord.y;
+    if(validBehind && !underwater) transmitted += caustColor * transmittance;
     #endif
 
-    vec3 reflected = environmentRadiance(worldDirection(R)) * pow(lmcoord.y, 2.0);
+    // Underside light must be spatially continuous, not a fluid-quad lightmap grid.
+    float skyExposure=underwater?smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y)):lmcoord.y;
+    vec3 reflected = environmentRadiance(worldDirection(R)) * skyExposure*skyExposure;
     #ifdef SSR
     vec2 hit;
-    if(traceScreen(depthtex1, viewPos + N * 0.08, R, 0.22, SSR_STEPS, hit)) {
-        vec3 ssrColor = textureScreen(colortex6, hit).rgb;
-        if(WATER_ROUGHNESS > 0.08) {
-            float rOffset = WATER_ROUGHNESS * 0.004;
-            ssrColor = ssrColor * 0.60 + 0.20 * (textureScreen(colortex6, hit + vec2(rOffset, 0.0)).rgb + textureScreen(colortex6, hit - vec2(rOffset, 0.0)).rgb);
-        }
-        reflected = mix(reflected, ssrColor, edgeFade(hit));
+    float confidence;
+    if(traceScreen(depthtex1, viewPos + N * 0.08, R, 0.22, SSR_STEPS, hit,confidence)
+        && waterReflectionAboveSurface(hit,underwater)) {
+        vec3 ssrColor = waterReflectionSample(hit,roughness);
+        reflected = mix(reflected, ssrColor, edgeFade(hit)*confidence);
     }
     #endif
 
@@ -146,20 +211,6 @@ void main(){
 
     vec3 result = mix(transmitted, reflected, fresnel) + glint;
 
-    #ifdef WATER_FOAM
-    float surfaceUp=abs(worldDirection(normalize(viewNormal)).y);
-    float waveSurge=sin(worldPos.x*0.45+worldPos.z*0.30+frameTimeCounter*1.8)*0.12;
-    float shoreBand=validBehind?1.0-smoothstep(0.01,0.55+waveSurge,thickness):0.0;
-    float oceanWhitecap=waterWhitecap(waveCrest,thickness);
-    if((shoreBand+oceanWhitecap)>0.001 && surfaceUp>0.65 && isEyeInWater!=1){
-        vec2 foamPos=worldPos.xz+vec2(frameTimeCounter*0.20,frameTimeCounter*0.08);
-        float froth=noise2D(foamPos*3.8)*0.65+noise2D(foamPos*8.0)*0.35;
-        float shoreFoam=smoothstep(0.30,0.68,froth+shoreBand*0.60)*shoreBand;
-        float totalFoam=sat(shoreFoam+oceanWhitecap*smoothstep(0.25,0.65,froth));
-        vec3 foamColor=vec3(0.88,0.93,0.95)*mix(0.035,1.0,day)*(0.15+lmcoord.y*0.85);
-        result=mix(result,foamColor,totalFoam*0.88);
-    }
-    #endif
 
     color = vec4(max(result, vec3(0.0)), 1.0);
 }

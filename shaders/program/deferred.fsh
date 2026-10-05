@@ -1,12 +1,14 @@
 #include "/lib/common.glsl"
 #include "/lib/environment.glsl"
-#include "/lib/trace.glsl"
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex0;
-uniform sampler2D dhDepthTex1;
 uniform mat4 dhProjectionInverse;
+#define AA_TRACE_DH
+#define AA_TRACE_DH_DEPTH dhDepthTex0
 #endif
-uniform sampler2D colortex0,colortex1,colortex2,depthtex0;
+#include "/lib/trace.glsl"
+uniform sampler2D colortex0,colortex1,colortex2,colortex15,depthtex0;
+#include "/lib/material.glsl"
 #ifdef RESOURCE_SPECULAR
 uniform sampler2D colortex3;
 /*
@@ -26,25 +28,29 @@ const int colortex0Format = RGBA16F;
 const int colortex1Format = RGBA16F;
 const int colortex2Format = RGBA8;
 const int colortex6Format = RGBA16F;
+const int colortex15Format = RGBA8;
 */
+const vec4 colortex15ClearColor=vec4(0.0,0.0,0.0,0.0);
 const vec4 colortex1ClearColor=vec4(0.5,0.5,1.0,0.0);
 const vec4 colortex2ClearColor=vec4(1.0,0.0,0.0,0.0);
 void main(){
-    float depth=textureScreen(depthtex0,texcoord).r;
+    float depth=depthScreen(depthtex0,texcoord);
     vec3 vp=viewPosition(texcoord,depth);
-    vec3 rd=worldDirection(normalize(vp));
+    vec3 V_dir=normalize(vp);
+    vec3 rd=worldDirection(V_dir);
     vec3 scene=textureScreen(colortex0,texcoord).rgb;
     bool isDH=false;
     #ifdef DISTANT_HORIZONS
-    float dhSolidD=textureScreen(dhDepthTex0,texcoord).r;
-    float dhTransD=textureScreen(dhDepthTex1,texcoord).r;
-    float dhDepth=min(dhSolidD,dhTransD);
+    // The opaque-copy DH depth is refreshed only before DH translucency,
+    // AFTER deferred. It can still contain last frame's camera silhouette here.
+    float dhDepth=depthScreen(dhDepthTex0,texcoord);
     if(depth>=0.999999 && dhDepth<1.0){
         isDH=true;
         vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
         vec4 vpDH=dhProjectionInverse*clipDH;
         vp=vpDH.xyz/vpDH.w;
-        rd=worldDirection(normalize(vp));
+        V_dir=normalize(vp);
+        rd=worldDirection(V_dir);
     }
     #endif
     if(depth>=0.999999 && !isDH) {
@@ -74,20 +80,40 @@ void main(){
             #else
             indirect=sampleIndirect(texcoord,vp,N,mat,gl_FragCoord.xy);
             #endif
-            scene*=indirect.a;
-            scene+=indirect.rgb*sqrt(max(scene,vec3(0.015)));
+            vec4 response=textureScreen(colortex15,texcoord);
+            scene*=mix(1.0,indirect.a,response.a);
+            scene+=indirect.rgb*response.rgb;
             #endif
             #ifdef SSR
-            if(mat.r<0.38) {
-                vec3 reflected=reflect(normalize(vp),N); vec2 hit;
-                vec3 reflection=environmentRadiance(worldDirection(reflected))*mat.g*mat.g;
-                if(traceScreen(depthtex0,vp+N*0.08,reflected,0.30,SSR_STEPS,hit)) reflection=mix(reflection,textureScreen(colortex0,hit).rgb,edgeFade(hit));
+            if(mat.b<0.99) {
                 vec3 f0=vec3(0.04);
                 #ifdef RESOURCE_SPECULAR
                 f0=textureScreen(colortex3,texcoord).rgb;
                 #endif
-                vec3 fresnel=f0+(1.0-f0)*pow(1.0-max(dot(N,normalize(-vp)),0.0),5.0);
-                scene=mix(scene,reflection,fresnel*(1.0-mat.r));
+                vec3 reflected=reflect(V_dir,N); vec2 hit; float confidence;
+                vec3 wr=worldDirection(reflected);
+                bool roughDielectric=mat.r>=0.60 && max(f0.r,max(f0.g,f0.b))<0.12;
+                // Matte stone/grass/wood need a broad sky lobe, not five cache directions.
+                vec3 reflection=environmentRadiance(roughDielectric?worldDirection(N):wr);
+                // Small angular convolution of the sky cache for rough materials.
+                // This is a bounded approximation, not a prefiltered cubemap/voxel trace.
+                if(mat.r>0.18 && !roughDielectric) {
+                    vec3 t=normalize(cross(wr,abs(wr.y)<0.9?vec3(0,1,0):vec3(1,0,0)));
+                    vec3 b=cross(wr,t);
+                    float spread=mat.r*mat.r*1.5;
+                    reflection=(reflection*2.0+environmentRadiance(normalize(wr+t*spread))
+                        +environmentRadiance(normalize(wr-t*spread))+environmentRadiance(normalize(wr+b*spread))
+                        +environmentRadiance(normalize(wr-b*spread)))/6.0;
+                }
+                reflection*=mat.g*mat.g;
+                // Skip rays whose sharp reflected signal cannot represent this rough lobe.
+                if(mat.r<0.60 && traceScreen(depthtex0,vp+N*0.08,reflected,0.30,SSR_STEPS,hit,confidence))
+                    reflection=mix(reflection,textureScreen(colortex0,hit).rgb,edgeFade(hit)*confidence*(1.0-smoothstep(0.18,0.60,mat.r)));
+                float nv=sat(dot(N,-V_dir));
+                float fnv=1.0-nv; float fnv2=fnv*fnv;
+                vec3 fresnel=f0+(max(vec3(1.0-mat.r),f0)-f0)*(fnv2*fnv2*fnv);
+                // Add the environment specular lobe; mixing the entire scene erased direct light.
+                scene+=reflection*fresnel/(1.0+mat.r*mat.r);
             }
             #endif
         }

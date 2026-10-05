@@ -51,8 +51,40 @@ for locale in ('en_us', 'id_id'):
     lang = (ROOT / f'lang/{locale}.lang').read_text()
     for option in options:
         assert f'option.{option}=' in lang, f'{locale}: missing {option}'
+    for profile in profiles:
+        assert f'profile.{profile}=' in lang and f'profile.{profile}.comment=' in lang, f'{locale}: missing profile description {profile}'
+    locale_keys=re.findall(r'^([^#=\s]+)=',lang,re.M)
+    assert len(locale_keys)==len(set(locale_keys)), f'{locale}: duplicate translation keys'
 print(f'PASS: {len(profiles)} complete profiles, legal option values, both translations', flush=True)
+exported=set()
+for preset in sorted((ROOT.parent/'presets').glob('*.txt')):
+    text=preset.read_text()
+    header=re.search(r'^# Profile: (\w+)$',text,re.M)
+    assert header and header[1] in profiles, f'{preset.name}: missing/unknown profile ID'
+    name=header[1]
+    assert name not in exported, f'Duplicate preset export: {name}'
+    exported.add(name)
+    values={}
+    for line in text.splitlines():
+        if not line or line.startswith('#'): continue
+        key,value=line.split('=',1)
+        assert key in options and key not in values, f'{preset.name}: unknown/duplicate option {key}'
+        if isinstance(options[key][0],bool):
+            assert value in ('true','false'), f'{preset.name}: invalid boolean {key}'
+            value=value=='true'
+        values[key]=value
+    assert values==resolve(name), f'{preset.name}: saved values differ from Iris profile {name}'
+assert exported==set(profiles), 'Missing saved profile exports'
+print(f'PASS: {len(exported)} saved presets exactly match Iris profiles; every profile has both descriptions',flush=True)
 all_source = '\n'.join(p.read_text() for p in ROOT.rglob('*') if p.suffix in ('.glsl','.fsh','.vsh'))
+# Iris parses buffer clear colors independently of GLSL compilation. Its vec4
+# directive parser requires four literal components, even for a scalar splat.
+for name,constructor in re.findall(r'const\s+vec4\s+((?:colortex\d+|shadowcolor\d+)ClearColor)\s*=\s*vec4\(([^)]*)\)',all_source):
+    components=constructor.split(',')
+    assert len(components)==4, f'Iris {name} requires four explicit components: {constructor}'
+    for component in components:
+        assert re.fullmatch(r'\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fF]?\s*',component), f'Iris {name} requires literal components: {constructor}'
+print('PASS: Iris clear-color directives use four explicit literal components',flush=True)
 for key,(value,_) in options.items():
     if isinstance(value,bool):
         assert re.search(r'#ifn?def\s+'+key+r'\b',all_source), f'{key}: option not discoverable by Iris'
@@ -135,6 +167,20 @@ try:
     total = 0
     variants = [(name, resolve(name)) for name in profiles]
     variants += [('DEFAULT', dict((k,v[0]) for k,v in options.items())), ('MANUAL_FOCUS', dict(resolve('HIGH'), DOF_AUTOFOCUS=False))]
+    active_file=ROOT.parent.parent/(ROOT.parent.name+'.txt')
+    if active_file.exists():
+        active=dict((k,v[0]) for k,v in options.items())
+        for line in active_file.read_text().splitlines():
+            if not line or line.startswith('#') or '=' not in line: continue
+            key,value=line.split('=',1)
+            assert key in options, f'Active preset has unknown option: {key}'
+            if isinstance(options[key][0],bool):
+                assert value in ('true','false'), f'Invalid boolean in active preset: {line}'
+                value=value=='true'
+            else:
+                assert options[key][1] is None or value in options[key][1], f'Invalid active setting: {line}'
+            active[key]=value
+        variants += [('ACTIVE_INSTANCE',active)]
     variants += [('POM_NO_NORMALS', dict(resolve('HIGH'), RESOURCE_NORMALS=False)),
                  ('POM_NO_SPECULAR', dict(resolve('HIGH'), RESOURCE_SPECULAR=False)),
                  ('POM_ZERO_DEPTH', dict(resolve('HIGH'), POM_DEPTH='0.0'))]
@@ -147,10 +193,15 @@ try:
                  ('FSR1_NO_SHARPEN',dict(resolve('HIGH'),UPSCALE_QUALITY='2',UPSCALE_SHARPNESS='0.0'))]
     if '--images-only' in sys.argv:
         variants = []
+    requested_programs={arg.split('=',1)[1] for arg in sys.argv if arg.startswith('--program=')}
+    if requested_programs:
+        assert requested_programs <= {p.stem for p in ROOT.glob('*.vsh')}, 'Unknown requested shader program'
     for name, values in variants:
         for dh in (False, True):
             for vertex in sorted(ROOT.rglob('*.vsh')):
                 if vertex.parent.name in ('program', 'lib'):
+                    continue
+                if requested_programs and vertex.stem not in requested_programs:
                     continue
                 fragment = vertex.with_suffix('.fsh')
                 if not fragment.exists():
@@ -179,7 +230,13 @@ try:
     quality_checks.run(globals())
     import weather_checks
     weather_checks.run(globals())
+    import realism_checks
+    realism_checks.run(globals())
+    import water_surface_checks
+    water_surface_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
+    import photoreal_checks
+    photoreal_checks.run(globals())
 finally:
     driver.close()

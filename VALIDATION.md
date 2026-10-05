@@ -1,20 +1,11 @@
 # Validation — 5 October 2026
 
-The final source passed `python3 tools/validate.py` on the Apple M1 OpenGL driver. Full output is in `artifacts/validation.log`.
+The latest retained output is `artifacts/validation.log`. Validation runs on the native NVIDIA GeForce RTX 3080 Ti driver. The current preset update checks all ten profiles and their saved exports, legal option values, complete Indonesian/English names and descriptions, unique translation keys, dimension entry points and Iris clear-color directive syntax.
 
-- Nine complete quality profiles; 23 configurations including manual options and FSR variants.
-- **4,554 shader program variants compiled and linked**, across three dimensions and Distant Horizons enabled/disabled.
-- GPU water fixtures: normal/grazing Fresnel, underwater critical-angle reflection, deep-water whitecaps, animated waves and pixel-footprint filtering.
-- GPU cloud fixtures: consistent volume bounds, visibility above/below the layer, finite opacity, and clouds present in the environment-reflection cache.
-- GPU ray fixtures: coarse steps refine surface crossings; sky remains a miss.
-- Existing lens, soft particle, temporal HDR, FSR EASU/RCAS and POM regressions passed.
-- 35 RGBA texture assets verified, including four 32-frame flame strips, smoke references and resource format 97.1.
-- `git diff --check` passed.
+The latest GPU run passed **750 compiled/linked program variants** and all GPU fixtures. It compiles the five affected entry points (`gbuffers_terrain`, `deferred2`, `deferred3`, `deferred4`, `composite5`) across quality/manual/FSR/active-instance variants, three dimensions and DH enabled/disabled, then executes all synthetic fixtures. Earlier renderer validation compiled 5,100 complete-pipeline variants; intermediate logs from those iterations have been removed during cleanup.
 
-The instance log shows an Iris reload of ApaAdanyaShader at 20:05 WIB with no shader compilation error in that reload segment. Unused-attribute/link warnings remain. Earlier renderer `Deleting stream buffers: Invalid operation` messages are not diagnosed by these shader tests.
+GPU fixtures cover material conductors and linear F0, emission/missing-map defaults, ambient-only AO, contact-shadow penumbra growth, exposure bounds/adaptation/reset, indirect depth/normal rejection, POM, water Fresnel/TIR/rough reflections, cloud bounds, ray refinement, DH frame order, temporal HDR, lens effects, particles and FSR. Preset-only changes do not alter the previously validated shader algorithms.
 
-The native automation interface exposes the launcher but not Minecraft's Java game window. No in-game visual signoff or RTX 3080 Ti frame-time measurement was performed. Windows GLSL driver compilation, final Iris bindings, resource-pack activation, framebuffer resize, weather transitions and DH seams still require validation on the destination PC.
+Runtime diagnosis: the 22:14:41 instance log traced `Index 1 out of bounds for length 1` to `colortex15ClearColor=vec4(0.0)`. GLSL accepted that constructor but Iris' directive parser required four components. It now uses four explicit zeros, and static validation rejects scalar clear-color constructors.
 
-The harness bridges compatibility builtins and stubs DH texture helpers. Synthetic renders establish math and shader regressions, not identical AC4/RDR2 visuals. `artifacts/sky-cache-preview.png` is a synthetic low-resolution cache diagnostic; `effects-preview.png` is a texture contact sheet.
-
-Rerun GPU fixtures with `python3 tools/validate.py --images-only`; run the settings/translation/dimension checks with `python3 tools/validate.py --static`.
+Compatibility builtins and DH sampling helpers are bridged/stubbed in the test harness. Native compilation and fixture results do not establish final Iris bindings, visual appearance, frame time, weather/dimension transitions, resize behavior or memory usage. Reload in Minecraft for runtime verification. In-game visual and performance signoff remains unverified.

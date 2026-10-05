@@ -1,5 +1,6 @@
 #ifndef AA_LIGHTING
 #define AA_LIGHTING
+#include "/lib/material.glsl"
 uniform sampler2D shadowtex0,colortex8;
 float cloudShadow(vec3 world){
     #ifdef CLOUD_SHADOWS
@@ -60,16 +61,37 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float s3 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2( r,  r)).r);
     return mix((s0 + s1 + s2 + s3) * 0.25, 1.0, fade);
     #else
-    float r = 1.65 * texelSize;
+    vec2 radius=vec2(1.65*texelSize);
+    #ifdef CONTACT_HARDENING_SHADOWS
+    // Directional sun: penumbra = blocker/receiver separation * solar half angle.
+    // The orthographic z projection is compressed by 0.2 in distortShadow.
+    float searchRadius=5.0*texelSize,blockers=0.0,blockerDepth=0.0;
+    for(int i=0;i<4;i++) {
+        float d=texture(shadowtex0,clamp(sc.xy+poissonDisk8[i+4]*searchRadius,vec2(0.002),vec2(0.998))).r;
+        if(d<sc.z-bias) {blockerDepth+=d;blockers+=1.0;}
+    }
+    if(blockers==0.0) return 1.0;
+    float separation=max(sc.z-bias-blockerDepth/blockers,0.0)/max(abs(shadowProjection[2][2])*0.1,1e-6);
+    float penumbra=separation*0.00465;
+    vec3 p=clip.xyz/clip.w;
+    vec3 dp=distortShadow(p);
+    vec2 sx=(distortShadow(p+vec3(shadowProjection[0][0]*penumbra,0.0,0.0))-dp).xy*0.5;
+    vec2 sy=(distortShadow(p+vec3(0.0,shadowProjection[1][1]*penumbra,0.0))-dp).xy*0.5;
+    radius=clamp(vec2(length(sx),length(sy)),vec2(0.75*texelSize),vec2(searchRadius));
+    #endif
     float sum = 0.0;
     int samples = min(SHADOW_SAMPLES, 8);
     for(int i = 0; i < samples; i++) {
-        sum += step(sc.z - bias, texture(shadowtex0, sc.xy + poissonDisk8[i] * r).r);
+        sum += step(sc.z - bias, texture(shadowtex0, clamp(sc.xy + poissonDisk8[i] * radius,vec2(0.002),vec2(0.998))).r);
     }
     return mix(sum / float(samples), 1.0, fade);
     #endif
 }
-vec3 fresnelSchlick(float cosine,vec3 f0) { return f0+(1.0-f0)*pow(1.0-sat(cosine),5.0); }
+vec3 fresnelSchlick(float cosine,vec3 f0) {
+    float f = 1.0 - sat(cosine);
+    float f2 = f * f;
+    return f0 + (1.0 - f0) * (f2 * f2 * f);
+}
 float filteredRoughness(vec3 N,float roughness) {
     #ifdef SPECULAR_AA
     vec3 dx=dFdx(N),dy=dFdy(N);
@@ -93,7 +115,16 @@ vec3 specularBRDF(vec3 N,vec3 V,vec3 L,float roughness,vec3 f0) {
     float visibility=0.5/max(gv+gl,0.00001);
     return min(vec3(24.0),D*visibility*fresnelSchlick(vh,f0))*nl;
 }
-vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0,float metal,float materialAO) {
+float burleyDiffuse(vec3 N,vec3 V,vec3 L,float roughness) {
+    float nl=sat(dot(N,L)),nv=sat(dot(N,V));
+    vec3 H=normalize(V+L+vec3(1e-6));
+    float lh=sat(dot(L,H));
+    float f90=0.5+2.0*roughness*lh*lh;
+    float fnl=1.0-nl; float fnl2=fnl*fnl; float pnl=fnl2*fnl2*fnl;
+    float fnv=1.0-nv; float fnv2=fnv*fnv; float pnv=fnv2*fnv2*fnv;
+    return (1.0+(f90-1.0)*pnl)*(1.0+(f90-1.0)*pnv);
+}
+vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0,float metal,float materialAO,out float ambientFraction) {
     vec3 nw=worldDirection(N), rel=(gbufferModelViewInverse*vec4(vp,1.0)).xyz;
     vec3 L=normalize(shadowLightPosition), V=normalize(-vp);
     float nl=max(dot(N,L),0.0);
@@ -103,24 +134,40 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
         vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
     }
     #endif
-    vec3 ambient=mix(vec3(0.018,0.028,0.055)*NIGHT_BRIGHTNESS,vec3(0.22,0.35,0.55),daylight());
-    ambient*=pow(lm.y,1.6)*(0.40+0.60*max(nw.y*0.5+0.5,0.0));
+    // Hemispherical irradiance: blue skylight above, subdued ground bounce below.
+    // This preserves face orientation without tinting downward surfaces sky blue.
+    vec3 skyAmbient=mix(vec3(0.012,0.018,0.030)*NIGHT_BRIGHTNESS,vec3(0.16,0.22,0.31),daylight());
+    vec3 groundAmbient=mix(vec3(0.004,0.006,0.009)*NIGHT_BRIGHTNESS,vec3(0.065,0.068,0.073),daylight());
+    vec3 ambient=mix(groundAmbient,skyAmbient,sat(nw.y*0.5+0.5))*pow(lm.y,1.6);
     #ifdef NETHER
     ambient=pow(fogColor,vec3(2.2))*0.45+vec3(0.045,0.013,0.008);
     #elif defined(END)
     ambient=vec3(0.06,0.035,0.09);
     #endif
-    ambient+=stormFlash()*pow(lm.y,3.0)*(0.35+0.65*max(nw.y,0.0));
-    vec3 torch=vec3(1.8,0.72,0.23)*pow(lm.x,3.0)*TORCH_BRIGHTNESS;
+    ambient+=stormFlash()*(lm.y*lm.y*lm.y)*(0.35+0.65*max(nw.y,0.0));
+    vec3 torch=vec3(1.8,0.72,0.23)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
     vec3 direct=vec3(0.0);
     #if !defined(NETHER) && !defined(END)
     if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
     #endif
-    float subsurface=foliage*pow(sat(dot(-V,L)),5.0)*0.5;
+    float s=sat(dot(-V,L)); float s2=s*s;
+    float subsurface=foliage*(s2*s2*s)*0.5;
     vec3 specular=vec3(0.0);
     if(vis>0.001 && nl>0.0001) specular=specularBRDF(N,V,L,roughness,f0)*direct;
-    vec3 diffuse=albedo*(1.0-metal)*(vec3(1.0)-f0);
-    return diffuse*((ambient+torch+vec3(0.008)*CAVE_BRIGHTNESS)*materialAO+(nl+subsurface)*direct*0.60)+f0*metal*(ambient+torch)*materialAO*0.35+specular+albedo*emission*5.0;
+    vec3 diffuse=diffuseResponse(albedo,f0,metal);
+    vec3 ambientTerm=diffuse*(ambient+torch+vec3(0.008)*CAVE_BRIGHTNESS)*materialAO;
+    #ifndef SSR
+    ambientTerm+=f0*metal*(ambient+torch)*materialAO*0.35;
+    #endif
+    vec3 result=ambientTerm+diffuse*(nl*burleyDiffuse(N,V,L,roughness)+subsurface)*direct*0.60+specular+albedo*emission*5.0;
+    // Screen AO may attenuate ambient light only, never direct sun or emission.
+    const vec3 luminance=vec3(0.2126,0.7152,0.0722);
+    ambientFraction=sat(dot(ambientTerm,luminance)/max(dot(result,luminance),1e-5));
+    return result;
+}
+vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0,float metal,float materialAO) {
+    float ambientFraction;
+    return shadeMaterial(albedo,N,vp,lm,roughness,emission,foliage,f0,metal,materialAO,ambientFraction);
 }
 vec3 shadeSurface(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0) {
     return shadeMaterial(albedo,N,vp,lm,filteredRoughness(N,roughness),emission,foliage,f0,0.0,1.0);

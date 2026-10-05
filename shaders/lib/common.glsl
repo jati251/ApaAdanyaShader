@@ -38,6 +38,13 @@ vec4 textureScreen(sampler2D source,vec2 uv) {
     return texture(source,uv);
     #endif
 }
+// Never interpolate depth across a silhouette: it invents a surface between sky and terrain.
+float depthScreen(sampler2D source,vec2 uv,ivec2 size) {
+    return texelFetch(source,clamp(ivec2(uv*vec2(size)),ivec2(0),size-1),0).r;
+}
+float depthScreen(sampler2D source,vec2 uv) {
+    return depthScreen(source,uv,screenTextureSize(source));
+}
 // These macros keep all scene-space radii and fragment coordinates in render pixels.
 #if UPSCALE_QUALITY > 0
 #define viewWidth floor(viewWidth*AA_RENDER_SCALE)
@@ -45,6 +52,14 @@ vec4 textureScreen(sampler2D source,vec2 uv) {
 #endif
 const float PI = 3.14159265;
 float sat(float x) { return clamp(x, 0.0, 1.0); }
+vec3 srgbToLinear(vec3 c) {
+    c=max(c,vec3(0.0));
+    return mix(pow((c+0.055)/1.055,vec3(2.4)),c/12.92,lessThanEqual(c,vec3(0.04045)));
+}
+vec3 linearToSrgb(vec3 c) {
+    c=clamp(c,0.0,1.0);
+    return mix(1.055*pow(c,vec3(1.0/2.4))-0.055,12.92*c,lessThanEqual(c,vec3(0.0031308)));
+}
 float hash12(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float noise2D(vec2 p) {
     vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
@@ -71,14 +86,14 @@ vec3 lightColor() {
     return vec3(0.0);
     #else
     float elev=abs(sunDirection().y);
-    vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.85,2.52,2.05),smoothstep(0.02,0.38,elev));
-    return mix(vec3(0.055,0.085,0.16)*NIGHT_BRIGHTNESS,day,daylight())*(1.0-rainStrength*0.78);
+    vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.75,2.70,2.60),smoothstep(0.02,0.38,elev));
+    return mix(vec3(0.055,0.065,0.09)*NIGHT_BRIGHTNESS,day,daylight())*(1.0-rainStrength*0.78);
     #endif
 }
 vec3 stormFlash() {
     #if !defined(NETHER) && !defined(END)
     float distance2=dot(lightningBoltPosition.xz,lightningBoltPosition.xz);
-    return vec3(0.48,0.62,0.85)*lightningBoltPosition.w/(1.0+distance2*0.000025);
+    return vec3(0.48,0.62,0.85)*(lightningBoltPosition.w/(1.0+distance2*0.000025));
     #else
     return vec3(0.0);
     #endif
@@ -86,13 +101,17 @@ vec3 stormFlash() {
 vec3 distortShadow(vec3 p) { p.xy/=0.15+length(p.xy)*0.85; p.z*=0.2; return p; }
 vec3 waveOffset(vec3 p, float id, float top) {
     #ifdef WAVING_FOLIAGE
-    float t = frameTimeCounter * WIND_SPEED;
-    float wind=sin(p.x*0.43+p.z*0.31+t*1.6)+0.45*sin(p.z*0.91+t*2.5);
-    #ifdef WAVING_PLANTS
-    if (id>1000.5 && id<1001.5) return vec3(wind,0.0,wind*0.4)*0.065*top;
-    #endif
-    #ifdef WAVING_LEAVES
-    if (id>1001.5 && id<1002.5) return vec3(wind,sin(p.x+t)*0.3,wind*0.6)*0.035;
+    #if defined(WAVING_PLANTS) || defined(WAVING_LEAVES)
+    if (id>1000.5 && id<1002.5) {
+        float t = frameTimeCounter * WIND_SPEED;
+        float wind=sin(p.x*0.43+p.z*0.31+t*1.6)+0.45*sin(p.z*0.91+t*2.5);
+        #ifdef WAVING_PLANTS
+        if (id<1001.5) return vec3(wind,0.0,wind*0.4)*0.065*top;
+        #endif
+        #ifdef WAVING_LEAVES
+        return vec3(wind,sin(p.x+t)*0.3,wind*0.6)*0.035;
+        #endif
+    }
     #endif
     #endif
     return vec3(0.0);

@@ -1,5 +1,7 @@
-PASS: 9 complete profiles, legal option values, both translations
-GPU: Apple M1
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
 PASS: POTATO, with/without DH
 PASS: LOW, with/without DH
 PASS: MEDIUM, with/without DH
@@ -9,8 +11,10 @@ PASS: EXTREME, with/without DH
 PASS: REALISM, with/without DH
 PASS: REALISM_FSR, with/without DH
 PASS: REALISM_RT, with/without DH
+PASS: REALISM_CINEMA, with/without DH
 PASS: DEFAULT, with/without DH
 PASS: MANUAL_FOCUS, with/without DH
+PASS: ACTIVE_INSTANCE, with/without DH
 PASS: POM_NO_NORMALS, with/without DH
 PASS: POM_NO_SPECULAR, with/without DH
 PASS: POM_ZERO_DEPTH, with/without DH
@@ -23,13 +27,26 @@ PASS: FSR1_3, with/without DH
 PASS: FSR1_EXTREME, with/without DH
 PASS: FSR1_POTATO, with/without DH
 PASS: FSR1_NO_SHARPEN, with/without DH
-PASS: 4554 program variants compiled and linked
-PASS: GPU lens images, focus/hand preserved, background variance 0.10427 -> 0.00053, autofocus matched
+PASS: 5100 program variants compiled and linked
+PASS: GPU lens images, focus/hand preserved, background variance 0.09349 -> 0.00002, autofocus matched
 PASS: GPU particles, intersection/midpoint/free-space alpha, off switch, weather opacity
 PASS: GPU temporal HDR history, motion reprojection, depth rejection, camera cuts, hand rejection
 PASS: GPU FSR 1 mode 1, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
 PASS: GPU FSR 1 mode 2, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
 PASS: GPU FSR 1 mode 3, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
 PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection
-PASS: GPU water Fresnel/TIR, deep whitecaps, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU DH camera-pan sky/clouds ignore stale pre-translucent depth
+PASS: GPU motion blur, dark silhouette isolation and translation-free sky
+PASS: GPU 120-block reflection travel and bounded intersection confidence
+PASS: GPU distant reflection fallback with separate DH projection
+PASS: GPU real water underside remains continuous across fluid lightmap tiles
+PASS: GPU shoreline reflections reject submerged geometry above water
+PASS: GPU rough water reflections filter high-contrast sky/foliage edges
 PASS: GPU POM, flat/constant/sloped heights, ray direction, atlas isolation, distance fade, grazing/head-on/zero-depth/invalid-bounds bypass
+PASS: GPU LabPBR conductors, linear F0, alpha sentinel, zero metal diffuse and ambient-only AO
+PASS: GPU solar PCSS lit/shadowed bounds and increasing blocker-distance penumbra
+PASS: GPU exposure limits, measured luminance, gradual/frame-rate-independent adaptation and reset
+PASS: GPU signal-specific GI/AO reprojection, static reuse, depth/normal rejection and camera reset
+PASS: GPU sRGB reference/roundtrip, neutral noon/warm sunset, near-clear/distance fog, disk-free fog and neutral middle gray
+GPU BENCHMARK: isolated matte reflection pass 960x540, 100 draws: before 0.138 ms, after 0.450 ms; not gameplay FPS

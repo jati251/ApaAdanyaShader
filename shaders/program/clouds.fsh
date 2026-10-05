@@ -2,7 +2,7 @@
 #include "/lib/atmosphere.glsl"
 uniform sampler2D depthtex0;
 #ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex0,dhDepthTex1;
+uniform sampler2D dhDepthTex0;
 #endif
 in vec2 texcoord;
 /* RENDERTARGETS: 9 */
@@ -17,9 +17,10 @@ void main() {
     for(int y=0;y<2;y++) {
         for(int x=0;x<2;x++) {
             vec2 uv=texcoord+(vec2(x,y)-0.5)/size;
-            bool clear=textureScreen(depthtex0,uv).r>=0.999999;
+            bool clear=depthScreen(depthtex0,uv)>=0.999999;
             #ifdef DISTANT_HORIZONS
-            clear=clear && min(textureScreen(dhDepthTex0,uv).r,textureScreen(dhDepthTex1,uv).r)>=0.999999;
+            // This deferred pass precedes the current-frame opaque depth copy.
+            clear=clear && depthScreen(dhDepthTex0,uv)>=0.999999;
             #endif
             if(clear) { sky=true; break; }
         }

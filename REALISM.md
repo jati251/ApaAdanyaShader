@@ -1,51 +1,52 @@
-# Realism update — 5 October 2026
+# Renderer realism — 5 October 2026
 
-Target: Minecraft Java 26.3, Iris 1.11.7, Sodium 0.9.2. Main performance target is Windows with RTX 3080 Ti; macOS remains supported through GLSL 330 / OpenGL. AC4 and RDR2 are artistic references, not source code or engines used by this pack. This update does not claim an identical result.
+Implemented in the existing ApaAdanyaShader, using the supplied master plan as a technology reference. Existing local changes were preserved. The pre-edit shaderpack and active settings are backed up under the instance's `.codex-backups/photoreal-refactor-20261005/` directory.
 
-## Use on Windows or Mac
+## Changes
 
-Copy `ApaAdanyaShader.zip` to the destination instance's `shaderpacks` folder and `ApaAdanyaEffects.zip` to `resourcepacks`. Select the shader, then choose a profile in Shader Pack Settings. Enable the effects resource pack above other texture packs. The effects pack targets resource format 97.1 (Minecraft 26.3).
+- Shared LabPBR decoding in `shaders/lib/material.glsl`. Green remains linear dielectric F0; IDs 230–237 use the standard conductor optical constants with albedo tint; other metal IDs retain the albedo-F0 fallback. Perceptual roughness is squared once in GGX. Alpha 255 remains non-emissive. Missing specular maps retain the vanilla defaults.
+- Burley diffuse added alongside existing height-correlated Smith/GGX and specular normal-variance filtering.
+- New material-response G-buffer, `colortex15`: linear diffuse reflectance times material AO in RGB; approximate ambient luminance fraction in alpha. Screen GI now multiplies this response rather than `sqrt(shadedColor)`. Metals have no diffuse GI. Screen AO attenuates the ambient fraction instead of the whole direct/emissive result. The scalar fraction is a compact approximation for differently colored light sources.
+- Environment reflections add a separate specular lobe instead of mixing away the entire illuminated surface. Rough surfaces use a small five-direction sky-cache convolution. Screen rays are skipped above perceptual roughness 0.60; sky fallback is occluded by skylight. This is an approximate rough reflection filter, not GGX VNDF sampling or off-screen world tracing.
+- Screen GI uses receiver cosine/PDF cancellation consistently, rejects hit back faces, weights hit confidence and limits fireflies by luminance rather than clipping individual color channels. Rays now take 16 coarse steps instead of 10; reconstruction accepts valid partial bilateral coverage instead of repeating full ray work at most edges.
+- Optional solar contact hardening: eight blocker taps, orthographic depth conversion that accounts for the pack's shadow z distortion, solar angular radius, and distortion-aware penumbra projection. Filtering remains capped to five texels. Active at six/eight shadow samples; cheaper variants retain PCF. This remains one distorted shadow map, not cascaded shadows.
+- Optional, separate GI/AO temporal history in `colortex17/18`, validated per bilinear tap using previous-view depth and world normal. Camera cuts, FOV changes, invalid frames and entities reject reuse. Directions cycle over 32 frames. Half-resolution lighting is required; full-resolution variants retain the unaccumulated path. History is independent of DOF and display TAA.
+- Optional exposure pass, `deferred4`, meters opaque scene-linear HDR using 64 center-weighted log-luminance samples into a persistent 1×1 `colortex16`. Exposure stays within 0.35–3.0, adapts faster toward bright scenes and more slowly toward dark scenes, and resets invalid history/camera teleports. `EXPOSURE` remains a user multiplier. Water/translucency are drawn after metering; this is not a histogram or local tone mapper.
 
-| Profile | Rendering | Tracing and effects |
-| --- | --- | --- |
-| Realism (Optimized) | Native resolution | 32 reflection steps, 4 GI rays, 22 cloud steps, 2048 shadows, half-resolution GI and clouds |
-| Realism + FSR Ultra Quality | 77% internal width and height | Same effects; AMD FSR 1 EASU and RCAS reconstruct the display image |
-| Realism + High Screen-Space Tracing | Native resolution | 48 reflection steps, 6 GI rays, 24 cloud steps, 8 shadow taps |
+## Current settings and costs
 
-Start with Realism. At 1440p/4K, compare Realism + FSR Ultra Quality in the same scene. Quality and Balanced FSR modes are also available in Performance & Reconstruction. These are comparison starting points, not measured RTX 3080 Ti FPS promises. DOF and motion blur can be enabled separately after choosing a profile.
+The active custom settings enable contact hardening, adaptive exposure, temporal indirect light and reduced-resolution lighting/clouds. All ten menu profiles now have matching complete disk presets and Indonesian/English descriptions. Medium enables adaptive exposure and temporal AO; High/Ultra enable contact hardening and temporal GI. Extreme disables indirect history because its lighting runs at full resolution. DOF, motion blur and TAA sharpening are disabled in the current gameplay configuration. Cinematic options remain available in their profile. FXAA is retained: the existing temporal filter has no projection jitter, so it does not replace coverage anti-aliasing.
 
-The running game has saved Realism + FSR Ultra Quality settings. Its current resource selection is still vanilla: enable ApaAdanyaEffects from Options → Resource Packs, then place it above other packs. Changing options.txt externally while the game is running is not reliable because Minecraft rewrites it. Previous instance settings are backed up under `.codex-backups/visual-upgrade-20261005` in the instance root. No CPU, render-distance, Java allocation, Distant Horizons or OS setting was reduced for the development Mac.
+No unreachable GLSL or program modules were found in the include graph. Dimension entry points and FSR support are used, so they were retained. Savings are from optional pass bypasses, bounded ray/filter work and reduced fallback work, not deletion of active renderer modules. PCSS, rough environment filtering, the new material attachment and temporal histories add costs. No net FPS gain is claimed without an in-game frame-time capture.
 
-## Implemented
+At native 1920×1080, the new response and half-resolution GI history logical targets total about 15.8 MiB; allocating both ping-pong sides can double that. The exposure target is negligible. Allocation details depend on Iris. These additions require Iris 1.10.5+ for attachments above 15; the installed instance uses Iris 1.11.7.
 
-- Shared near/Distant Horizons water spectrum with analytic gradients, gravity-based wave speeds, rain response, and pixel-footprint filtering. The `WATER_OCTAVES` option now changes actual work. Waterfalls retain the mesh orientation. Waves shade the existing mesh; they do not add ocean geometry or change Minecraft's simulation.
-- Refraction validates the selected depth before sampling scene color, including DH depth. Removed three-channel dispersion that leaked foreground colors. Caustics follow the submerged scene position. Underwater total internal reflection uses Snell's critical angle.
-- Deep-water whitecaps evaluate independently of shoreline foam. Sun highlights use the filtered BRDF rather than adding a second unfiltered glitter lobe.
-- Cloud density uses a three-dimensional body with edge erosion, weather coverage, directional extinction and approximate multiple scattering. Density and ray intersections use consistent bounds. Camera-dependent density curvature and skipped sample intervals were removed.
-- An eight-step cloud render in the small sky cache supplies cloud reflections to water and reflective materials. The cache's azimuth seam interpolates periodically. Camera cloud history uses matching wind and signed plane intersection above the layer.
-- Fire and soul-fire block IDs receive animated HDR radiance. Actual lightning uses a dedicated Iris program and entity ID; flash illumination reaches exposed surfaces, clouds and particles. Arbitrary white/orange/cyan particles no longer become lightning/fire based on color. Removed per-vertex 48-block particle clipping, which could cut stretched quads and unrelated geometry.
-- 35 original procedural textures replace animated fire/soul fire, flame particles, smoke, rain and splashes. Smoke uses separate texture references so unrelated generic particles retain their original assets. Rebuild via `python3 tools/build_effects_pack.py <resourcepack-directory>` (NumPy and Pillow).
-- Fixed reversed-edge `smoothstep` in puddle ripples and made underwater caustics obey their toggle. Screen-space ray hits refine crossed surfaces even when a coarse step overshoots; rejected silhouette intersections no longer terminate the entire ray.
+## Validation and remaining limits
 
-## Upscaling, ray tracing and frame generation
+Run `python -B tools/validate.py`. It compiles all quality variants, the active instance configuration, all dimensions, and DH on/off, then executes synthetic GPU fixtures. Run `--images-only` for image/math regressions or `--static` for menu/profile/translation checks.
 
-| Feature | Status in this pack |
-| --- | --- |
-| FSR 1 EASU + RCAS | Implemented, native / Ultra Quality / Quality / Balanced. GPU fixtures cover all three scaled modes. |
-| Reflection ray tracing (SSR) | Implemented software ray marching against the visible depth buffer. |
-| Indirect-light tracing (SSGI) | Implemented screen-space diffuse rays, optional half-resolution reconstruction. |
-| Hardware RTX / DXR / Vulkan RT / full path tracing | Not implemented. Requires acceleration structures and a renderer integration outside this portable GLSL 330 pipeline. |
-| DLSS Super Resolution / Ray Reconstruction | Not integrated. RTX 3080 Ti supports these NVIDIA features, but hardware capability alone does not provide Minecraft/Iris integration. |
-| Frame generation | Not implemented. Requires a renderer/presentation integration, frame pacing and reliable motion inputs. |
+Static checks require every exported preset to exactly match its resolved menu profile, with unique option keys and both profile descriptions. Iris clear-color directives require four explicit literal components; a scalar vec4 constructor previously triggered the runtime parser error and is corrected. New GPU regressions cover conductor spectra, linear dielectric F0, missing-map and emission sentinels, zero metal diffuse, ambient-only AO, solar penumbra growth, exposure bounds/adaptation/reset and indirect depth/normal/history rejection. The retained latest validation record is `artifacts/validation.log`. Intermediate logs and synthetic preview files are removed after verification.
 
-Research checked 5 October 2026: NVIDIA's [hardware table](https://www.nvidia.com/en-eu/geforce/technologies/dlss/) lists Super Resolution and Ray Reconstruction on RTX 30, but does not list DLSS Frame Generation on that series. [Super Resolution 0.8.3-alpha.5](https://github.com/IReallyWantToSleep/superresolution/releases/tag/0.8.3-alpha.5) documents Minecraft 26.2 with the OpenGL backend; a matching 26.3 build was not verified, so it was not installed. [DLSSmc](https://github.com/lukeclaw/dlssmc) targets 26.3 snapshot 3 with the Vulkan renderer and labels frame generation as tuning; that is not a verified drop-in integration for this instance.
+This remains a hybrid renderer with forward material lighting and deferred screen-space effects. It does not implement the entire master plan. There is no world voxel cache, ReSTIR, DDGI, off-screen geometry GI/reflections, path tracing, Hi-Z pyramid, motion-vector G-buffer, jittered TAA, progressive photo accumulation, native hardware RT or neural reconstruction. Existing water, atmosphere, POM, lens, FSR and DH implementations remain in place. Extending those architectures requires a separately validated implementation, not preset switches.
 
-Do not enable the pack's FSR scaling and another resolution scaler simultaneously. No DLSS/FSR2/FSR3/frame-gen setting is exposed as if it worked when there is no backend.
+The instance currently selects only the vanilla resource pack. It therefore has no supplied LabPBR normal/height/specular asset set. Lighting can improve substantially, but photographic surface detail requires appropriate PBR textures and scene assets. No new resource pack was downloaded or installed.
 
-## Validation and limits
+Native NVIDIA driver compilation and synthetic fixtures do not establish final Iris framebuffer bindings, visual signoff, weather/dimension transitions or gameplay frame time. Reload the shader in Minecraft to apply source/settings changes; these need in-game verification. No runtime verification was claimed from an earlier log entry.
 
-Run `python3 tools/validate.py`. The suite compiles and links every profile, dimension and DH variant on the local OpenGL driver, then renders regression fixtures. New fixtures check Fresnel, total internal reflection, deep whitecaps, wave filtering/animation, cloud bounds and visibility above/below the layer, reflected clouds and coarse ray intersections. Existing temporal, FSR, POM, lens and particle fixtures are retained.
+## References
 
-`artifacts/sky-cache-preview.png` is a synthetic low-resolution environment-cache render, and `effects-preview.png` is a texture contact sheet. Neither is an in-game screenshot or a photorealism acceptance test.
+- Supplied `minecraft_java_26_3_photorealistic_rendering_master_plan.md`.
+- [LabPBR material standard](https://shaderlabs.org/wiki/LabPBR_Material_Standard): channel interpretation and conductor optical constants.
+- [Filament](https://google.github.io/filament/main/filament.html): microfacet and rough diffuse material models.
+- [NVIDIA PCSS integration](https://developer.download.nvidia.com/assets/gamedev/docs/PCSS_Integration.pdf): blocker search, penumbra estimation and filtering.
+- [Iris color buffers](https://shaders.properties/current/reference/buffers/colortex/): extended attachment count, persistence and ping-pong behavior.
 
-Windows driver behavior, complete Iris bindings and final RTX 3080 Ti frame times still need in-game validation. Compare settled daylight, sunset, night, rain, underwater, waterfall, shoreline, DH boundaries and moving entities at a fixed output resolution. SSR/SSGI cannot see off-screen geometry. Terrain still needs a compatible PBR resource pack for relief; the supplied effects pack does not replace all world materials. Particle simulation, Minecraft block silhouettes and lightning mesh topology remain Minecraft's.
+## Water, sky, particles and terrain
+
+The existing water path retains crossing swells, analytic wave gradients, rain ripples, pixel-footprint filtering, Beer-Lambert absorption, Fresnel, Snell refraction and underwater total internal reflection. Reflection/refraction hits validate surface depth, with separate DH projection where needed. Shore foam, deep whitecaps and procedural caustics are bounded approximations. Waves shade the existing mesh; they do not change Minecraft fluid simulation or add tessellated ocean geometry.
+
+Volumetric clouds retain shared volume bounds, weather density, edge erosion, directional extinction and approximate multiple scattering. A small periodic sky cache supplies environment reflections; cloud and indirect histories are separate. Sun/moon, stars, fog, foliage wind and volumetric light shafts remain available.
+
+Cutout/translucent particles retain their masks, optional soft intersections and weather opacity. Fire and soul-fire use classified emissive materials; lightning flash lighting uses the actual lightning uniform. Opaque particles explicitly clear the material-response attachment so they cannot inherit the terrain receiver behind them.
+
+The optional effects-pack generator in `tools/build_effects_pack.py` creates procedural fire, smoke, rain and splash assets; it is a reusable build tool, not a temporary experiment. No effects pack or PBR pack is automatically enabled. Terrain, entities, hands, Overworld/Nether/End wrappers and Distant Horizons support remain in the shaderpack.

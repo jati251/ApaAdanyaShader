@@ -11,9 +11,9 @@ uniform mat4 dhProjectionInverse;
 #endif
 
 float lensDepthFromValue(vec2 uv, float d) {
-    if(d<0.999999) return max(-viewPosition(uv,d).z,0.05);
+    if(d<0.999999) return max(-viewDepth(uv,d),0.05);
     #ifdef DISTANT_HORIZONS
-    float dh=textureScreen(dhDepthTex0,uv).r;
+    float dh=depthScreen(dhDepthTex0,uv);
     if(dh<0.999999) {
         vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,dh*2.0-1.0,1.0);
         return max(-p.z/p.w,0.05);
@@ -23,11 +23,11 @@ float lensDepthFromValue(vec2 uv, float d) {
 }
 
 float lensDepth(vec2 uv) {
-    return lensDepthFromValue(uv, textureScreen(depthtex0,uv).r);
+    return lensDepthFromValue(uv, depthScreen(depthtex0,uv));
 }
 
 bool lensHand(vec2 uv) {
-    return textureScreen(depthtex0,uv).r<0.56 && textureScreen(colortex2,uv).a>0.5;
+    return depthScreen(depthtex0,uv)<0.56 && textureScreen(colortex2,uv).a>0.5;
 }
 
 float circleOfConfusion(float z,float focus) {
@@ -45,7 +45,7 @@ float lensFocus() {
     // Iris samples the allocation center; our active viewport has a different center.
     focus=clamp(lensDepth(vec2(0.5)),0.5,10000.0);
     #else
-    focus=clamp(-viewPosition(vec2(0.5),centerDepthSmooth).z,0.5,10000.0);
+    focus=clamp(-viewDepth(vec2(0.5),centerDepthSmooth),0.5,10000.0);
     #ifdef DISTANT_HORIZONS
     if(centerDepthSmooth>=0.999999) focus=lensDepth(vec2(0.5));
     #endif
@@ -64,12 +64,13 @@ vec3 depthOfField(vec2 uv,vec3 sharp) {
     vec2 pixel=1.0/vec2(viewWidth,viewHeight);
     vec3 sum=sharp;
     float total=1.0;
+    ivec2 depthSize=screenTextureSize(depthtex0);
     for(int i=0;i<DOF_SAMPLES;i++) {
         float r=sqrt((float(i)+0.5)/float(DOF_SAMPLES));
         float angle=float(i)*2.39996323;
         vec2 tap=uv+vec2(cos(angle),sin(angle))*r*radius*pixel;
         if(any(lessThan(tap,pixel)) || any(greaterThan(tap,1.0-pixel))) continue;
-        float tapD=textureScreen(depthtex0,tap).r;
+        float tapD=depthScreen(depthtex0,tap,depthSize);
         if(tapD<0.56 && textureScreen(colortex2,tap).a>0.5) continue;
         float tapZ=lensDepthFromValue(tap,tapD);
         float tapCoC=circleOfConfusion(tapZ,focus);
@@ -77,7 +78,9 @@ vec3 depthOfField(vec2 uv,vec3 sharp) {
         float depthWeight=1.0-smoothstep(0.02,0.15,abs(tapZ-centerZ)/max(centerZ,1.0));
         float sameSide=step(0.0,tapCoC*coc);
         float coverage=smoothstep(r*radius-1.0,r*radius+1.0,abs(tapCoC));
-        float w=max(depthWeight,sameSide*coverage*step(centerZ,tapZ));
+        // Background bokeh must not spill through a terrain silhouette.
+        float backgroundGuard=1.0-smoothstep(0.15,0.40,max(tapZ-centerZ,0.0)/max(centerZ,1.0));
+        float w=max(depthWeight,sameSide*coverage*step(centerZ,tapZ))*backgroundGuard;
         sum+=textureScreen(colortex0,tap).rgb*w;
         total+=w;
     }

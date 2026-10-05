@@ -1,5 +1,8 @@
 #ifndef AA_COLOR_GRADING
 #define AA_COLOR_GRADING
+#ifdef AUTO_EXPOSURE
+uniform sampler2D colortex16;
+#endif
 
 // =============================================================================
 // Tonemapping Operators
@@ -36,7 +39,7 @@ vec3 tonemapAgX(vec3 c) {
 
 // 2: Khronos PBR Neutral (True color fidelity, minimal tint distortion)
 vec3 tonemapKhronos(vec3 c) {
-    const float startCompression = 0.75;
+    const float startCompression = 0.76;
     const float desaturation = 0.15;
     float x = min(c.r, min(c.g, c.b));
     float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
@@ -203,6 +206,10 @@ vec3 applyVibranceSaturation(vec3 c, float sat, float vib) {
 vec3 applyColorGrading(vec3 hdrColor, vec2 uv) {
     // 1. Dynamic Camera Exposure
     float exposure = EXPOSURE * mix(1.15, 0.90, daylight());
+    #ifdef AUTO_EXPOSURE
+    float measured=texelFetch(colortex16,ivec2(0),0).r;
+    if(measured>=0.35 && measured<=3.0) exposure=EXPOSURE*measured;
+    #endif
     vec3 scaledColor = hdrColor * exposure;
 
     // 2. White Balance in Linear HDR space
@@ -226,9 +233,9 @@ vec3 applyColorGrading(vec3 hdrColor, vec2 uv) {
     sdr = tonemapLinear(scaledColor);
     #endif
 
-    // Gamma correction to standard gamma 2.2 (AgX already includes internal display curve)
+    // Scene/display sRGB transfer (AgX-style already contains a display curve)
     #if TONEMAP_OPERATOR != 1
-    sdr = pow(clamp(sdr, 0.0, 1.0), vec3(1.0 / 2.2));
+    sdr = linearToSrgb(sdr);
     #endif
 
     // 4. Stylized Color Grading Profile / Variant

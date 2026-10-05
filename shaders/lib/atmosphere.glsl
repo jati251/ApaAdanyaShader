@@ -1,8 +1,12 @@
 #ifndef AA_ATMOSPHERE
 #define AA_ATMOSPHERE
+float clearAirOpticalDepth(float dist,float altitude) {
+    float heightFactor=clamp(exp(-max(altitude-110.0,0.0)*0.003),0.55,1.0);
+    return pow(max(dist-12.0,0.0)*0.00045*FOG_DENSITY,1.25)*heightFactor;
+}
 
 
-vec3 skyRadiance(vec3 rd) {
+vec3 atmosphereBackground(vec3 rd) {
     #ifdef NETHER
     return pow(fogColor, vec3(2.2)) * 0.6 + vec3(0.018, 0.003, 0.001);
     #elif defined(END)
@@ -10,8 +14,8 @@ vec3 skyRadiance(vec3 rd) {
     #else
     vec3 sd = sunDirection(); float day = daylight();
     float horizon = pow(1.0 - max(rd.y, 0.0), 3.5);
-    vec3 zenithCol = vec3(0.06, 0.24, 0.72);
-    vec3 horizonCol = vec3(0.48, 0.72, 0.94);
+    vec3 zenithCol = vec3(0.075, 0.22, 0.48);
+    vec3 horizonCol = vec3(0.38, 0.49, 0.63);
     vec3 sky = mix(zenithCol, horizonCol, horizon);
     float sunset = exp(-abs(sd.y) * 8.5);
     float facing = pow(sat(dot(rd, sd) * 0.5 + 0.5), 6.0);
@@ -20,6 +24,16 @@ vec3 skyRadiance(vec3 rd) {
     sky *= mix(0.20, 1.0, smoothstep(-0.08, 0.25, sd.y));
     sky = mix(vec3(0.0018, 0.0035, 0.009) + vec3(0.008, 0.012, 0.024) * horizon, sky, day);
     sky = mix(sky, vec3(dot(sky, vec3(0.2126, 0.7152, 0.0722))) * 0.75, rainStrength * 0.8);
+    return sky;
+    #endif
+}
+
+vec3 skyRadiance(vec3 rd) {
+    #if defined(NETHER) || defined(END)
+    return atmosphereBackground(rd);
+    #else
+    vec3 sd=sunDirection();float day=daylight();
+    vec3 sky=atmosphereBackground(rd);
     float sunDot = dot(rd, sd), moonDot = dot(rd, -sd);
     #ifdef SUN_MOON_GLOW
     // ==================== [ REALISTIC PROCEDURAL SUN ] ====================
@@ -138,7 +152,7 @@ const float CLOUD_ALT_THICK = 118.0;
 
 // Density and ray bounds share the same layer; lighting uses the same cloud body.
 float sampleCloudDensity(vec3 p, bool detail) {
-    float h=(p.y-CLOUD_ALT_BASE)/CLOUD_ALT_THICK;
+    float h=(p.y-CLOUD_ALT_BASE)*(1.0/CLOUD_ALT_THICK);
     if(h<=0.0 || h>=1.0) return 0.0;
     vec2 wind=vec2(1.15,0.48)*frameTimeCounter;
     vec2 pos=(p.xz+wind)*0.0016;
@@ -154,7 +168,10 @@ float sampleCloudDensity(vec3 p, bool detail) {
     float billow=noise3D(q);
     float body=macro+(billow-0.5)*0.18;
     float density=smoothstep(threshold-0.05,threshold+0.16,body);
-    density*=smoothstep(0.0,0.08,h)*(1.0-smoothstep(0.80,1.0,h));
+    float edgeFade=1.0;
+    if(h<0.08) edgeFade=smoothstep(0.0,0.08,h);
+    else if(h>0.80) edgeFade=1.0-smoothstep(0.80,1.0,h);
+    density*=edgeFade;
     #ifdef CLOUD_DETAIL
     if(detail && density>0.005){
         float erosion=noise3D(q*3.1+vec3(1.3,2.1,0.7));
@@ -236,8 +253,8 @@ vec4 cloudLayerSteps(vec3 rd, vec2 pixel, int steps, float dither) {
             // Day: cool zenith azure from above + warm terrain ground bounce from below
             // Sunset: rich fiery amber glow on sun-facing rims, cool lavender-indigo shadows
             float hRel = sat((p.y - CLOUD_ALT_BASE) / CLOUD_ALT_THICK);
-            vec3 skyAmbient = vec3(0.20, 0.32, 0.52) * (0.32 + hRel * 0.68);
-            vec3 groundBounce = vec3(0.16, 0.15, 0.11) * (0.78 - hRel * 0.48);
+            vec3 skyAmbient = vec3(0.22, 0.28, 0.36) * (0.32 + hRel * 0.68);
+            vec3 groundBounce = vec3(0.15, 0.145, 0.13) * (0.78 - hRel * 0.48);
             vec3 dayAmbient = (skyAmbient + groundBounce) * (0.42 + 0.58 * exp(-density * 2.4));
 
             // Dramatic sunset rim warm tint (strictly when sun is at the horizon during sunset)
@@ -314,7 +331,7 @@ vec3 renderFastClouds(vec3 rd, vec3 background) {
 
         // Sunset horizon golden glow
         float horizon = pow(1.0 - max(rd.y, 0.0), 3.0);
-        float sunset = exp(-abs(sd.y) * 8.0) * horizon;
+        float sunset = exp(-abs(sd.y) * 8.0) * horizon * smoothstep(-0.04,0.04,sd.y);
         cloudCol = mix(cloudCol, vec3(1.15, 0.45, 0.12), sunset * 0.70);
 
         // Horizon distance fade

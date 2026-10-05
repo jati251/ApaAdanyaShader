@@ -18,7 +18,7 @@ vec3 getViewPos(vec2 uv, float depth, out bool isSky) {
     isSky = false;
     if (depth >= 0.999999) {
         #ifdef DISTANT_HORIZONS
-        float dh = textureScreen(dhDepthTex0, uv).r;
+        float dh = depthScreen(dhDepthTex0, uv);
         if (dh < 0.999999) {
             vec4 p = dhProjectionInverse * vec4(uv * 2.0 - 1.0, dh * 2.0 - 1.0, 1.0);
             return p.xyz / p.w;
@@ -26,7 +26,7 @@ vec3 getViewPos(vec2 uv, float depth, out bool isSky) {
         #endif
         isSky = true;
         vec4 p = gbufferProjectionInverse * vec4(uv * 2.0 - 1.0, 1.0, 1.0);
-        return normalize(p.xyz / p.w) * (far * 0.5);
+        return normalize(p.xyz / p.w);
     }
     vec4 p = gbufferProjectionInverse * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     return p.xyz / p.w;
@@ -62,7 +62,7 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // Latency Gate 2: First-Person Hand & Held Item Check
     // Keep held items 100% crisp without blurring or dragging trails
     // -------------------------------------------------------------
-    float depth = textureScreen(depthtex0, uv).r;
+    float depth = depthScreen(depthtex0, uv);
     #ifndef MOTION_BLUR_HAND
     if (depth < 0.56 && textureScreen(colortex2, uv).a > 0.5) {
         return currentRGB;
@@ -75,7 +75,8 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // -------------------------------------------------------------
     bool isSky;
     vec3 viewPos = getViewPos(uv, depth, isSky);
-    vec4 relWorld = gbufferModelViewInverse * vec4(viewPos, 1.0);
+    vec4 relWorld = isSky ? vec4(mat3(gbufferModelViewInverse)*viewPos,0.0)
+                         : gbufferModelViewInverse * vec4(viewPos, 1.0);
     if (!isSky) relWorld.xyz += camDelta;
     vec4 prevClip = gbufferPreviousProjection * (gbufferPreviousModelView * relWorld);
 
@@ -118,23 +119,38 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // -------------------------------------------------------------
     // Fast Accumulation Loop (Single-cycle ALU, 1 texture fetch per tap)
     // -------------------------------------------------------------
-    vec3 sum = vec3(0.0);
-    float totalWeight = 0.0;
+    vec3 sum = currentRGB*currentRGB;
+    float totalWeight = 1.0;
+    vec2 margin=0.5/vec2(viewWidth,viewHeight);
+    ivec2 sceneSize=screenTextureSize(colortex0);
+    ivec2 depthSize=screenTextureSize(depthtex0);
 
     for (int i = 0; i < SAMPLES; i++) {
         float offset = ((float(i) + dither) / float(SAMPLES)) - 0.5;
         vec2 sampleUV = uv + velocity * offset;
 
-        if (sampleUV.x < 0.0 || sampleUV.x > 1.0 || sampleUV.y < 0.0 || sampleUV.y > 1.0) {
+        if (any(lessThan(sampleUV,margin)) || any(greaterThan(sampleUV,1.0-margin))) {
             continue;
         }
 
-        vec3 tap = textureScreen(colortex0, sampleUV).rgb;
+        float tapDepth=depthScreen(depthtex0,sampleUV,depthSize);
+        #ifndef MOTION_BLUR_HAND
+        if(tapDepth<0.56 && textureScreen(colortex2,sampleUV).a>0.5) continue;
+        #endif
+        bool tapSky;
+        vec3 tapPos=getViewPos(sampleUV,tapDepth,tapSky);
+        // Prevent bright background/sky trails across dark terrain silhouettes.
+        if(tapSky!=isSky) continue;
+        float depthWeight=isSky?1.0:1.0-smoothstep(0.04,0.20,
+            abs(tapPos.z-viewPos.z)/max(-viewPos.z,1.0));
+        if(depthWeight<0.001) continue;
+        // Match the validated depth texel; bilinear color could still borrow bright sky.
+        vec3 tap = texelFetch(colortex0,clamp(ivec2(sampleUV*vec2(sceneSize)),ivec2(0),sceneSize-1),0).rgb;
 
         // Fast gamma 2.0 linear approximation (single-cycle multiply instead of pow)
         vec3 linearTap = tap * tap;
 
-        float weight = 1.0 - abs(offset) * 0.6;
+        float weight = (1.0 - abs(offset) * 0.6)*depthWeight;
         sum += linearTap * weight;
         totalWeight += weight;
     }

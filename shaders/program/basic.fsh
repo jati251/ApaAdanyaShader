@@ -6,5 +6,5 @@ void main() {
     #if UPSCALE_QUALITY > 0
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
-    color=vec4(pow(max(glcolor.rgb,vec3(0.0)),vec3(2.2)),glcolor.a);
+    color=vec4(srgbToLinear(glcolor.rgb),glcolor.a);
 }

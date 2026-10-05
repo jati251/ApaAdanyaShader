@@ -7,21 +7,21 @@ screen.WORLD=World & Vegetation
 screen.POST=Post-Processing & Camera
 
 # Profiles
-profile.POTATO=Potato (Max FPS)
-profile.LOW=Low (Fast Shadows & FXAA)
+profile.POTATO=Potato (Minimal)
+profile.LOW=Low (Lightweight)
 profile.MEDIUM=Medium (Balanced)
-profile.HIGH=High (Realistic)
-profile.ULTRA=Ultra (Showcase)
-profile.EXTREME=Extreme (Cinematic)
-profile.comment=Potato: Max FPS (no shadows/clouds). Low: Fast shadows + FXAA. Medium: Volumetric 3D clouds + SSAO + SSR reflections + TAA. High: SSGI + God rays + LabPBR/POM. Ultra: Maximum gameplay fidelity. Extreme: Full-resolution cinematic showcase (DOF + Motion Blur).
+profile.HIGH=High (PBR Gameplay)
+profile.ULTRA=Ultra (Detailed Gameplay)
+profile.EXTREME=Extreme (Full-resolution Lighting)
+profile.comment=Potato/Low: lightweight rendering. Medium: temporal AO and exposure. High/Ultra: PBR, contact shadows and temporal GI. Realism: neutral gameplay; FSR and higher tracing variants available. Extreme/Cinematic: lens effects.
 
 # Lighting Options
 option.SSAO=Screen-Space Ambient Occlusion
-option.SSAO.comment=Shades occluded crevices and contact points in screen space. Turn off to save depth buffer bandwidth.
+option.SSAO.comment=Screen-space occlusion attenuates the stored ambient fraction, preserving direct light and emission approximately. Half-resolution mode can use its own temporal history.
 option.SSAO_SAMPLES=SSAO Sample Count
 option.SSAO_SAMPLES.comment=Number of depth samples used to compute ambient occlusion. Lower values give more performance on potato devices.
 option.SSGI=Screen-Space Indirect Light
-option.SSGI.comment=Traces short hemisphere rays for visible-surface light bounce. Turn off on low-end GPUs.
+option.SSGI.comment=Visible-surface diffuse bounce weighted by material reflectance, hit confidence and back-face rejection. No off-screen geometry or multi-bounce path tracing.
 option.GI_SAMPLES=Indirect Light Rays
 option.GI_STRENGTH=Indirect Light Intensity
 option.VOLUMETRIC_LIGHT=Volumetric God Rays
@@ -65,10 +65,8 @@ option.WATER_REFRACTION=Underwater Optical Refraction
 option.WATER_REFRACTION.comment=Refracts light passing through water surfaces. Disable on potato devices to avoid double depth buffer sampling.
 option.WATER_CAUSTICS=Underwater Caustics
 option.WATER_CAUSTICS.comment=Animated dancing sunlight patterns on riverbeds and ocean floors.
-option.WATER_FOAM=Shoreline Wave Foam
-option.WATER_FOAM.comment=Procedural white foam along shorelines. Disable on potato devices to skip noise lookups.
-option.SSR=Screen-Space Water Reflections
-option.SSR.comment=Traces raymarched reflections of blocks and entities onto water.
+option.SSR=Screen-Space Reflections
+option.SSR.comment=Visible depth/color rays for water and reflective materials. Matte dielectrics use one broad sky-cache lookup; glossy/metal surfaces retain filtered reflections. No off-screen world geometry.
 option.SSR_STEPS=Reflection Ray Steps
 option.WATER_OCTAVES=Wave Detail Octaves
 option.WATER_OCTAVES.comment=Number of wave frequencies computed for water normals. Set to 2 for maximum FPS on potato devices.
@@ -98,12 +96,12 @@ value.COLOR_PROFILE.7=Cyberpunk (Electric Neon)
 option.COLOR_PROFILE.comment=Stylistic color grading variants. Changes overall color palette, mood, and atmospheric toning.
 option.TONEMAP_OPERATOR=Tonemapping Curve
 value.TONEMAP_OPERATOR.0=ACES Filmic
-value.TONEMAP_OPERATOR.1=AgX (Modern Blender)
+value.TONEMAP_OPERATOR.1=AgX-style (Approximation)
 value.TONEMAP_OPERATOR.2=Khronos PBR Neutral
 value.TONEMAP_OPERATOR.3=Uncharted 2 (Hable)
 value.TONEMAP_OPERATOR.4=Reinhard-Jodie
-value.TONEMAP_OPERATOR.5=Linear (Vanilla)
-option.TONEMAP_OPERATOR.comment=High dynamic range highlight compression curve. AgX avoids clipping highlights; ACES offers classic filmic punch.
+value.TONEMAP_OPERATOR.5=Linear (Clipped)
+option.TONEMAP_OPERATOR.comment=HDR highlight compression. ACES, simplified AgX-style, PBR Neutral, Hable, Reinhard-Jodie or clipped linear output.
 option.COLOR_VIBRANCE=Smart Vibrance
 option.COLOR_VIBRANCE.comment=Intelligently boosts muted colors without over-saturating already vibrant blocks or skin tones.
 option.COLOR_SATURATION=Color Saturation
@@ -140,8 +138,8 @@ screen.CAMERA=Camera & Motion Effects
 screen.PARTICLES=Particles & Weather
 option.MOTION_BLUR=Motion Blur
 option.MOTION_BLUR.comment=Simulates camera shutter exposure blur during movement and rotation.
-option.MOTION_BLUR_LOW_LATENCY=Low Latency Mode
-option.MOTION_BLUR_LOW_LATENCY.comment=Optimizes motion blur for competitive gameplay. Caps samples to 5 and limits blur radius to minimize input lag and display latency.
+option.MOTION_BLUR_LOW_LATENCY=Reduced Motion Blur
+option.MOTION_BLUR_LOW_LATENCY.comment=Caps blur at 5 samples and reduces trail radius. Only affects enabled motion blur; does not control input or display latency.
 option.MOTION_BLUR_STRENGTH=Motion Blur Strength
 option.MOTION_BLUR_STRENGTH.comment=Controls the duration of motion trails. 0.50 corresponds to a cinematic 180-degree shutter angle.
 option.MOTION_BLUR_SAMPLES=Motion Blur Samples
@@ -149,7 +147,7 @@ option.MOTION_BLUR_SAMPLES.comment=Number of samples gathered along the motion t
 option.MOTION_BLUR_HAND=Blur Hand & Held Item
 option.MOTION_BLUR_HAND.comment=Applies motion blur to the first-person hand and held item. Turn off to keep the hand crisp during camera rotation.
 option.RESOURCE_SPECULAR=LabPBR Specular & Emission
-option.RESOURCE_SPECULAR.comment=Reads LabPBR smoothness, F0, metalness, subsurface and emission maps. Metals use albedo F0. Height maps are controlled separately by POM; porosity is not used.
+option.RESOURCE_SPECULAR.comment=LabPBR 1.3: linear F0, conductor constants for metal IDs 230-237 with albedo tint, albedo-F0 fallback for other metals, emission and subsurface data. Porosity affects rain darkening and puddles.
 option.SPECULAR_AA=Filter Specular Shimmer
 option.SPECULAR_AA.comment=Broadens subpixel highlights to reduce sparkling on moving water and normal maps.
 option.SOFT_PARTICLES=Soft Particle Intersections
@@ -196,12 +194,39 @@ value.UPSCALE_QUALITY.3=Balanced (59%)
 option.UPSCALE_SHARPNESS=FSR RCAS Sharpness
 option.UPSCALE_SHARPNESS.comment=Sharpen the upscaled image with AMD RCAS. Zero disables sharpening.
 
-profile.REALISM=Realism (Optimized)
-profile.REALISM.comment=Native resolution, volumetric clouds, ocean detail and half-resolution indirect lighting.
+profile.REALISM=Realism (Gameplay)
+profile.REALISM.comment=Natural gameplay at native resolution: 2048 shadows, 3 GI rays, 24 SSR steps, 16 cloud steps, mild haze/bloom. Temporal GI/AO, neutral tone mapping; DOF/motion blur off.
 
 screen.RAYTRACING=Ray Tracing (Screen Space)
 screen.RAYTRACING.comment=Depth-buffer ray marching for reflections and indirect light. No hardware RT, off-screen geometry or path tracing.
 profile.REALISM_FSR=Realism + FSR Ultra Quality
-profile.REALISM_FSR.comment=Same effects as Realism with 77 percent internal dimensions and AMD EASU / RCAS upscaling.
+profile.REALISM_FSR.comment=Natural Realism effects with 77% internal width/height and FSR 1 EASU/RCAS. Lower shading cost with a fine-detail tradeoff; no frame generation.
 profile.REALISM_RT=Realism + High Screen-Space Tracing
-profile.REALISM_RT.comment=48 reflection steps and 6 indirect rays. Higher GPU cost; no hardware RT or frame generation.
+profile.REALISM_CINEMA=Realism Cinematic (4K Shadow Map)
+profile.REALISM_CINEMA.comment=Native resolution, 4096 shadow map, 4 GI rays, 40 SSR steps, 20 cloud steps. Neutral tone mapping and temporal GI/AO; f/4 DOF and motion blur on. Higher GPU cost.
+profile.REALISM_RT.comment=Natural Realism with 4 GI rays, 40 SSR steps, 20 cloud steps and 8 shadow taps. More screen-space tracing; no off-screen geometry.
+
+option.CONTACT_HARDENING_SHADOWS=Contact-hardening sun shadows
+option.CONTACT_HARDENING_SHADOWS.comment=Four blocker taps estimate solar penumbra, capped at five texels. Requires shadows with 6 or 8 filter samples; adds GPU work.
+
+option.AUTO_EXPOSURE=Adaptive camera exposure
+option.AUTO_EXPOSURE.comment=64 opaque HDR luminance samples drive bounded 0.35-3.0 exposure. Faster adaptation to bright scenes, slower to darkness; applied before tone mapping.
+
+option.TEMPORAL_INDIRECT=Temporal GI/AO
+option.TEMPORAL_INDIRECT.comment=Reprojects GI/AO with per-tap depth and world-normal checks. Requires half-resolution lighting. Moving entities, camera cuts and invalid history reject reuse.
+
+option.EXPOSURE.comment=Manual exposure multiplier. With adaptive exposure enabled it scales the metered result; otherwise uses the day/night baseline.
+
+profile.POTATO.comment=Minimal effects, neutral tone mapping. Shadows, clouds, GI, SSR, adaptive exposure and history off.
+
+profile.LOW.comment=512 shadows with 2-tap PCF, 2D clouds, FXAA and neutral tone mapping. GI and adaptive exposure off.
+
+profile.MEDIUM.comment=1024 shadows, temporal AO, 16-step SSR, 10-step half-resolution clouds, adaptive exposure and neutral tone mapping. No PBR/POM or diffuse GI.
+
+profile.HIGH.comment=2048 contact-hardening shadows, 3 GI rays, 28 SSR steps, 16 cloud steps. Temporal GI/AO, LabPBR/POM, neutral daylight and tone mapping; lens blur off.
+
+profile.ULTRA.comment=2048 shadows, 4 GI rays, 32 SSR steps, 20 cloud steps, 24 POM steps. Temporal GI/AO and neutral tone mapping; lens blur off.
+
+profile.EXTREME.comment=4096 shadows, native AO/GI without indirect history, 6 GI rays and 56 SSR steps. Neutral tone mapping, adaptive exposure, DOF, motion blur and grain on.
+
+option.FOG_DENSITY.comment=Distance haze density. Clear air leaves the first 12 blocks unattenuated; horizon haze remains. Rain and underwater extinction are handled separately.

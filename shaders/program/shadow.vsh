@@ -17,21 +17,28 @@ void main(){
     }
 
     vec4 p=gl_ModelViewMatrix*gl_Vertex;
-    vec3 world=(shadowModelViewInverse*p).xyz+cameraPosition;
+    vec3 relWorld=(shadowModelViewInverse*p).xyz;
 
     // Early Culling 2: Radial distance shadow culling.
     // Discard geometry outside shadow sampling radius (+25% safety margin)
     // to avoid rasterizing distant terrain chunks into the shadow map.
-    vec2 relXZ = world.xz - cameraPosition.xz;
-    if(dot(relXZ, relXZ) > (shadowDistance * 1.25) * (shadowDistance * 1.25)) {
+    float maxDist=shadowDistance*1.25;
+    if(dot(relWorld.xz, relWorld.xz) > maxDist * maxDist) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         return;
     }
 
     #ifdef WAVING_FOLIAGE
-    world+=waveOffset(world,materialId,step(texcoord.y,mc_midTexCoord.y));
+    if(materialId > 1000.5 && materialId < 1002.5) {
+        vec3 world=relWorld+cameraPosition;
+        world+=waveOffset(world,materialId,step(texcoord.y,mc_midTexCoord.y));
+        p=shadowProjection*(shadowModelView*vec4(world-cameraPosition,1.0));
+    } else {
+        p=shadowProjection*p;
+    }
+    #else
+    p=shadowProjection*p;
     #endif
-    p=shadowProjection*(shadowModelView*vec4(world-cameraPosition,1.0));
     p.xyz=distortShadow(p.xyz/p.w)*p.w; gl_Position=p;
     #else
     gl_Position=vec4(2.0,2.0,2.0,1.0); // Outside NDC: clipped instantly before rasterization

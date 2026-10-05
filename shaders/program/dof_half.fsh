@@ -10,7 +10,7 @@ layout(location=0) out vec4 gathered;
 void main() {
     gathered=vec4(textureScreen(colortex0,texcoord).rgb,0.0);
     #ifdef DOF
-    float d=textureScreen(depthtex0,texcoord).r;
+    float d=depthScreen(depthtex0,texcoord);
     if(d<0.56 && textureScreen(colortex2,texcoord).a>0.5) return;
     float z=lensDepthFromValue(texcoord,d);
     // Smaller circles are gathered at native resolution by the resolve pass.

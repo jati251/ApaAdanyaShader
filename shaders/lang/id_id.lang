@@ -7,21 +7,21 @@ screen.WORLD=Dunia & Tumbuhan
 screen.POST=Pasca-Proses & Kamera
 
 # Profil
-profile.POTATO=Potato (FPS Maksimal)
-profile.LOW=Rendah (Bayangan Cepat & FXAA)
+profile.POTATO=Potato (Minimal)
+profile.LOW=Rendah (Ringan)
 profile.MEDIUM=Sedang (Seimbang)
-profile.HIGH=Tinggi (Realistis)
-profile.ULTRA=Ultra (Maksimal)
-profile.EXTREME=Extreme (Sinematik)
-profile.comment=Potato: FPS maksimal (tanpa bayangan/awan). Low: Bayangan cepat + FXAA. Medium: Awan 3D + SSAO + pantulan air (SSR) + TAA. High: SSGI + God rays + LabPBR/POM. Ultra: Grafis maksimal gameplay. Extreme: Tampilan sinematik resolusi penuh (DOF + Motion Blur).
+profile.HIGH=Tinggi (Gameplay PBR)
+profile.ULTRA=Ultra (Gameplay Detail)
+profile.EXTREME=Extreme (Cahaya Resolusi Penuh)
+profile.comment=Potato/Rendah: rendering ringan. Sedang: AO temporal dan exposure. Tinggi/Ultra: PBR, bayangan kontak dan GI temporal. Realistis: gameplay netral; tersedia FSR dan tracing lebih tinggi. Extreme/Sinematik: efek lensa.
 
 # Opsi Pencahayaan
 option.SSAO=Screen-Space Ambient Occlusion
-option.SSAO.comment=Memberikan bayangan gelap pada sudut dan celah objek. Matikan untuk menghemat bandwidth GPU kentang.
+option.SSAO.comment=Oklusi screen-space meredupkan fraksi ambient tersimpan, sehingga cahaya langsung dan emisi kira-kira tetap terjaga. Mode setengah resolusi dapat memakai history temporal tersendiri.
 option.SSAO_SAMPLES=Jumlah Sampel SSAO
 option.SSAO_SAMPLES.comment=Banyaknya sampel kedalaman untuk menghitung oklusi. Nilai rendah lebih ramah untuk perangkat kentang.
 option.SSGI=Screen-Space Indirect Light
-option.SSGI.comment=Melacak pantulan cahaya antar permukaan objek. Matikan di GPU kelas bawah.
+option.SSGI.comment=Pantulan diffuse permukaan terlihat ditimbang reflektansi material, keyakinan hit dan penolakan sisi belakang. Tanpa geometri di luar layar atau path tracing multi-bounce.
 option.GI_SAMPLES=Jumlah Ray Cahaya
 option.GI_STRENGTH=Kekuatan Pantulan Cahaya
 option.VOLUMETRIC_LIGHT=Berkas Cahaya (God Rays)
@@ -65,10 +65,8 @@ option.WATER_REFRACTION=Pembiasan Cahaya di Bawah Air
 option.WATER_REFRACTION.comment=Membias permukaan di bawah air. Matikan pada perangkat kentang untuk menghindari pembacaan ganda buffer kedalaman.
 option.WATER_CAUSTICS=Pola Kaustik Dasar Air
 option.WATER_CAUSTICS.comment=Pola gelombang pantulan sinar matahari di dasar sungai dan laut.
-option.WATER_FOAM=Busa Ombak Pesisir
-option.WATER_FOAM.comment=Busa putih di tepi air. Matikan pada perangkat kentang untuk menghemat komputasi noise.
-option.SSR=Refleksi Air Ray Tracing (SSR)
-option.SSR.comment=Melacak pantulan blok dan mob di permukaan air.
+option.SSR=Refleksi Screen-Space
+option.SSR.comment=Ray kedalaman/warna terlihat untuk air dan material reflektif. Dielektrik matte memakai satu lookup langit lebar; kilap/logam tetap memakai refleksi tersaring. Tanpa geometri dunia di luar layar.
 option.SSR_STEPS=Langkah Ray Refleksi
 option.WATER_OCTAVES=Oktaf Gelombang Air
 option.WATER_OCTAVES.comment=Banyaknya frekuensi gelombang air. Gunakan 2 oktaf untuk FPS maksimal pada perangkat kentang.
@@ -98,12 +96,12 @@ value.COLOR_PROFILE.7=Cyberpunk (Neon Elektrik)
 option.COLOR_PROFILE.comment=Pilihan varian gaya grading warna. Mengubah palet warna keseluruhan, atmosfer suasana, dan nuansa pencahayaan.
 option.TONEMAP_OPERATOR=Kurva Tonemapping
 value.TONEMAP_OPERATOR.0=ACES Filmic
-value.TONEMAP_OPERATOR.1=AgX (Standar Blender Modern)
+value.TONEMAP_OPERATOR.1=Gaya AgX (Pendekatan)
 value.TONEMAP_OPERATOR.2=Khronos PBR Netral
 value.TONEMAP_OPERATOR.3=Uncharted 2 (Hable)
 value.TONEMAP_OPERATOR.4=Reinhard-Jodie
-value.TONEMAP_OPERATOR.5=Linear (Vanilla)
-option.TONEMAP_OPERATOR.comment=Metode kompresi kecerahan tinggi (HDR). AgX mencegah warna terpotong/pudar menjadi kuning aneh; ACES memberikan kontras film klasik.
+value.TONEMAP_OPERATOR.5=Linear (Clipping)
+option.TONEMAP_OPERATOR.comment=Kompresi highlight HDR: ACES, pendekatan sederhana gaya AgX, PBR Netral, Hable, Reinhard-Jodie atau linear dengan clipping.
 option.COLOR_VIBRANCE=Vibrance Pintar
 option.COLOR_VIBRANCE.comment=Secara cerdas meningkatkan warna-warna redup/pucat tanpa membuat warna yang sudah terang menjadi terlalu mencolok atau merusak warna kulit.
 option.COLOR_SATURATION=Saturasi Warna
@@ -140,8 +138,8 @@ screen.CAMERA=Kamera & Efek Gerakan
 screen.PARTICLES=Partikel & Cuaca
 option.MOTION_BLUR=Motion Blur (Kabur Gerakan)
 option.MOTION_BLUR.comment=Mensimulasikan efek blur rana kamera sinematik saat bergerak dan memutar pandangan.
-option.MOTION_BLUR_LOW_LATENCY=Mode Latensi Rendah (Low Latency)
-option.MOTION_BLUR_LOW_LATENCY.comment=Mengoptimalkan motion blur untuk permainan kompetitif/PvP. Membatasi sampel ke 5 dan mereduksi radius blur untuk meminimalkan input lag dan latensi layar.
+option.MOTION_BLUR_LOW_LATENCY=Motion Blur Ringan
+option.MOTION_BLUR_LOW_LATENCY.comment=Membatasi blur ke 5 sampel dan memperpendek jejak. Hanya bekerja saat motion blur aktif; tidak mengatur latensi input atau layar.
 option.MOTION_BLUR_STRENGTH=Kekuatan Motion Blur
 option.MOTION_BLUR_STRENGTH.comment=Mengatur panjang jejak blur gerakan. 0.50 setara dengan sudut rana sinematik 180 derajat.
 option.MOTION_BLUR_SAMPLES=Sampel Motion Blur
@@ -149,7 +147,7 @@ option.MOTION_BLUR_SAMPLES.comment=Jumlah sampel di sepanjang lintasan blur. Sam
 option.MOTION_BLUR_HAND=Blur Tangan & Item
 option.MOTION_BLUR_HAND.comment=Menerapkan motion blur pada tangan dan item yang dipegang. Matikan agar tangan tetap tajam saat kamera berputar.
 option.RESOURCE_SPECULAR=Kilap & Emisi LabPBR
-option.RESOURCE_SPECULAR.comment=Membaca smoothness, F0, logam, hamburan bawah permukaan dan emisi. Logam memakai albedo sebagai F0. Peta tinggi diatur melalui POM; porositas belum digunakan.
+option.RESOURCE_SPECULAR.comment=LabPBR 1.3: F0 linear, konstanta logam ID 230-237 dengan tint albedo, fallback F0 albedo untuk logam lain, emisi dan subsurface. Porositas mengatur penggelapan basah serta genangan.
 option.SPECULAR_AA=Kurangi Kedipan Kilap
 option.SPECULAR_AA.comment=Melebarkan kilap yang lebih kecil dari piksel agar air dan normal map tidak berkelip berlebihan.
 option.SOFT_PARTICLES=Pertemuan Partikel Halus
@@ -196,12 +194,39 @@ value.UPSCALE_QUALITY.3=Balanced (59%)
 option.UPSCALE_SHARPNESS=Ketajaman FSR RCAS
 option.UPSCALE_SHARPNESS.comment=Penajaman adaptif AMD RCAS setelah upscale. Nol menonaktifkan penajaman.
 
-profile.REALISM=Realistis (Optimal)
-profile.REALISM.comment=Resolusi native, awan volumetrik, detail laut dan pencahayaan tidak langsung setengah resolusi.
+profile.REALISM=Realistis (Gameplay)
+profile.REALISM.comment=Gameplay natural pada resolusi native: bayangan 2048, 3 sinar GI, SSR 24 langkah, awan 16 langkah, haze/bloom ringan. GI/AO temporal dan tone mapping netral; DOF/motion blur mati.
 
 screen.RAYTRACING=Ray Tracing (Screen Space)
 screen.RAYTRACING.comment=Ray marching depth-buffer untuk refleksi dan cahaya tidak langsung. Bukan hardware RT atau path tracing.
 profile.REALISM_FSR=Realistis + FSR Ultra Quality
-profile.REALISM_FSR.comment=Efek sama dengan Realistis, dimensi internal 77 persen, upscaling AMD EASU / RCAS.
+profile.REALISM_FSR.comment=Efek Realistis natural dengan lebar/tinggi internal 77% dan FSR 1 EASU/RCAS. Shading lebih ringan dengan kompromi detail halus; tanpa frame generation.
 profile.REALISM_RT=Realistis + Tracing Screen-Space Tinggi
-profile.REALISM_RT.comment=48 langkah refleksi dan 6 sinar cahaya tidak langsung. Beban GPU lebih tinggi; bukan hardware RT atau frame generation.
+profile.REALISM_CINEMA=Realistis Sinematik (Peta Bayangan 4K)
+profile.REALISM_CINEMA.comment=Resolusi native, peta bayangan 4096, 4 sinar GI, SSR 40 langkah dan awan 20 langkah. Tone mapping netral serta GI/AO temporal; DOF f/4 dan motion blur aktif. Beban GPU lebih tinggi.
+profile.REALISM_RT.comment=Realistis natural dengan 4 sinar GI, SSR 40 langkah, awan 20 langkah dan 8 sampel bayangan. Tracing screen-space lebih tinggi; tanpa geometri di luar layar.
+
+option.CONTACT_HARDENING_SHADOWS=Bayangan matahari kontak
+option.CONTACT_HARDENING_SHADOWS.comment=Empat sampel penghalang memperkirakan penumbra matahari, dibatasi lima texel. Memerlukan bayangan dengan 6 atau 8 sampel filter; menambah kerja GPU.
+
+option.AUTO_EXPOSURE=Exposure kamera adaptif
+option.AUTO_EXPOSURE.comment=64 sampel luminansi HDR opaque mengatur exposure 0.35-3.0. Adaptasi lebih cepat ke terang dan lebih lambat ke gelap; diterapkan sebelum tone mapping.
+
+option.TEMPORAL_INDIRECT=GI/AO temporal
+option.TEMPORAL_INDIRECT.comment=Reproyeksi GI/AO memeriksa kedalaman dan normal dunia setiap sampel. Memerlukan cahaya setengah resolusi. Entitas bergerak, perpindahan kamera dan history tidak valid ditolak.
+
+option.EXPOSURE.comment=Pengali exposure manual. Saat exposure adaptif aktif, mengalikan hasil pengukuran; jika mati, memakai baseline siang/malam.
+
+profile.POTATO.comment=Efek minimal dengan tone mapping netral. Bayangan, awan, GI, SSR, exposure adaptif dan history mati.
+
+profile.LOW.comment=Bayangan 512 dengan PCF 2 sampel, awan 2D, FXAA dan tone mapping netral. GI dan exposure adaptif mati.
+
+profile.MEDIUM.comment=Bayangan 1024, AO temporal, SSR 16 langkah, awan setengah resolusi 10 langkah, exposure adaptif dan tone mapping netral. PBR/POM serta GI diffuse mati.
+
+profile.HIGH.comment=Bayangan kontak 2048, 3 sinar GI, SSR 28 langkah, awan 16 langkah. GI/AO temporal, LabPBR/POM, daylight dan tone mapping netral; blur lensa mati.
+
+profile.ULTRA.comment=Bayangan 2048, 4 sinar GI, SSR 32 langkah, awan 20 langkah dan POM 24 langkah. GI/AO temporal dan tone mapping netral; blur lensa mati.
+
+profile.EXTREME.comment=Bayangan 4096, AO/GI native tanpa history indirect, 6 sinar GI dan SSR 56 langkah. Tone mapping netral, exposure adaptif, DOF, motion blur serta grain aktif.
+
+option.FOG_DENSITY.comment=Kepadatan haze jarak jauh. Udara cerah tidak meredupkan 12 blok terdekat; haze horizon tetap ada. Extinction hujan dan bawah air ditangani terpisah.

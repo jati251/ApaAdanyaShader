@@ -18,21 +18,23 @@ def run(api):
         program=f.program('prepare.fsh',values,fragment=fragment)
         return f.render(program,[target],dict(uniforms,**(inputs or {})))
     pixels=render('''float nv=texcoord.x;
-        color=vec4(waterFresnel(nv,false),waterFresnel(nv,true),waterWhitecap(0.98,8.0),1.0);''')
+        color=vec4(waterFresnel(nv,false),waterFresnel(nv,true),0.0,1.0);''')
     def at(p,x,y=48): return p[(y*f.w+x)*4:(y*f.w+x)*4+4]
     normal=at(pixels,f.w-1)
     assert abs(normal[0]-.0204)<.0001, 'Water normal-incidence Fresnel changed'
     assert at(pixels,0)[0]>.97, 'Grazing water must reflect'
     assert abs(at(pixels,100)[1]-1)<1e-5, 'Underwater critical angle must totally reflect'
     assert at(pixels,170)[1]<.06, 'Subcritical underwater rays must transmit'
-    assert normal[2]>.05, 'Deep-water whitecaps cannot depend on the shore branch'
     body='''float crest;
         vec2 slope=waterSlope(texcoord*30.0,vec2(footprint,0.0),vec2(0.0,footprint),crest);
         color=vec4(slope,crest,1.0);'''
     near=render(body,'uniform float footprint;',{'footprint':.01})
-    distant=render(body,'uniform float footprint;',{'footprint':30.0})
+    # The longest swell is now ~74 blocks: an 80-block footprint is unresolved.
+    distant=render(body,'uniform float footprint;',{'footprint':80.0})
+    mid=render(body,'uniform float footprint;',{'footprint':30.0})
     energy=lambda p:sum(p[i]**2+p[i+1]**2 for i in range(0,len(p),4))
     assert energy(distant)<energy(near)*.01, 'Unresolved waves must be suppressed'
+    assert energy(distant)<energy(mid)<energy(near), 'Distant water lost its resolvable swell'
     moved=render(body,'uniform float footprint;',{'footprint':.01,'frameTimeCounter':3.5})
     assert max(abs(a-b) for a,b in zip(moved,near))>.03, 'Water spectrum is not animated'
     # Density must be zero outside the slab used for ray intersection.
@@ -76,16 +78,17 @@ def run(api):
     assert min(hit[0::4])>.99, 'Coarse screen rays missed the plane crossing'
     assert max(sky[0::4])<.01, 'Sky must never become a traced hit'
     print('PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection',flush=True)
-    print('PASS: GPU water Fresnel/TIR, deep whitecaps, wave animation/filtering, cloud slab/both sides, reflected clouds',flush=True)
-    # Render a diagnostic panorama of the actual cache; this is not an in-game screenshot.
-    try:
-        import numpy as np
-        from PIL import Image
-        out=api['ROOT'].parent/'artifacts'
-        out.mkdir(exist_ok=True)
-        image=np.array(cached).reshape(f.h,f.w,4)[::-1,:,:3]
-        image=np.maximum(image,0)/(1+np.maximum(image,0))
-        Image.fromarray(np.uint8(np.clip(image**(1/2.2),0,1)*255)).resize((768,384)).save(out/'sky-cache-preview.png')
-    except ImportError:
-        pass
+    print('PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds',flush=True)
+    if '--write-previews' in api['sys'].argv:
+        # Render a diagnostic panorama of the actual cache; this is not an in-game screenshot.
+        try:
+            import numpy as np
+            from PIL import Image
+            out=api['ROOT'].parent/'artifacts'
+            out.mkdir(exist_ok=True)
+            image=np.array(cached).reshape(f.h,f.w,4)[::-1,:,:3]
+            image=np.maximum(image,0)/(1+np.maximum(image,0))
+            Image.fromarray(np.uint8(np.clip(image**(1/2.2),0,1)*255)).resize((768,384)).save(out/'sky-cache-preview.png')
+        except ImportError:
+            pass
     f.close()

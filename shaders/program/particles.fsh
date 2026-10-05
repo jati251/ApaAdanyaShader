@@ -17,9 +17,10 @@ in vec3 viewPos;
 #ifdef TRANSLUCENT
 /* RENDERTARGETS: 0 */
 #else
-/* RENDERTARGETS: 0,1,2 */
+/* RENDERTARGETS: 0,1,2,15 */
 layout(location=1) out vec4 normalData;
 layout(location=2) out vec4 materialData;
+layout(location=3) out vec4 responseData;
 #endif
 layout(location=0) out vec4 color;
 void main(){
@@ -32,7 +33,7 @@ void main(){
     #else
     if(tex.a<max(alphaTestRef,0.01)) discard;
     #endif
-    vec3 albedo=pow(max(tex.rgb,vec3(0.0)),vec3(2.2));
+    vec3 albedo=srgbToLinear(tex.rgb);
     vec3 ambient=mix(vec3(0.025,0.04,0.075)*NIGHT_BRIGHTNESS,vec3(0.28,0.36,0.48),daylight());
     ambient*=pow(lmcoord.y,1.6);
     #ifdef NETHER
@@ -57,7 +58,7 @@ void main(){
 
     #if defined(TRANSLUCENT) && defined(AA_SOFT_PARTICLES)
     vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
-    float opaque=textureScreen(depthtex1,uv).r;
+    float opaque=depthScreen(depthtex1,uv);
     if(opaque<0.999999) {
         float separation=viewPos.z-viewPosition(uv,opaque).z;
         tex.a*=smoothstep(0.0,PARTICLE_SOFTNESS,separation);
@@ -75,6 +76,8 @@ void main(){
     illumination+=stormFlash()*pow(lmcoord.y,3.0)*0.4;
     color=vec4(albedo*illumination,tex.a);
     #ifndef TRANSLUCENT
+    // Billboards have no stable material receiver: never inherit the terrain response behind them.
+    responseData=vec4(0.0);
     normalData=vec4(normalize(-viewPos)*0.5+0.5,1.0);
     materialData=vec4(1.0,lmcoord.y,0.0,0.0);
     #endif

@@ -5,6 +5,8 @@
 
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
+uniform sampler2D dhDepthTex1,colortex6;
+uniform mat4 dhProjectionInverse;
 
 in vec2 texcoord, lmcoord;
 in vec4 glcolor;
@@ -19,11 +21,13 @@ void main(){
     #if UPSCALE_QUALITY > 0
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
-    if (length(viewPos) < 24.0) discard;
+    vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
+    if (dot(viewPos,viewPos) < 576.0) discard;
 
-    float vanillaSolidDepth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
-    float vanillaWaterDepth = texelFetch(depthtex1, ivec2(gl_FragCoord.xy), 0).r;
-    if (vanillaSolidDepth < 0.999999 || vanillaWaterDepth < 0.999999) discard;
+    // Vanilla water draws afterwards; only opaque vanilla terrain exists here.
+    float vanillaSolidDepth = depthScreen(depthtex1,uv);
+    if (vanillaSolidDepth < 0.999999 &&
+        viewDepth(uv,vanillaSolidDepth)>viewPos.z+0.02) discard;
 
     vec3 V = normalize(-viewPos);
 
@@ -34,22 +38,36 @@ void main(){
     vec3 N=normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
 
     // Robust sky light retrieval regardless of Iris transformer coordinate packing
-    float skyLight = clamp(max(lmcoord.x, lmcoord.y), 0.0, 1.0);
+    float skyLight = clamp(lmcoord.y, 0.0, 1.0);
 
     // Physical Fresnel reflectance matching vanilla water
-    float NdotV = sat(dot(N, V));
+    float NdotV = dot(N, V);
     float fresnel = waterFresnel(NdotV,isEyeInWater==1);
 
     // Environment reflections (sky & clouds) matching vanilla water
+    vec3 meshN = normalize(viewNormal);
     vec3 R = reflect(-V, N);
-    vec3 skyReflect = environmentRadiance(worldDirection(R)) * pow(skyLight, 2.0);
+    if(dot(R, meshN) < 0.02) R = normalize(R + meshN * (0.02 - dot(R, meshN)));
+    float skyExposure=isEyeInWater==1?smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y)):skyLight;
+    vec3 skyReflect = environmentRadiance(worldDirection(R)) * skyExposure*skyExposure;
 
     // Direct sun / moon specular highlight matching vanilla water
     vec3 L = normalize(shadowLightPosition);
-    vec3 glint = specularBRDF(N, V, L, filteredRoughness(N,WATER_ROUGHNESS), vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
+    float footprint=max(length(dFdx(worldPos.xz)),length(dFdy(worldPos.xz)));
+    float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
+        +0.012*smoothstep(0.15,2.0,footprint)));
+    vec3 glint = specularBRDF(N, V, L, roughness, vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
 
-    vec3 deepWater = vec3(0.005, 0.038, 0.12) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
-    vec3 waterResult = mix(deepWater, skyReflect, fresnel) + glint;
+    float bottom=depthScreen(dhDepthTex1,uv);
+    float thickness=80.0;
+    if(bottom<0.999999) {
+        vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,bottom*2.0-1.0,1.0);
+        thickness=clamp(length(p.xyz/p.w-viewPos),0.0,80.0);
+    }
+    vec3 transmittance=isEyeInWater==1?vec3(1.0):exp(-waterAbsorption()*thickness);
+    vec3 body=textureScreen(colortex6,uv).rgb*transmittance
+        +waterBodyColor(thickness,skyLight)*(1.0-transmittance);
+    vec3 waterResult = mix(body, skyReflect, fresnel) + glint;
 
     color = vec4(max(waterResult, vec3(0.0)), 1.0);
     normalData = vec4(N * 0.5 + 0.5, 1.0);

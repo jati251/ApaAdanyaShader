@@ -1,10 +1,10 @@
-# Profile: REALISM
-# Realism (Gameplay) / Realistis (Gameplay)
-# Natural gameplay at native resolution: 2048 shadows, 3 GI rays, 24 SSR steps, 16 cloud steps, mild haze/bloom. Temporal GI/AO, neutral tone mapping; DOF/motion blur off.
-# Gameplay natural pada resolusi native: bayangan 2048, 3 sinar GI, SSR 24 langkah, awan 16 langkah, haze/bloom ringan. GI/AO temporal dan tone mapping netral; DOF/motion blur mati.
+# Profile: HIGH
+# High (PBR Gameplay) / Tinggi (Gameplay PBR)
+# 2048 contact-hardening shadows, 3 GI rays, 28 SSR steps, 16 cloud steps. Temporal GI/AO, LabPBR/POM, neutral daylight and tone mapping; lens blur off.
+# Bayangan kontak 2048, 3 sinar GI, SSR 28 langkah, awan 16 langkah. GI/AO temporal, LabPBR/POM, daylight dan tone mapping netral; blur lensa mati.
 AUTO_EXPOSURE=true
 BLOOM=true
-BLOOM_STRENGTH=0.02
+BLOOM_STRENGTH=0.08
 CAVE_BRIGHTNESS=1.0
 CA_STRENGTH=1.0
 CHROMATIC_ABERRATION=false
@@ -33,7 +33,7 @@ DOF_SAMPLES=8
 EXPOSURE=1.0
 FILM_GRAIN=false
 FILM_GRAIN_STRENGTH=0.03
-FOG_DENSITY=0.65
+FOG_DENSITY=0.75
 FOG_ENABLED=true
 FXAA=true
 GI_SAMPLES=3
@@ -45,7 +45,7 @@ MOTION_BLUR_HAND=false
 MOTION_BLUR_LOW_LATENCY=false
 MOTION_BLUR_SAMPLES=4
 MOTION_BLUR_STRENGTH=0.50
-NIGHT_BRIGHTNESS=1.0
+NIGHT_BRIGHTNESS=1.5
 PARTICLE_LIGHTING=true
 PARTICLE_SOFTNESS=0.35
 POM=true
@@ -64,7 +64,7 @@ SSAO=true
 SSAO_SAMPLES=6
 SSGI=true
 SSR=true
-SSR_STEPS=24
+SSR_STEPS=28
 STARS=true
 SUN_MOON_GLOW=true
 TAA=true

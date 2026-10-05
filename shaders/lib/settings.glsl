@@ -4,6 +4,7 @@
 // ========== [ LIGHTING & SHADOWS ] ==========
 #define SHADOWS // Real-Time Dynamic Shadows
 #define SHADOW_SAMPLES 2 // [1 2 4 6 8]
+//#define CONTACT_HARDENING_SHADOWS // Bounded solar PCSS; requires 6/8 shadow taps
 const int shadowMapResolution = 1024; // [256 512 1024 2048 4096]
 const float shadowDistance = 96.0; // [48.0 64.0 80.0 96.0 112.0 144.0 176.0 224.0]
 const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 35.0 45.0]
@@ -34,7 +35,6 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 // ========== [ WATER & REFLECTIONS ] ==========
 #define WATER_REFRACTION // Underwater Optical Distortion
 #define WATER_CAUSTICS // Sunlight Refraction Patterns on Seabed
-#define WATER_FOAM // Shoreline Wave Foam
 #define SSR // Screen-Space Ray-Traced Reflections
 #define SSR_STEPS 24 // [8 12 16 18 24 28 32 40 48 56 64]
 #define WATER_OCTAVES 5 // [2 3 4 5 6 7]
@@ -67,6 +67,7 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define COLOR_VIBRANCE 0.15 // [-0.50 -0.25 0.0 0.15 0.30 0.50 0.75]
 #define COLOR_CONTRAST 1.04 // [0.85 0.90 1.0 1.04 1.10 1.18 1.30]
 #define EXPOSURE 1.0 // [0.6 0.8 1.0 1.2 1.4]
+//#define AUTO_EXPOSURE // Scene-linear luminance metering with temporal adaptation
 #define COLOR_TEMPERATURE 0.0 // [-1.0 -0.75 -0.50 -0.25 0.0 0.25 0.50 0.75 1.0]
 #define COLOR_TINT 0.0 // [-1.0 -0.50 0.0 0.50 1.0]
 #define BLOOM // Bloom Glow Effect
@@ -104,6 +105,7 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define CLOUD_RECONSTRUCTION // Half-resolution volumetric cloud layer
 #define TEMPORAL_CLOUDS // Reproject and clamp cloud history
 #define HALF_RES_LIGHTING // Bilateral SSAO/GI reconstruction
+//#define TEMPORAL_INDIRECT // Signal-specific AO/GI history; requires HALF_RES_LIGHTING
 #define HALF_RES_DOF // Bilateral lens reconstruction
 
 const float ambientOcclusionLevel = 0.65;
