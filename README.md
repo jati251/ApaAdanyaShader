@@ -1,58 +1,97 @@
 # ApaAdanyaShader
 
-Minecraft shaderpack for Iris + Sodium, with six quality profiles and an OpenGL shader pipeline. The development instance uses Minecraft 26.3, Iris 1.11.7 and Apple M1. The pack uses the same Iris/OpenGL path on Windows and macOS; it does not require a Mac-only shader feature or a PC migration.
+Minecraft Java shaderpack for Iris + Sodium on Windows and macOS. Development target: Minecraft 26.3 / Iris 1.11.7. All shader stages use GLSL 330; no compute shaders, Metal bridge, RTX hardware or additional upscaling mod are required. Automated GPU validation runs on Apple M1; Windows driver and in-game validation are still pending.
 
-## Features
+## What changed
+
+- Bloom now completes both separable blur axes at quarter width/height. The scene resolve samples the finished bloom once instead of doing seven vertical blur taps per scene pixel. Both axes retain the original Gaussian kernel. This adds one small pass and reuses `colortex4`.
+- Temporal stabilization stores scene-linear HDR color before bloom, depth of field and grading. History samples are depth-tested individually before interpolation, clipped against a current-frame YCoCg neighborhood and reduced for changing colors. Camera movement reprojects history instead of switching it off at a quarter-pixel threshold. Hands bypass history; entities and water have conservative history weights. Sharpening runs after the resolve and is never fed back into history.
+- Direct specular lighting uses height-correlated Smith GGX visibility. Normal-derivative roughness filtering also reaches the material buffer, so reflected surfaces use the filtered roughness. LabPBR porosity controls wet-surface darkening and puddle reflectivity.
+- SSR/GI rays project their origin and direction once, refine intersections and revalidate the final depth crossing. Screen-edge environment fallback remains. AO/GI reconstruction skips its texture gathering outside the effects' contribution distances.
+- Fixed preset values missing from the settings lists, and a negative-input fractional-power case in the Vibrant color profile.
+- Added optional AMD FSR 1 EASU + RCAS with viewport-aware scene/depth/history sampling, plus a basic-geometry path so outlines/leashes share the scaled viewport.
+
+## Enable the upscaler
+
+Choose a quality profile first, then open **Shader Pack Settings → Performance & Reconstruction → AMD FSR 1 Upscaling**.
+
+| Mode | Internal width / height | Approximate scene pixel count | Intended use |
+| --- | --- | --- | --- |
+| Native | 100% | 100% | Default; preserve original scene resolution |
+| Ultra Quality | 77% | 59% | First setting to compare against Native |
+| Quality | 67% | 44% | More GPU savings, more fine-detail loss |
+| Balanced | 59% | 35% | Larger performance/quality tradeoff |
+
+These percentages describe rendered pixels, **not measured FPS gains**. Shadow maps, geometry submission, CPU simulation, buffer clears and parts of the renderer retain their original costs. EASU and RCAS add full-screen work. Existing buffers retain their allocations; this is a shading optimization, not a VRAM reduction. Upscaling can be slower when the GPU's scene shading is already cheap or the game is CPU-limited.
+
+**FSR RCAS Sharpness** controls final sharpening; zero disables RCAS. Native sharpening is bypassed while FSR is active to avoid sharpening twice. Choosing another quality profile resets upscaling to Native. Existing instance overrides have not been changed.
+
+This is a real spatial upscaler: geometry and scene/effect passes render a smaller viewport, EASU reconstructs the display-sized image, then RCAS sharpens it. The shaderpack does not downsample a fully rendered scene and call it a performance improvement. The Minecraft HUD remains outside the shader's world upscale.
+
+FSR 1 does not generate frames and cannot recover all missing fine detail. It does not require motion vectors or camera jitter. Temporal stabilization plus FXAA provides input filtering; the native temporal filter is not jittered TAA or temporal super resolution. For scaled DOF, autofocus reads the actual viewport center directly; Iris's native smoothed-center-depth value belongs to the full allocation and is only used in Native mode.
+
+The same implementation works at the shader-language level on Windows and macOS. Begin Windows testing with Ultra Quality, compare Native at the same position/resolution, and keep whichever has better frame times and acceptable detail. Full Iris runtime behavior still needs checking on both platforms, including window resizing, DH boundaries, block outlines and hand/translucent geometry.
+
+## Visual features
 
 - Sun/moon lighting, filtered shadow maps, foliage transmission, SSAO, screen-space indirect light and volumetric light shafts.
-- Procedural day/night sky, stars, 2D or volumetric clouds, cloud shadows and atmospheric fog. Cloud rays stop at the cloud layer exit and also support views from above the layer.
-- Water Fresnel, screen-space reflections, refraction, animated wave normals, absorption, shoreline foam and procedural caustics.
-- Wind, wet surfaces and puddles; optional LabPBR normal, material AO, smoothness, F0, emission and subsurface maps on terrain. Metallic materials use the standard's albedo-F0 fallback. Porosity and exact conductor Fresnel are not implemented.
-- Terrain POM reads the alpha height channel of LabPBR normal maps. Albedo, normal, specular and emission maps share the displaced UV. Sampling wraps within the current quad's atlas region, uses explicit gradients, adapts to view angle and fades with distance/pixel footprint. Flat maps, head-on views, invalid tangent frames and foliage bypass the march.
-- Separate opaque/translucent particle programs, particle sunlight and shadows, soft intersections with opaque terrain, and adjustable rain/snow opacity. The shader shades Minecraft's existing particles; it does not create new particle geometry or replace their textures.
-- HDR bloom, filmic tone mapping, FXAA, ordered dithering and optional vignette.
-- Adaptive reconstruction modes: half-resolution cloud and indirect-light passes, depth/normal-aware upsampling, temporal cloud history with camera/weather/frame rejection, and a half-resolution large-bokeh DOF path. The full-resolution reference path remains available by disabling the four controls in Performance & Reconstruction.
-- Thin-lens DOF with smoothed crosshair autofocus or manual focus, aperture, focal length, bounded bokeh radius and 8–32 samples. The hand stays sharp, focused pixels skip the gathering loop, and distant terrain depth is supported. Blur is gathered before tone mapping. This is a single-layer screen-space approximation; occluded backgrounds and particle depths are unavailable.
-- Complete Overworld, Nether and End program sets; DH terrain/water paths share their implementation between dimensions.
+- Procedural day/night sky, stars, 2D/volumetric clouds, cloud shadows and distance fog. Cloud reconstruction has its own temporal history and camera/weather rejection.
+- Water Fresnel, SSR, refraction, wave normals, wavelength-dependent absorption, shoreline foam and procedural caustics.
+- Wind, wet materials and puddles. Optional terrain LabPBR normal, AO, roughness, F0, emission, subsurface and porosity inputs. Metals use albedo as F0; exact conductor Fresnel and predefined metal constants are not implemented.
+- Terrain POM from the normal texture's alpha height channel, with shared displaced albedo/specular coordinates, atlas bounds, explicit gradients and distance fading. POM does not modify mesh silhouettes, geometry depth or cast shadows.
+- Separate opaque/translucent particles, soft intersections, adjustable weather opacity, HDR bloom, six tone-map choices, color profiles, vignette, optional camera motion blur and depth of field.
+- Shared Overworld, Nether, End and Distant Horizons programs. Half-resolution cloud, AO/GI and large-bokeh reconstruction remain individually selectable.
+
+Photoreal material relief needs a compatible normal/height/specular resource pack. The installed Faithful 64x archive has no terrain `_n` / `_s` maps; its two similarly named files are alphabet particles. Enabling POM alone cannot invent material relief. Geometry remains Minecraft's block geometry, and screen-space GI/reflections cannot see surfaces absent from the depth/color buffers.
 
 ## Profiles
 
-| Profile | Main workload | DOF | Shadow map |
+| Profile | Main effects | DOF / motion blur | Shadow map |
 | --- | --- | --- | --- |
-| Potato | 2D clouds, 2 wave octaves; no shadow pass, bloom, SSAO, SSR or GI | Off | Disabled |
-| Low | 2D clouds, foliage wind, FXAA, 1-tap shadows | Off | 512 |
-| Medium | 3D clouds, SSAO, water SSR, bloom, soft particles | Off, available manually | 1024 |
-| High | Adds GI, light shafts and resource-pack materials | 16 samples | 2048 |
-| Ultra | Higher cloud/GI/reflection counts and 7 wave octaves | 24 samples | 2048 |
-| Extreme | 32 cloud steps, 64 reflection steps, 8 GI rays | 32 samples | 4096 |
+| Potato | No clouds, shadows, AO, GI, SSR or bloom | Off | Disabled |
+| Low | 2D clouds, foliage wind, FXAA, 2-tap shadows | Off | 512 |
+| Medium | Half-resolution volumetric clouds, SSAO, SSR, bloom | Off | 1024 |
+| High | Adds GI, light shafts, LabPBR/POM | Off | 2048 |
+| Ultra | 22 cloud steps, 40 SSR steps, 5 GI rays, 24 POM steps | Off | 2048 |
+| Extreme | 28 cloud steps, 56 SSR steps, 6 GI rays, 32 POM steps; native AO/GI | DOF 20 samples; motion blur 12 | 4096 |
 
-Profiles inherit a complete base, including all quality controls, so lowering the preset resets expensive settings. Selecting a profile also resets its camera and grading values; make custom adjustments after choosing the profile.
+All profiles inherit a complete base, resetting expensive settings when switching down. Custom camera, color and upscaling settings should be applied after choosing a profile. Native mode plus disabling cloud/lighting/DOF reconstruction provides a full-resolution reference.
 
-Bloom extraction runs at quarter width/height with 13 taps. Its Gaussian blur uses 7 bilinear taps per axis. Bloom passes are disabled when bloom is off, and the cloud-shadow pass is disabled when unused. Water foam does no work when disabled. Normal maps and detailed water use derivative-based specular filtering to reduce subpixel shimmer. Potato and Low leave the reconstruction passes off; Medium enables cloud reconstruction and history; High and above also enable AO/GI and large-bokeh reconstruction. POM is off for Potato/Low/Medium; High uses up to 16 steps within 24 blocks, Ultra 32 within 32 blocks, and Extreme 48 within 48 blocks. Three refinement samples follow the first height crossing. Distance fading begins at 65% of the selected range.
+## Pipeline and buffers
 
-There is no universal FPS guarantee. Extreme increases both GPU work and memory use; resolution, render distance, DH generation, resource packs and scene complexity all affect frame time. On the M1 instance, start with Low or Medium and measure while the world has finished loading. Detailed photoreal surfaces require appropriate resource-pack textures; lighting alone retains Minecraft's block geometry and source texture detail.
+| Stage | Output / operation |
+| --- | --- |
+| prepare / prepare1 | Native-size sky cache / cloud-shadow cache |
+| gbuffers / DH | Scene color, normals, material data, optional reflectance |
+| deferred / deferred1 | Reduced cloud layer / cloud history |
+| deferred2 | Reduced AO/GI |
+| deferred3 | Scene lighting, sky, reflections; opaque copy for water |
+| composite | Fog and light shafts after translucency |
+| composite1 / 2 / 3 | Quarter-size bloom extraction / horizontal / vertical blur |
+| composite4 | Optional half-size DOF |
+| composite5 | HDR temporal history; lens, bloom and display grading |
+| composite6 | Upscaling only: FXAA and camera/post effects at render resolution |
+| composite7 | Upscaling only: EASU to display-sized `colortex14` |
+| final | Native: camera/post effects; upscaled: RCAS to display |
 
-## Use
+`colortex13.rgb` is pre-lens HDR history; alpha stores positive view-space depth, -1 for sky or -2 for a hand. `colortex12` is reused for AO/GI and DOF. Upscaling uses lower-left active viewports with clamped logical-UV sampling. Shadow and environment-cache viewports remain unchanged. `colortex14` shrinks to 1×1 and both upscale-only composite passes are disabled in Native mode.
 
-1. Select `ApaAdanyaShader` in Iris Shader Packs.
-2. Open Shader Pack Settings and select the desired profile. Existing saved overrides are preserved until you choose a profile.
-3. Open **Lens & Depth of Field** for DOF. A lower f-number or longer focal length produces more blur. Disable autofocus for a fixed focus distance.
-4. Open **Particles & Weather** for soft intersections and weather opacity. Open **World & Vegetation** for LabPBR controls.
-5. For relief textures, enable **Resource Pack Normal Maps** and **Parallax Occlusion Mapping (POM)** under **World & Vegetation**, or select High/Ultra/Extreme. The resource pack must contain height information in the normal-map alpha channel. The default depth is 0.25 of a texture tile; lower it if a pack looks too deep. POM changes texture intersections, not mesh silhouettes, depth-buffer geometry or cast shadows. Height-field self-shadowing, entities, held items and DH LOD displacement are not implemented. Cropped/nonrectangular model UVs can produce approximate results.
-6. Reload the pack after changing files. This instance maps Iris reload to **R** while in the world.
-
-## Validation
-
-Run from the shaderpack folder:
+## Validation and use
 
 ```sh
 python3 tools/validate.py
+python3 tools/validate.py --static
+python3 tools/validate.py --images-only
 ```
 
-The validator checks profile completeness, legal values, translated controls, option discovery and dimension entry points. It compiles and links every program for six presets, defaults, manual focus, three POM option combinations, a full-resolution reference, no-cloud-history mode and AO-only reconstruction, with DH enabled and disabled. On macOS it uses CGL; on Windows or Linux it uses a hidden GLFW OpenGL 3.3 core context (`python -m pip install glfw`). The Windows path is a driver compile check and still needs an actual Iris/Minecraft run for visual and frame-time measurements. Compatibility inputs are bridged to core inputs for the test, and injected DH texture helpers are stubbed; this does not reproduce Iris's complete transformation pipeline.
+The validator checks profile completeness, option ranges, translations, dimension entry points, GPU compile/link variants and synthetic image regressions. It uses macOS CGL or a hidden GLFW context on Windows/Linux (`python -m pip install glfw`). Both paths compile GLSL 330. Compatibility builtins are bridged to core inputs and DH helpers are stubbed; this is not the complete Iris patching/binding pipeline. See [VALIDATION.md](VALIDATION.md).
 
-GPU image checks exercise the real DOF/tone-map fragment program with known focus, background and hand-mask depths, then test translucent particle intersections, the soft-particle off switch and weather opacity. POM GPU fixtures check known flat/sloped height intersections, opposite view directions, atlas isolation, gradual distance fading and bypass conditions. Use `python3 tools/validate.py --static` for configuration checks without an OpenGL context, or `python3 tools/validate.py --images-only` to rerun GPU fixtures without the complete compile matrix. `tools/ValidateShaders.java` is an older validator and does not cover the current profiles.
+Select the pack and reload it in Minecraft after edits. This instance binds Iris reload to **R**. Check the same loaded scene before/after, with a fixed display resolution and render distance. Record median and 95th-percentile frame times after chunk generation settles. Review day/night/rain, water/underwater, moving foliage/entities, particles, all dimensions, DH transitions, resizing, focus and outlines. Automated fixtures do not establish in-game FPS gains or approve the final look.
 
-Before publishing, verify in Minecraft: every profile in the same loaded scene, day/night/rain, close foliage, transparent particles at walls and water, autofocus transitions, underwater views, Nether, End and DH chunk boundaries. Record median and 95th-percentile frame time at a fixed resolution and render distance. Current automated checks do not establish in-game FPS or visual quality across these scenes.
+## Other upscalers and frame generation
 
-Implementation references: [Iris program ordering](https://shaders.properties/current/reference/shadersproperties/ordering/), [Iris PBR textures](https://shaders.properties/current/how-to/pbr_standards/), [LabPBR data format](https://shaderlabs.org/wiki/LabPBR_Material_Standard), and [Iris buffer format declarations](https://shaders.properties/current/guides/your-first-shaderpack/3_deferred_lighting/).
+FSR 2/3 temporal upscaling, DLSS and XeSS need a separate renderer/mod integration with jitter and reliable motion/depth inputs. The [Super Resolution project](https://github.com/IReallyWantToSleep/superresolution) provides such integration on supported Windows/Linux x64 configurations; it is not a dependency of this pack and was not installed. Its custom shader interface also requires the pack to control render scaling itself. Do not enable two independent resolution scalers together.
+
+Frame generation additionally needs interpolation scheduling, frame pacing and UI/presentation integration outside this shaderpack. No frame-generation feature is claimed or included. See AMD's [frame interpolation integration](https://gpuopen.com/manuals/fidelityfx_sdk/techniques/frame-interpolation-swap-chain/).
+
+References: [AMD FSR 1 source](https://github.com/GPUOpen-Effects/FidelityFX-FSR), [Iris gbuffers and fallbacks](https://shaders.properties/current/reference/programs/gbuffers/), [LabPBR specification](https://shaderlabs.org/wiki/LabPBR_Material_Standard), [Filament PBR reference](https://github.com/google/filament/blob/main/docs/Filament.md.html). Third-party attribution is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

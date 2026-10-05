@@ -18,7 +18,7 @@ vec3 getViewPos(vec2 uv, float depth, out bool isSky) {
     isSky = false;
     if (depth >= 0.999999) {
         #ifdef DISTANT_HORIZONS
-        float dh = texture(dhDepthTex0, uv).r;
+        float dh = textureScreen(dhDepthTex0, uv).r;
         if (dh < 0.999999) {
             vec4 p = dhProjectionInverse * vec4(uv * 2.0 - 1.0, dh * 2.0 - 1.0, 1.0);
             return p.xyz / p.w;
@@ -62,9 +62,9 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // Latency Gate 2: First-Person Hand & Held Item Check
     // Keep held items 100% crisp without blurring or dragging trails
     // -------------------------------------------------------------
-    float depth = texture(depthtex0, uv).r;
+    float depth = textureScreen(depthtex0, uv).r;
     #ifndef MOTION_BLUR_HAND
-    if (depth < 0.56 && texture(colortex2, uv).a > 0.5) {
+    if (depth < 0.56 && textureScreen(colortex2, uv).a > 0.5) {
         return currentRGB;
     }
     #endif
@@ -73,13 +73,11 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // Optimized Fast Reprojection (Algebraically Combined Matrix)
     // Collapses 4 separate matrix-vector multiplications into 1
     // -------------------------------------------------------------
-    mat4 prevViewProj = gbufferPreviousProjection * gbufferPreviousModelView;
-    mat4 reprojMatrix = prevViewProj * gbufferModelViewInverse;
-    vec4 camTranslationClip = prevViewProj * vec4(camDelta, 0.0);
-
     bool isSky;
     vec3 viewPos = getViewPos(uv, depth, isSky);
-    vec4 prevClip = reprojMatrix * vec4(viewPos, 1.0) + (isSky ? vec4(0.0) : camTranslationClip);
+    vec4 relWorld = gbufferModelViewInverse * vec4(viewPos, 1.0);
+    if (!isSky) relWorld.xyz += camDelta;
+    vec4 prevClip = gbufferPreviousProjection * (gbufferPreviousModelView * relWorld);
 
     if (prevClip.w <= 0.0) {
         return currentRGB;
@@ -131,7 +129,7 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
             continue;
         }
 
-        vec3 tap = texture(colortex0, sampleUV).rgb;
+        vec3 tap = textureScreen(colortex0, sampleUV).rgb;
 
         // Fast gamma 2.0 linear approximation (single-cycle multiply instead of pow)
         vec3 linearTap = tap * tap;

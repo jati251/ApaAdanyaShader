@@ -37,7 +37,7 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float normalBias = (0.05 + 0.12 * (1.0 - clamp(ndl, 0.0, 1.0))) * (1024.0 * texelSize);
     vec3 biased = relativeWorld + normalWorld * normalBias;
 
-    vec4 clip = shadowProjection * shadowModelView * vec4(biased, 1.0);
+    vec4 clip = shadowProjection * (shadowModelView * vec4(biased, 1.0));
     vec3 sc = distortShadow(clip.xyz / clip.w) * 0.5 + 0.5;
     if(any(lessThan(sc, vec3(0.002))) || any(greaterThan(sc, vec3(0.998)))) return 1.0;
 
@@ -70,19 +70,28 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     #endif
 }
 vec3 fresnelSchlick(float cosine,vec3 f0) { return f0+(1.0-f0)*pow(1.0-sat(cosine),5.0); }
-vec3 specularBRDF(vec3 N,vec3 V,vec3 L,float roughness,vec3 f0) {
+float filteredRoughness(vec3 N,float roughness) {
     #ifdef SPECULAR_AA
     vec3 dx=dFdx(N),dy=dFdy(N);
-    roughness=sqrt(clamp(roughness*roughness+min(0.18,0.5*(dot(dx,dx)+dot(dy,dy))),0.002,1.0));
+    float variance=min(0.18,0.5*(dot(dx,dx)+dot(dy,dy)));
+    return sqrt(clamp(roughness*roughness+variance,0.002,1.0));
+    #else
+    return roughness;
     #endif
-    vec3 H=normalize(V+L); float nl=max(dot(N,L),0.0), nv=max(dot(N,V),0.001);
-    float nh=max(dot(N,H),0.0), vh=max(dot(V,H),0.0);
-    float a=max(roughness*roughness,0.003), a2=a*a;
+}
+vec3 specularBRDF(vec3 N,vec3 V,vec3 L,float roughness,vec3 f0) {
+    vec3 halfVector=V+L;
+    vec3 H=halfVector*inversesqrt(max(dot(halfVector,halfVector),0.000001));
+    float nl=sat(dot(N,L)),nv=max(dot(N,V),0.001);
+    float nh=sat(dot(N,H)),vh=sat(dot(V,H));
+    float a=max(roughness*roughness,0.003),a2=a*a;
     float denom=nh*nh*(a2-1.0)+1.0;
     float D=a2/max(PI*denom*denom,0.000001);
-    float k=(roughness+1.0)*(roughness+1.0)*0.125;
-    float G=nv/(nv*(1.0-k)+k)*nl/(nl*(1.0-k)+k);
-    return min(vec3(24.0),D*G*fresnelSchlick(vh,f0)/max(4.0*nv*nl,0.001))*nl;
+    // Height-correlated Smith visibility, with alpha = perceptual roughness squared.
+    float gv=nl*sqrt(nv*nv*(1.0-a2)+a2);
+    float gl=nv*sqrt(nl*nl*(1.0-a2)+a2);
+    float visibility=0.5/max(gv+gl,0.00001);
+    return min(vec3(24.0),D*visibility*fresnelSchlick(vh,f0))*nl;
 }
 vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0,float metal,float materialAO) {
     vec3 nw=worldDirection(N), rel=(gbufferModelViewInverse*vec4(vp,1.0)).xyz;
@@ -112,6 +121,6 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     return diffuse*((ambient+torch+vec3(0.008)*CAVE_BRIGHTNESS)*materialAO+(nl+subsurface)*direct*0.60)+f0*metal*(ambient+torch)*materialAO*0.35+specular+albedo*emission*5.0;
 }
 vec3 shadeSurface(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emission,float foliage,vec3 f0) {
-    return shadeMaterial(albedo,N,vp,lm,roughness,emission,foliage,f0,0.0,1.0);
+    return shadeMaterial(albedo,N,vp,lm,filteredRoughness(N,roughness),emission,foliage,f0,0.0,1.0);
 }
 #endif

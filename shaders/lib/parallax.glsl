@@ -28,12 +28,13 @@ vec2 parallaxUV(sampler2D heightMap,vec2 uv,vec2 dx,vec2 dy,
     vec2 ray=viewTS.xy/max(viewTS.z,0.16)*(POM_DEPTH*fade);
     int steps=int(mix(float(POM_STEPS)*0.5,float(POM_STEPS),1.0-clamp(viewTS.z,0.0,1.0)));
     steps=max(steps,4);
+    float stepSize=1.0/float(steps);
     float layer=0.0,previous=0.0;
     float surface=initialDepth;
     for(int i=0;i<POM_STEPS;i++) {
         if(i>=steps || layer>=surface) break;
         previous=layer;
-        layer+=1.0/float(steps);
+        layer+=stepSize;
         vec2 tap=parallaxTileUV(localUV-ray*layer,bounds.xy,size,margin);
         surface=1.0-textureGrad(heightMap,tap,dx,dy).a;
     }

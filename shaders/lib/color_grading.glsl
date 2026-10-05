@@ -84,7 +84,7 @@ vec3 applyColorProfile(vec3 c) {
     #if COLOR_PROFILE == 1
     // --- Profile 1: Vibrant Fantasy ---
     // Punchy colors, saturated foliage greens, rich skies, golden warmth
-    vec3 satBoost = mix(vec3(luma), c, 1.25);
+    vec3 satBoost = max(mix(vec3(luma), c, 1.25),vec3(0.0));
     satBoost.r = pow(satBoost.r, 0.95) * 1.04;
     satBoost.g = pow(satBoost.g, 0.94) * 1.05;
     satBoost.b = pow(satBoost.b, 0.97) * 1.02;

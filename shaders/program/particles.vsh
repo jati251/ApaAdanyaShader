@@ -8,4 +8,5 @@ void main() {
     glcolor=gl_Color;
     viewPos=(gl_ModelViewMatrix*gl_Vertex).xyz;
     gl_Position=gl_ProjectionMatrix*vec4(viewPos,1.0);
+    gl_Position=scaleSceneClip(gl_Position,vec2(1.0));
 }

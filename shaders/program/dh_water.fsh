@@ -14,7 +14,10 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 
-void main() {
+void main(){
+    #if UPSCALE_QUALITY > 0
+    if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
+    #endif
     if (length(viewPos) < 24.0) discard;
 
     float vanillaSolidDepth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
@@ -47,7 +50,7 @@ void main() {
 
     // Direct sun / moon specular highlight matching vanilla water
     vec3 L = normalize(shadowLightPosition);
-    vec3 glint = specularBRDF(N, V, L, WATER_ROUGHNESS, vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
+    vec3 glint = specularBRDF(N, V, L, filteredRoughness(N,WATER_ROUGHNESS), vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
 
     // Deep water equilibrium color matching vanilla water (water.fsh)
     vec3 deepWater = vec3(0.02, 0.14, 0.24) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
@@ -55,5 +58,5 @@ void main() {
 
     color = vec4(max(waterResult, vec3(0.0)), 1.0);
     normalData = vec4(N * 0.5 + 0.5, 1.0);
-    materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.0);
+    materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.25);
 }

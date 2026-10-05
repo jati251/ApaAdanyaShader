@@ -10,11 +10,10 @@ uniform sampler2D dhDepthTex0;
 uniform mat4 dhProjectionInverse;
 #endif
 
-float lensDepth(vec2 uv) {
-    float d=texture(depthtex0,uv).r;
+float lensDepthFromValue(vec2 uv, float d) {
     if(d<0.999999) return max(-viewPosition(uv,d).z,0.05);
     #ifdef DISTANT_HORIZONS
-    float dh=texture(dhDepthTex0,uv).r;
+    float dh=textureScreen(dhDepthTex0,uv).r;
     if(dh<0.999999) {
         vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,dh*2.0-1.0,1.0);
         return max(-p.z/p.w,0.05);
@@ -23,8 +22,12 @@ float lensDepth(vec2 uv) {
     return 10000.0;
 }
 
+float lensDepth(vec2 uv) {
+    return lensDepthFromValue(uv, textureScreen(depthtex0,uv).r);
+}
+
 bool lensHand(vec2 uv) {
-    return texture(depthtex0,uv).r<0.56 && texture(colortex2,uv).a>0.5;
+    return textureScreen(depthtex0,uv).r<0.56 && textureScreen(colortex2,uv).a>0.5;
 }
 
 float circleOfConfusion(float z,float focus) {
@@ -38,9 +41,14 @@ float circleOfConfusion(float z,float focus) {
 float lensFocus() {
     float focus=DOF_FOCUS_DISTANCE;
     #ifdef DOF_AUTOFOCUS
+    #if UPSCALE_QUALITY > 0
+    // Iris samples the allocation center; our active viewport has a different center.
+    focus=clamp(lensDepth(vec2(0.5)),0.5,10000.0);
+    #else
     focus=clamp(-viewPosition(vec2(0.5),centerDepthSmooth).z,0.5,10000.0);
     #ifdef DISTANT_HORIZONS
     if(centerDepthSmooth>=0.999999) focus=lensDepth(vec2(0.5));
+    #endif
     #endif
     #endif
     return focus;
@@ -61,15 +69,16 @@ vec3 depthOfField(vec2 uv,vec3 sharp) {
         float angle=float(i)*2.39996323;
         vec2 tap=uv+vec2(cos(angle),sin(angle))*r*radius*pixel;
         if(any(lessThan(tap,pixel)) || any(greaterThan(tap,1.0-pixel))) continue;
-        if(lensHand(tap)) continue;
-        float tapZ=lensDepth(tap);
+        float tapD=textureScreen(depthtex0,tap).r;
+        if(tapD<0.56 && textureScreen(colortex2,tap).a>0.5) continue;
+        float tapZ=lensDepthFromValue(tap,tapD);
         float tapCoC=circleOfConfusion(tapZ,focus);
         // Keep focused foreground out of distant bokeh, and backgrounds out of near blur.
         float depthWeight=1.0-smoothstep(0.02,0.15,abs(tapZ-centerZ)/max(centerZ,1.0));
         float sameSide=step(0.0,tapCoC*coc);
         float coverage=smoothstep(r*radius-1.0,r*radius+1.0,abs(tapCoC));
         float w=max(depthWeight,sameSide*coverage*step(centerZ,tapZ));
-        sum+=texture(colortex0,tap).rgb*w;
+        sum+=textureScreen(colortex0,tap).rgb*w;
         total+=w;
     }
     return mix(sharp,sum/total,smoothstep(0.75,1.5,radius));

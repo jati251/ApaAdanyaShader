@@ -13,7 +13,7 @@ const bool colortex11Clear = false;
 layout(location=0) out vec4 history;
 layout(location=1) out vec4 metadata;
 void main() {
-    ivec2 size=textureSize(colortex9,0);
+    ivec2 size=screenTextureSize(colortex9);
     ivec2 pixel=clamp(ivec2(gl_FragCoord.xy),ivec2(0),size-1);
     vec4 now=texelFetch(colortex9,pixel,0);
     history=now;
@@ -29,7 +29,7 @@ void main() {
     if(anchor<110.0 || anchor>4200.0) return;
     vec3 relative=rd*anchor+cameraPosition-previousCameraPosition;
     relative+=vec3(1.2,0.0,0.5)*frameTime;
-    vec4 previous=gbufferPreviousProjection*gbufferPreviousModelView*vec4(relative,1.0);
+    vec4 previous=gbufferPreviousProjection*(gbufferPreviousModelView*vec4(relative,1.0));
     if(previous.w<=0.0) return;
     vec2 uv=previous.xy/previous.w*0.5+0.5;
     vec2 border=1.0/vec2(size);

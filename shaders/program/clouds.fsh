@@ -13,14 +13,17 @@ layout(location=0) out vec4 layer;
 void main() {
     // March a whole cloud layer only where at least one covered pixel is sky.
     bool sky=false;
-    vec2 size=vec2(textureSize(depthtex0,0));
-    for(int y=0;y<2;y++) for(int x=0;x<2;x++) {
-        vec2 uv=texcoord+(vec2(x,y)-0.5)/size;
-        bool clear=texture(depthtex0,uv).r>=0.999999;
-        #ifdef DISTANT_HORIZONS
-        clear=clear && min(texture(dhDepthTex0,uv).r,texture(dhDepthTex1,uv).r)>=0.999999;
-        #endif
-        sky=sky || clear;
+    vec2 size=vec2(screenTextureSize(depthtex0));
+    for(int y=0;y<2;y++) {
+        for(int x=0;x<2;x++) {
+            vec2 uv=texcoord+(vec2(x,y)-0.5)/size;
+            bool clear=textureScreen(depthtex0,uv).r>=0.999999;
+            #ifdef DISTANT_HORIZONS
+            clear=clear && min(textureScreen(dhDepthTex0,uv).r,textureScreen(dhDepthTex1,uv).r)>=0.999999;
+            #endif
+            if(clear) { sky=true; break; }
+        }
+        if(sky) break;
     }
     layer=vec4(0.0,0.0,0.0,-1.0);
     if(!sky) return;

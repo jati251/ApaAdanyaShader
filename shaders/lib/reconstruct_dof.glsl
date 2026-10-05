@@ -6,7 +6,7 @@ vec3 reconstructDOF(vec2 uv,vec3 sharp) {
     float coc=circleOfConfusion(z,focus);
     if(abs(coc)<0.75) return sharp;
     if(abs(coc)<2.0) return depthOfField(uv,sharp);
-    ivec2 size=textureSize(colortex12,0);
+    ivec2 size=screenTextureSize(colortex12);
     vec2 p=uv*vec2(size)-0.5,f=fract(p);
     ivec2 base=ivec2(floor(p));
     vec3 sum=vec3(0.0);

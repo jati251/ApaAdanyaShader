@@ -7,7 +7,7 @@ layout(location=0) out vec4 color;
 const int colortex4Format = RGBA16F;
 */
 vec3 bloomSample(vec2 uv) {
-    vec3 c=texture(colortex0,clamp(uv,vec2(0.001),vec2(0.999))).rgb;
+    vec3 c=textureScreen(colortex0,clamp(uv,vec2(0.001),vec2(0.999))).rgb;
     float brightness=max(c.r,max(c.g,c.b));
     float knee=clamp(brightness-0.5,0.0,1.0);
     float contribution=max(brightness-1.0,knee*knee*0.5);

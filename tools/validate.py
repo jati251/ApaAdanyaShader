@@ -65,7 +65,7 @@ if '--static' in sys.argv:
 from gl_context import GLContext
 driver = GLContext()
 bind = driver.bind
-CORE_VERSION = driver.version
+CORE_VERSION = '330'  # Compile the same language version on macOS and Windows.
 get_string = bind('glGetString', c.c_char_p, c.c_uint)
 print('GPU:', get_string(0x1F01).decode(), flush=True)
 create_shader = bind('glCreateShader', c.c_uint, c.c_uint)
@@ -141,6 +141,10 @@ try:
     variants += [('FULL_RES_REFERENCE', dict(resolve('EXTREME'), CLOUD_RECONSTRUCTION=False, TEMPORAL_CLOUDS=False, HALF_RES_LIGHTING=False, HALF_RES_DOF=False)),
                  ('NO_CLOUD_HISTORY', dict(resolve('HIGH'), TEMPORAL_CLOUDS=False)),
                  ('AO_ONLY_RECONSTRUCTION', dict(resolve('HIGH'), SSGI=False))]
+    variants += [(f'FSR1_{q}',dict(resolve('HIGH'),UPSCALE_QUALITY=str(q))) for q in (1,2,3)]
+    variants += [('FSR1_EXTREME',dict(resolve('EXTREME'),UPSCALE_QUALITY='1')),
+                 ('FSR1_POTATO',dict(resolve('POTATO'),UPSCALE_QUALITY='3')),
+                 ('FSR1_NO_SHARPEN',dict(resolve('HIGH'),UPSCALE_QUALITY='2',UPSCALE_SHARPNESS='0.0'))]
     if '--images-only' in sys.argv:
         variants = []
     for name, values in variants:
@@ -171,6 +175,8 @@ try:
         print(f'PASS: {total} program variants compiled and linked', flush=True)
     import render_checks
     render_checks.run(globals())
+    import quality_checks
+    quality_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
 finally:

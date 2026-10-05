@@ -9,9 +9,46 @@ uniform float frameTimeCounter, rainStrength, wetness, viewWidth, viewHeight, ne
 uniform float frameTime;
 uniform int worldTime, isEyeInWater, frameCounter;
 uniform ivec2 eyeBrightnessSmooth;
+#if UPSCALE_QUALITY == 1
+#define AA_RENDER_SCALE 0.76923077
+#elif UPSCALE_QUALITY == 2
+#define AA_RENDER_SCALE 0.66666667
+#elif UPSCALE_QUALITY == 3
+#define AA_RENDER_SCALE 0.58823529
+#else
+#define AA_RENDER_SCALE 1.0
+#endif
+vec4 scaleSceneClip(vec4 clip,vec2 targetFraction) {
+    #if UPSCALE_QUALITY > 0
+    vec2 allocation=max(floor(vec2(viewWidth,viewHeight)*targetFraction),vec2(1.0));
+    vec2 scale=max(floor(allocation*AA_RENDER_SCALE),vec2(1.0))/allocation;
+    clip.xy=(clip.xy+clip.w)*scale-clip.w;
+    #endif
+    return clip;
+}
+ivec2 screenTextureSize(sampler2D source) {
+    return max(ivec2(floor(vec2(textureSize(source,0))*AA_RENDER_SCALE)),ivec2(1));
+}
+vec4 textureScreen(sampler2D source,vec2 uv) {
+    #if UPSCALE_QUALITY > 0
+    vec2 allocation=vec2(textureSize(source,0)),activeSize=vec2(screenTextureSize(source));
+    return texture(source,clamp(uv*activeSize,vec2(0.5),activeSize-0.5)/allocation);
+    #else
+    return texture(source,uv);
+    #endif
+}
+// These macros keep all scene-space radii and fragment coordinates in render pixels.
+#if UPSCALE_QUALITY > 0
+#define viewWidth floor(viewWidth*AA_RENDER_SCALE)
+#define viewHeight floor(viewHeight*AA_RENDER_SCALE)
+#endif
 const float PI = 3.14159265;
 float sat(float x) { return clamp(x, 0.0, 1.0); }
 float hash12(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float noise2D(vec2 p) {
+    vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+    return mix(mix(hash12(i),hash12(i+vec2(1.0,0.0)),f.x),mix(hash12(i+vec2(0.0,1.0)),hash12(i+vec2(1.0,1.0)),f.x),f.y);
+}
 float hash13(vec3 p) { p=fract(p*0.1031); p+=dot(p,p.yzx+33.33); return fract((p.x+p.y)*p.z); }
 float noise3D(vec3 p) {
     vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
@@ -19,6 +56,12 @@ float noise3D(vec3 p) {
 }
 float ignDither(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 vec3 viewPosition(vec2 uv,float d) { vec4 p=gbufferProjectionInverse*vec4(uv*2.0-1.0,d*2.0-1.0,1.0); return p.xyz/p.w; }
+float viewDepth(vec2 uv,float d) {
+    vec4 clip=vec4(uv*2.0-1.0,d*2.0-1.0,1.0);
+    // Only z/w are needed by ray intersection tests.
+    return dot(vec4(gbufferProjectionInverse[0][2],gbufferProjectionInverse[1][2],gbufferProjectionInverse[2][2],gbufferProjectionInverse[3][2]),clip)
+         / dot(vec4(gbufferProjectionInverse[0][3],gbufferProjectionInverse[1][3],gbufferProjectionInverse[2][3],gbufferProjectionInverse[3][3]),clip);
+}
 vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v); }
 vec3 sunDirection() { return worldDirection(sunPosition); }
 float daylight() { return smoothstep(-0.10,0.18,sunDirection().y); }

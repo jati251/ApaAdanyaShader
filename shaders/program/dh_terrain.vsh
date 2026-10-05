@@ -14,4 +14,5 @@ void main() {
     worldPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz + cameraPosition;
     materialId = 0.0;
     gl_Position = ftransform();
+    gl_Position=scaleSceneClip(gl_Position,vec2(1.0));
 }

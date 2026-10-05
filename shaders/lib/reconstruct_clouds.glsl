@@ -7,7 +7,7 @@ uniform sampler2D colortex9;
 #define AA_CLOUD_BUFFER colortex9
 #endif
 vec4 reconstructClouds(vec2 uv,vec3 rd) {
-    ivec2 size=textureSize(AA_CLOUD_BUFFER,0);
+    ivec2 size=screenTextureSize(AA_CLOUD_BUFFER);
     vec2 p=uv*vec2(size)-0.5, f=fract(p);
     ivec2 base=ivec2(floor(p));
     vec4 sum=vec4(0.0);

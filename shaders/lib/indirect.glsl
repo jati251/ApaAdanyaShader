@@ -13,7 +13,7 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
                     float radius=1.5*sqrt((float(i)+0.5)/float(SSAO_SAMPLES));
                     vec2 sampleUV=uv+vec2(cos(angle),sin(angle))*(radius*projScale);
                     if(any(lessThan(sampleUV,vec2(0.0)))||any(greaterThan(sampleUV,vec2(1.0)))) continue;
-                    float d=texture(depthtex0,sampleUV).r;
+                    float d=textureScreen(depthtex0,sampleUV).r;
                     vec3 diff=viewPosition(sampleUV,d)-vp;
                     float len=length(diff);
                     occ+=max(dot(N,diff/max(len,0.001))-0.10,0.0)*(1.0-smoothstep(0.1,2.4,len))*step(d,0.99999);
@@ -34,8 +34,8 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
                     vec3 dir=normalize(tangent*cos(angle)*r+bitangent*sin(angle)*r+N*z);
                     vec2 hit;
                     if(traceScreen(depthtex0,vp+N*0.08,dir,0.18,10,hit)) {
-                        vec3 incoming=texture(colortex0,hit).rgb;
-                        vec3 hitN=normalize(texture(colortex1,hit).xyz*2.0-1.0);
+                        vec3 incoming=textureScreen(colortex0,hit).rgb;
+                        vec3 hitN=normalize(textureScreen(colortex1,hit).xyz*2.0-1.0);
                         bounce+=min(incoming,vec3(3.0))*max(dot(hitN,-dir),0.0)*edgeFade(hit);
                     }
                 }

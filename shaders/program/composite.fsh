@@ -14,14 +14,14 @@ in vec2 texcoord;
 /* RENDERTARGETS: 0 */
 layout(location=0) out vec4 color;
 void main(){
-    vec3 c=texture(colortex0,texcoord).rgb;
-    float depth=texture(depthtex0,texcoord).r;
+    vec3 c=textureScreen(colortex0,texcoord).rgb;
+    float depth=textureScreen(depthtex0,texcoord).r;
     vec3 vp=viewPosition(texcoord,depth), rd=worldDirection(normalize(vp));
     float dist=depth>=0.999999?far:min(length(vp),far);
     bool isDH=false;
     #ifdef DISTANT_HORIZONS
-    float dhSolidD=texture(dhDepthTex0,texcoord).r;
-    float dhTransD=texture(dhDepthTex1,texcoord).r;
+    float dhSolidD=textureScreen(dhDepthTex0,texcoord).r;
+    float dhTransD=textureScreen(dhDepthTex1,texcoord).r;
     float dhDepth=min(dhSolidD,dhTransD);
     if(depth>=0.999999 && dhDepth<1.0){
         isDH=true;
@@ -32,7 +32,7 @@ void main(){
         dist=length(vp);
     }
     #endif
-    bool hand=texture(colortex2,texcoord).a>0.5 && depth<0.56;
+    bool hand=textureScreen(colortex2,texcoord).a>0.5 && depth<0.56;
     if(isEyeInWater==1){
         vec3 trans=exp(-vec3(0.24,0.08,0.045)*dist/WATER_CLARITY);
         c=c*trans+vec3(0.008,0.085,0.12)*mix(0.15,1.0,daylight())*(1.0-trans);

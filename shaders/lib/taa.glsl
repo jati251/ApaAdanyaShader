@@ -1,128 +1,94 @@
 #ifndef AA_TAA
 #define AA_TAA
-
 #ifdef TAA
-
 uniform sampler2D colortex13;
-
 #ifndef DEPTH_COLORTEX2_DECLARED
 #define DEPTH_COLORTEX2_DECLARED
-uniform sampler2D depthtex0, colortex2;
+uniform sampler2D depthtex0,colortex2;
 #endif
-
-uniform mat4 gbufferPreviousModelView, gbufferPreviousProjection;
+uniform mat4 gbufferPreviousModelView,gbufferPreviousProjection;
 uniform vec3 previousCameraPosition;
-
 #if defined(DISTANT_HORIZONS) && !defined(DH_PROJECTION_INVERSE_DECLARED)
 #define DH_PROJECTION_INVERSE_DECLARED
 uniform sampler2D dhDepthTex0;
 uniform mat4 dhProjectionInverse;
 #endif
 
-vec3 applyTAA(vec2 uv, vec3 currentRGB) {
-    vec2 px = 1.0 / vec2(viewWidth, viewHeight);
-    vec2 edgeMargin = px * 4.0;
-
-    // 1. Initial safety guards: startup, pauses, large teleports
-    if (frameCounter < 2 || frameTime <= 0.0 || frameTime > 0.2) {
-        return currentRGB;
-    }
-    vec3 camDelta = cameraPosition - previousCameraPosition;
-    if (dot(camDelta, camDelta) > 4.0) {
-        return currentRGB;
-    }
-
-    // 2. Hand rejection: first-person hand & held items NEVER blend with history (0% ghosting)
-    float depth = texture(depthtex0, uv).r;
-    if (depth < 0.56 && texture(colortex2, uv).a > 0.5) {
-        return currentRGB;
-    }
-
-    // 3. Fast reprojection to previous frame
-    mat4 prevViewProj = gbufferPreviousProjection * gbufferPreviousModelView;
-    mat4 reprojMatrix = prevViewProj * gbufferModelViewInverse;
-    vec4 camTranslationClip = prevViewProj * vec4(camDelta, 0.0);
-
-    bool isSky = false;
-    vec3 viewPos;
-    if (depth >= 0.999999) {
-        #ifdef DISTANT_HORIZONS
-        float dh = texture(dhDepthTex0, uv).r;
-        if (dh < 0.999999) {
-            vec4 p = dhProjectionInverse * vec4(uv * 2.0 - 1.0, dh * 2.0 - 1.0, 1.0);
-            viewPos = p.xyz / p.w;
-        } else
-        #endif
-        {
-            isSky = true;
-            vec4 p = gbufferProjectionInverse * vec4(uv * 2.0 - 1.0, 1.0, 1.0);
-            viewPos = normalize(p.xyz / p.w) * (far * 0.5);
-        }
-    } else {
-        vec4 p = gbufferProjectionInverse * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-        viewPos = p.xyz / p.w;
-    }
-
-    vec4 prevClip = reprojMatrix * vec4(viewPos, 1.0) + (isSky ? vec4(0.0) : camTranslationClip);
-    if (prevClip.w <= 0.0) {
-        return currentRGB;
-    }
-
-    vec2 historyUV = prevClip.xy / prevClip.w * 0.5 + 0.5;
-
-    // 4. Strict screen boundary check: prevent white borders at screen edges
-    if (historyUV.x <= edgeMargin.x || historyUV.x >= 1.0 - edgeMargin.x ||
-        historyUV.y <= edgeMargin.y || historyUV.y >= 1.0 - edgeMargin.y) {
-        return currentRGB;
-    }
-
-    // 5. Motion gate: on camera or player movement, immediately drop history
-    // In Hybrid mode (no camera jitter), temporal accumulation is exclusively for
-    // stabilizing static views and subtle shimmering. Movement uses pure current frame + FXAA.
-    vec2 pixelVelocity = (uv - historyUV) * vec2(viewWidth, viewHeight);
-    float motionLen = length(pixelVelocity);
-
-    // If pixel moved more than 0.25 pixels, completely bypass history to eliminate ghosting
-    if (motionLen > 0.25) {
-        return currentRGB;
-    }
-
-    // 6. Sample history buffer with safe clamped coordinates
-    vec2 clampedUV = clamp(historyUV, edgeMargin, 1.0 - edgeMargin);
-    vec3 historyColor = texture(colortex13, clampedUV).rgb;
-
-    // 7. Strict color delta validation: reject history if color shifted (e.g. moving entity or foliage)
-    vec3 colDiff = abs(historyColor - currentRGB);
-    float maxDiff = max(colDiff.r, max(colDiff.g, colDiff.b));
-    if (maxDiff > 0.08) {
-        return currentRGB;
-    }
-
-    // 8. Static temporal stabilization blend
-    float motionFade = smoothstep(0.25, 0.0, motionLen);
-    float blend = TAA_BLEND * motionFade;
-
-    // Anti-flicker Karis luma weighting
-    float lumaCurr = dot(currentRGB, vec3(0.2126, 0.7152, 0.0722));
-    float lumaHist = dot(historyColor, vec3(0.2126, 0.7152, 0.0722));
-    float wCurr = 1.0 / (1.0 + lumaCurr);
-    float wHist = 1.0 / (1.0 + lumaHist);
-
-    float denom = wCurr * (1.0 - blend) + wHist * blend;
-    vec3 resolved = (currentRGB * wCurr * (1.0 - blend) + historyColor * wHist * blend) / max(denom, 0.0001);
-
-    // 9. Crisp contrast sharpening
-    #ifdef TAA_SHARPENING
-    vec3 n = texture(colortex13, clamp(uv + vec2(0.0, px.y), edgeMargin, 1.0 - edgeMargin)).rgb;
-    vec3 s = texture(colortex13, clamp(uv - vec2(0.0, px.y), edgeMargin, 1.0 - edgeMargin)).rgb;
-    vec3 e = texture(colortex13, clamp(uv + vec2(px.x, 0.0), edgeMargin, 1.0 - edgeMargin)).rgb;
-    vec3 w = texture(colortex13, clamp(uv - vec2(px.x, 0.0), edgeMargin, 1.0 - edgeMargin)).rgb;
-    vec3 crossBlur = (n + s + e + w) * 0.25;
-    resolved = clamp(resolved + (resolved - crossBlur) * (TAA_SHARPEN_STRENGTH * 0.35), 0.0, 1.0);
-    #endif
-
-    return clamp(resolved, 0.0, 1.0);
+vec3 temporalEncode(vec3 rgb) {
+    rgb=max(rgb,vec3(0.0));
+    rgb/=1.0+max(rgb.r,max(rgb.g,rgb.b));
+    return vec3(dot(rgb,vec3(0.25,0.5,0.25)),(rgb.r-rgb.b)*0.5,(-rgb.r+2.0*rgb.g-rgb.b)*0.25);
 }
+vec3 temporalDecode(vec3 c) {
+    vec3 rgb=max(vec3(c.x+c.y-c.z,c.x+c.z,c.x-c.y-c.z),vec3(0.0));
+    return rgb/max(1.0-max(rgb.r,max(rgb.g,rgb.b)),0.0001);
+}
+vec3 applyTAA(vec2 uv,vec3 currentRGB,out float historyDepth) {
+    float depth=textureScreen(depthtex0,uv).r;
+    float mask=textureScreen(colortex2,uv).a;
+    bool sky=depth>=0.999999;
+    vec3 vp=viewPosition(uv,depth);
+    #ifdef DISTANT_HORIZONS
+    if(sky) {
+        float dh=textureScreen(dhDepthTex0,uv).r;
+        if(dh<0.999999) {
+            vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,dh*2.0-1.0,1.0);
+            vp=p.xyz/p.w;
+            sky=false;
+        }
+    }
+    #endif
+    bool hand=depth<0.56 && mask>0.5;
+    historyDepth=hand?-2.0:(sky?-1.0:min(-vp.z,60000.0));
+    vec3 delta=cameraPosition-previousCameraPosition;
+    if(hand || frameCounter<2 || frameTime<=0.0 || frameTime>0.2 || dot(delta,delta)>4.0) return currentRGB;
+    if(abs(gbufferProjection[1][1]-gbufferPreviousProjection[1][1])>0.01) return currentRGB;
 
-#endif // TAA
-#endif // AA_TAA
+    // Sky reprojection uses a direction (w=0), so camera translation has no effect.
+    vec4 relative=sky?vec4(mat3(gbufferModelViewInverse)*normalize(vp),0.0)
+                     :vec4((gbufferModelViewInverse*vec4(vp,1.0)).xyz+delta,1.0);
+    vec4 previousView=gbufferPreviousModelView*relative;
+    vec4 previousClip=gbufferPreviousProjection*previousView;
+    if(previousClip.w<=0.0) return currentRGB;
+    vec2 historyUV=previousClip.xy/previousClip.w*0.5+0.5;
+    ivec2 size=screenTextureSize(colortex13);
+    vec2 margin=1.0/vec2(size);
+    if(any(lessThan(historyUV,margin)) || any(greaterThan(historyUV,1.0-margin))) return currentRGB;
+
+    // Validate depth before interpolation; background history cannot bleed into a new foreground.
+    vec2 p=historyUV*vec2(size)-0.5,f=fract(p);
+    ivec2 base=ivec2(floor(p));
+    vec3 old=vec3(0.0);
+    float total=0.0;
+    for(int y=0;y<2;y++) for(int x=0;x<2;x++) {
+        vec4 tap=texelFetch(colortex13,clamp(base+ivec2(x,y),ivec2(0),size-1),0);
+        bool valid=sky?abs(tap.a+1.0)<0.01
+                      :(tap.a>0.0 && abs(tap.a+previousView.z)<max(0.06,-previousView.z*0.015));
+        if(!valid || any(isnan(tap)) || any(isinf(tap))) continue;
+        float weight=(x==0?1.0-f.x:f.x)*(y==0?1.0-f.y:f.y);
+        old+=tap.rgb*weight; total+=weight;
+    }
+    if(total<0.5) return currentRGB;
+    old=temporalEncode(old/total);
+    vec3 now=temporalEncode(currentRGB),lo=now,hi=now,mean=now,m2=now*now;
+    const ivec2 offsets[4]=ivec2[4](ivec2(-1,0),ivec2(1,0),ivec2(0,-1),ivec2(0,1));
+    ivec2 currentSize=screenTextureSize(colortex0);
+    ivec2 pixel=clamp(ivec2(uv*vec2(currentSize)),ivec2(0),currentSize-1);
+    for(int i=0;i<4;i++) {
+        vec3 tap=temporalEncode(texelFetch(colortex0,clamp(pixel+offsets[i],ivec2(0),currentSize-1),0).rgb);
+        lo=min(lo,tap); hi=max(hi,tap); mean+=tap; m2+=tap*tap;
+    }
+    mean*=0.2;
+    vec3 sigma=sqrt(max(m2*0.2-mean*mean,vec3(0.0)));
+    lo=max(lo,mean-1.25*sigma); hi=min(hi,mean+1.25*sigma);
+    vec3 clipped=clamp(old,lo,hi);
+    float reactive=sat(abs(old.x-now.x)/max(max(old.x,now.x),0.05));
+    float movement=length((uv-historyUV)*vec2(size));
+    float blend=pow(TAA_BLEND,clamp(frameTime*60.0,0.25,4.0))*exp(-movement*0.025);
+    blend*=1.0-smoothstep(0.05,0.35,reactive);
+    // Water, translucent surfaces and entities lack per-object motion vectors.
+    if(mask>0.1) blend=min(blend,0.15);
+    return temporalDecode(mix(now,clipped,blend));
+}
+#endif
+#endif

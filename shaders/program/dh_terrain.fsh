@@ -13,7 +13,10 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 
-void main() {
+void main(){
+    #if UPSCALE_QUALITY > 0
+    if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
+    #endif
     // Prevent DH LOD terrain from ever overlapping or clipping with near vanilla terrain
     if (length(viewPos) < 24.0) discard;
 

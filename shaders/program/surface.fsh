@@ -27,7 +27,10 @@ layout(location=3) out vec4 reflectanceData;
 layout(location=0) out vec4 color;
 layout(location=1) out vec4 normalData;
 layout(location=2) out vec4 materialData;
-void main() {
+void main(){
+    #if UPSCALE_QUALITY > 0
+    if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
+    #endif
     vec2 materialUV=texcoord;
     vec2 uvDx=dFdx(texcoord),uvDy=dFdy(texcoord);
     vec3 N=normalize(viewNormal);
@@ -76,6 +79,7 @@ void main() {
     float roughness=0.78;
     vec3 f0=vec3(0.04);
     float metal=0.0;
+    float porosity=0.5;
     if(materialId>1004.5 && materialId<1005.5) roughness=0.18;
     #if defined(RESOURCE_SPECULAR) && defined(TERRAIN)
     vec4 spec=textureGrad(specular,materialUV,uvDx,uvDy);
@@ -86,17 +90,19 @@ void main() {
         f0=mix(vec3(spec.g),albedo,metal);
         emission=max(emission,spec.a<0.999?spec.a*(255.0/254.0):0.0);
         foliage=max(foliage,sat((spec.b*255.0-65.0)/190.0));
+        porosity=spec.b<=64.5/255.0?sat(spec.b*255.0/64.0):0.0;
     }
     #endif
     #ifdef RAIN_PUDDLES
     vec3 nw=worldDirection(N);
     float wet=wetness*smoothstep(0.90,0.98,lmcoord.y)*max(nw.y,0.0);
     if(wet>0.001){
-        float puddle=smoothstep(0.40,0.65,noise3D(vec3(worldPos.xz*0.23,0.0)))*wet;
-        roughness=mix(roughness,0.09,puddle*0.9);
-        albedo*=1.0-wet*0.25;
+        float puddle=smoothstep(0.40,0.65,noise2D(worldPos.xz*0.23))*wet;
+        roughness=mix(roughness,0.09,puddle*(1.0-porosity*0.65));
+        albedo*=1.0-wet*(0.12+porosity*0.30);
     }
     #endif
+    roughness=filteredRoughness(N,roughness);
     vec3 shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO);
     color=vec4(shaded,tex.a);
     #ifdef RESOURCE_SPECULAR
@@ -104,6 +110,9 @@ void main() {
     #endif
     normalData=vec4(N*0.5+0.5,1.0);
     float hand=0.0;
+    #ifdef ENTITY
+    hand=0.25;
+    #endif
     #ifdef HAND
     hand=1.0;
     #endif

@@ -22,7 +22,10 @@ layout(location=1) out vec4 normalData;
 layout(location=2) out vec4 materialData;
 #endif
 layout(location=0) out vec4 color;
-void main() {
+void main(){
+    #if UPSCALE_QUALITY > 0
+    if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
+    #endif
     vec4 tex=texture(gtexture,texcoord)*glcolor;
     #ifdef TRANSLUCENT
     if(tex.a<0.004) discard;
@@ -53,7 +56,7 @@ void main() {
     #endif
     #if defined(TRANSLUCENT) && defined(AA_SOFT_PARTICLES)
     vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
-    float opaque=texture(depthtex1,uv).r;
+    float opaque=textureScreen(depthtex1,uv).r;
     if(opaque<0.999999) {
         float separation=viewPos.z-viewPosition(uv,opaque).z;
         tex.a*=smoothstep(0.0,PARTICLE_SOFTNESS,separation);
