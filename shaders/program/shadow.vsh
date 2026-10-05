@@ -8,8 +8,26 @@ flat out float materialId;
 void main(){
     #ifdef SHADOWS
     texcoord=gl_MultiTexCoord0.xy; glcolor=gl_Color; materialId=mc_Entity.x;
+
+    // Early Culling 1: Water (materialId 1003) does not cast shadows.
+    // Clipping at the vertex stage prevents triangle rasterization entirely.
+    if(materialId > 1002.5 && materialId < 1003.5) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+        return;
+    }
+
     vec4 p=gl_ModelViewMatrix*gl_Vertex;
     vec3 world=(shadowModelViewInverse*p).xyz+cameraPosition;
+
+    // Early Culling 2: Radial distance shadow culling.
+    // Discard geometry outside shadow sampling radius (+25% safety margin)
+    // to avoid rasterizing distant terrain chunks into the shadow map.
+    vec2 relXZ = world.xz - cameraPosition.xz;
+    if(dot(relXZ, relXZ) > (shadowDistance * 1.25) * (shadowDistance * 1.25)) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+        return;
+    }
+
     #ifdef WAVING_FOLIAGE
     world+=waveOffset(world,materialId,step(texcoord.y,mc_midTexCoord.y));
     #endif
