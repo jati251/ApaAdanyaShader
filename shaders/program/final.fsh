@@ -1,5 +1,6 @@
 #include "/lib/common.glsl"
 uniform sampler2D colortex0;
+#include "/lib/motion_blur.glsl"
 in vec2 texcoord;
 layout(location=0) out vec4 color;
 #ifdef COLOR_DITHERING
@@ -29,6 +30,19 @@ void main(){
         vec3 b=a*0.5+0.25*(texture(colortex0,texcoord-dir*0.5).rgb+texture(colortex0,texcoord+dir*0.5).rgb);
         c=(luma(b)<low||luma(b)>high)?a:b;
     }
+    #endif
+    #ifdef CHROMATIC_ABERRATION
+    vec2 caDist = (texcoord - 0.5);
+    vec2 caOffset = caDist * (dot(caDist, caDist) * 0.008 * CA_STRENGTH);
+    c.r = texture(colortex0, clamp(texcoord + caOffset, vec2(0.001), vec2(0.999))).r;
+    c.b = texture(colortex0, clamp(texcoord - caOffset, vec2(0.001), vec2(0.999))).b;
+    #endif
+    #ifdef MOTION_BLUR
+    c=applyMotionBlur(texcoord,c);
+    #endif
+    #ifdef FILM_GRAIN
+    float grain = ignDither(gl_FragCoord.xy + vec2(float(frameCounter % 32) * 19.19, float(frameCounter % 32) * 7.73));
+    c += (grain - 0.5) * (FILM_GRAIN_STRENGTH * 0.08);
     #endif
     #ifdef COLOR_DITHERING
     ivec2 fc = ivec2(gl_FragCoord.xy) & 3;

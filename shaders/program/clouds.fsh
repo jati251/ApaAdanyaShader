@@ -1,7 +1,6 @@
 #include "/lib/common.glsl"
 #include "/lib/atmosphere.glsl"
 uniform sampler2D depthtex0;
-uniform int frameCounter;
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex0,dhDepthTex1;
 #endif

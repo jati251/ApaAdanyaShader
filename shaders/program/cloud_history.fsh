@@ -2,8 +2,6 @@
 uniform sampler2D colortex9,colortex10,colortex11;
 uniform mat4 gbufferPreviousModelView,gbufferPreviousProjection;
 uniform vec3 previousCameraPosition;
-uniform int frameCounter;
-uniform float frameTime;
 in vec2 texcoord;
 /* RENDERTARGETS: 10,11 */
 /*

@@ -1,7 +1,11 @@
 #ifdef DOF
+#ifndef DEPTH_COLORTEX2_DECLARED
+#define DEPTH_COLORTEX2_DECLARED
 uniform sampler2D depthtex0,colortex2;
+#endif
 uniform float centerDepthSmooth;
-#ifdef DISTANT_HORIZONS
+#if defined(DISTANT_HORIZONS) && !defined(DH_PROJECTION_INVERSE_DECLARED)
+#define DH_PROJECTION_INVERSE_DECLARED
 uniform sampler2D dhDepthTex0;
 uniform mat4 dhProjectionInverse;
 #endif

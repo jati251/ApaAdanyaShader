@@ -3,10 +3,16 @@
 uniform sampler2D colortex0,colortex5;
 #include "/lib/dof.glsl"
 #include "/lib/reconstruct_dof.glsl"
+#include "/lib/color_grading.glsl"
+#include "/lib/taa.glsl"
 in vec2 texcoord;
-/* RENDERTARGETS: 0 */
+/* RENDERTARGETS: 0,13 */
+/*
+const int colortex13Format = RGBA16F;
+const bool colortex13Clear = false;
+*/
 layout(location=0) out vec4 color;
-vec3 film(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
+layout(location=1) out vec4 history;
 void main(){
     vec3 c=texture(colortex0,texcoord).rgb;
     #ifdef DOF
@@ -19,33 +25,10 @@ void main(){
     #ifdef BLOOM
     c+=blurBloom(colortex5,texcoord,vec2(0.0,4.0/viewHeight))*BLOOM_STRENGTH;
     #endif
-    float exposure=EXPOSURE*mix(1.15,0.90,daylight());
-    #if TONEMAP_OPERATOR == 0
-    vec3 scaled=c*exposure;
-    float lumaIn=dot(scaled,vec3(0.2126,0.7152,0.0722));
-    float lumaOut=(lumaIn*(2.51*lumaIn+0.03))/(lumaIn*(2.43*lumaIn+0.59)+0.14);
-    vec3 filmLuma=scaled*(clamp(lumaOut,0.0,1.0)/max(lumaIn,0.0001));
-    vec3 filmRGB=film(scaled);
-    c=pow(clamp(mix(filmRGB,filmLuma,0.60),0.0,1.0),vec3(1.0/2.2));
-    #else
-    c=pow(clamp(c*exposure,0.0,1.0),vec3(1.0/2.2));
-    #endif
-    float luminance=dot(c,vec3(0.2126,0.7152,0.0722));
-    if(COLOR_SATURATION != 1.0){
-        float maxC=max(c.r,max(c.g,c.b));
-        float minC=min(c.r,min(c.g,c.b));
-        float satAmt=maxC-minC;
-        float boost=mix(COLOR_SATURATION,1.0+(COLOR_SATURATION-1.0)*0.5,satAmt);
-        c=clamp(mix(vec3(luminance),c,boost),0.0,1.0);
-    }
-    if(COLOR_CONTRAST != 1.0){
-        vec3 sCurve=c*c*(3.0-2.0*c);
-        c=clamp(mix(c,sCurve,COLOR_CONTRAST-1.0),0.0,1.0);
-    }
-    #ifdef VIGNETTE
-    vec2 vigCoord=texcoord*(1.0-texcoord.yx);
-    float vig=vigCoord.x*vigCoord.y*15.0;
-    c*=clamp(pow(vig,VIGNETTE_STRENGTH),0.0,1.0);
+    c=applyColorGrading(c,texcoord);
+    #ifdef TAA
+    c=applyTAA(texcoord,c);
     #endif
     color=vec4(c,1.0);
+    history=vec4(c,1.0);
 }

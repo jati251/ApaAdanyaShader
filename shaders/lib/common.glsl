@@ -6,7 +6,8 @@ uniform mat4 gbufferProjection, gbufferProjectionInverse;
 uniform mat4 shadowModelView, shadowProjection;
 uniform vec3 cameraPosition, sunPosition, shadowLightPosition, fogColor;
 uniform float frameTimeCounter, rainStrength, wetness, viewWidth, viewHeight, near, far;
-uniform int worldTime, isEyeInWater;
+uniform float frameTime;
+uniform int worldTime, isEyeInWater, frameCounter;
 uniform ivec2 eyeBrightnessSmooth;
 const float PI = 3.14159265;
 float sat(float x) { return clamp(x, 0.0, 1.0); }

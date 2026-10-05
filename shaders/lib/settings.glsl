@@ -60,16 +60,28 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define PARTICLE_LIGHTING // Directional light for particles
 #define WEATHER_OPACITY 0.65 // [0.25 0.40 0.65 0.80 1.0]
 
-// ========== [ POST-PROCESSING ] ==========
+// ========== [ POST-PROCESSING & COLOR GRADING ] ==========
+#define COLOR_PROFILE 0 // [0 1 2 3 4 5 6 7]
+#define TONEMAP_OPERATOR 0 // [0 1 2 3 4 5]
+#define COLOR_SATURATION 1.10 // [0.60 0.80 0.90 1.0 1.10 1.20 1.35 1.50]
+#define COLOR_VIBRANCE 0.15 // [-0.50 -0.25 0.0 0.15 0.30 0.50 0.75]
+#define COLOR_CONTRAST 1.04 // [0.85 0.90 1.0 1.04 1.10 1.18 1.30]
+#define EXPOSURE 1.0 // [0.6 0.8 1.0 1.2 1.4]
+#define COLOR_TEMPERATURE 0.0 // [-1.0 -0.75 -0.50 -0.25 0.0 0.25 0.50 0.75 1.0]
+#define COLOR_TINT 0.0 // [-1.0 -0.50 0.0 0.50 1.0]
 #define BLOOM // Bloom Glow Effect
 #define BLOOM_STRENGTH 0.08 // [0.02 0.05 0.08 0.12 0.18]
+#define TAA // Temporal Anti-Aliasing & Stability
+#define TAA_BLEND 0.80 // [0.40 0.60 0.70 0.80 0.88 0.94]
+#define TAA_SHARPENING // Contrast-Adaptive Sharpening
+#define TAA_SHARPEN_STRENGTH 0.40 // [0.20 0.40 0.60 0.80 1.00 1.25]
 #define FXAA // Fast Approximate Anti-Aliasing
 #define VIGNETTE // Lens Vignette
 #define VIGNETTE_STRENGTH 0.30 // [0.15 0.30 0.45 0.60]
-#define TONEMAP_OPERATOR 0 // [0 1]
-#define COLOR_SATURATION 1.12 // [0.80 0.90 1.0 1.05 1.12 1.20 1.30]
-#define COLOR_CONTRAST 1.04 // [0.90 1.0 1.04 1.08 1.15 1.25]
-#define EXPOSURE 1.0 // [0.6 0.8 1.0 1.2 1.4]
+//#define CHROMATIC_ABERRATION // Lens optical dispersion
+#define CA_STRENGTH 1.0 // [0.5 1.0 1.5 2.0 3.0]
+//#define FILM_GRAIN // 35mm film grain texture
+#define FILM_GRAIN_STRENGTH 0.03 // [0.01 0.02 0.03 0.05 0.08]
 #define COLOR_DITHERING // Temporal Gradient Dithering
 //#define DOF // Lens depth of field
 #define DOF_AUTOFOCUS // Smooth focus at the crosshair
@@ -78,6 +90,11 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define DOF_FSTOP 2.8 // [1.4 2.0 2.8 4.0 5.6 8.0]
 #define DOF_SAMPLES 16 // [8 16 24 32]
 #define DOF_MAX_RADIUS 12.0 // [6.0 8.0 12.0 16.0 24.0]
+//#define MOTION_BLUR // Camera & world motion blur
+#define MOTION_BLUR_STRENGTH 0.50 // [0.10 0.20 0.35 0.50 0.75 1.00 1.50 2.00]
+#define MOTION_BLUR_SAMPLES 8 // [4 6 8 12 16 24]
+//#define MOTION_BLUR_LOW_LATENCY // High-performance 5-sample mode with tighter blur for competitive play
+//#define MOTION_BLUR_HAND // Blur first-person hand and held item
 
 // Effects are reconstructed independently; scene color stays at native resolution.
 #define CLOUD_RECONSTRUCTION // Half-resolution volumetric cloud layer
