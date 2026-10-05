@@ -25,7 +25,11 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
                     if(d2>5.76) continue;
                     float len=sqrt(d2);
                     float nd=dot(N,diff)/max(len,0.001);
-                    if(nd>0.10) occ+=(nd-0.10)*(1.0-smoothstep(0.1,2.4,len));
+                    if(nd>0.10) {
+                        float broadFade=1.0-smoothstep(0.1,2.4,len);
+                        float contactTerm=1.0-smoothstep(0.04,0.50,len);
+                        occ+=(nd-0.10)*(broadFade*0.72+contactTerm*0.48);
+                    }
                 }
                 float aoFade=1.0-smoothstep(32.0,48.0,distToCam);
                 result.a*=1.0-(occ/float(SSAO_SAMPLES))*0.84*(1.0-mat.b)*aoFade;
@@ -54,7 +58,10 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
                         bounce+=incoming*front*edgeFade(hit)*confidence;
                     }
                 }
-                result.rgb=bounce/float(GI_SAMPLES)*GI_STRENGTH*distWeight;
+                vec3 primaryBounce=bounce/float(GI_SAMPLES)*GI_STRENGTH*distWeight;
+                // Multi-bounce diffuse color bleeding: subtle secondary bounce retains warmth in enclosed spaces
+                float bounceLuma=dot(primaryBounce,vec3(0.2126,0.7152,0.0722));
+                result.rgb=primaryBounce*(1.0+primaryBounce*0.45+bounceLuma*0.25);
             }
             #endif
     return result;

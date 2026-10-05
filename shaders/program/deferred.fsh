@@ -110,6 +110,11 @@ void main(){
                 if(mat.r<0.60 && traceScreen(depthtex0,vp+N*0.08,reflected,0.30,SSR_STEPS,hit,confidence))
                     reflection=mix(reflection,textureScreen(colortex0,hit).rgb,edgeFade(hit)*confidence*(1.0-smoothstep(0.18,0.60,mat.r)));
                 float nv=sat(dot(N,-V_dir));
+                #if defined(SSAO) || defined(SSGI)
+                // Physically-based specular occlusion (Lagarde): suppresses sky reflections in occluded crevices
+                float specOcc = sat(nv + indirect.a - 1.0 + indirect.a);
+                reflection *= mix(specOcc, 1.0, 1.0 - response.a);
+                #endif
                 float fnv=1.0-nv; float fnv2=fnv*fnv;
                 vec3 fresnel=f0+(max(vec3(1.0-mat.r),f0)-f0)*(fnv2*fnv2*fnv);
                 // Add the environment specular lobe; mixing the entire scene erased direct light.

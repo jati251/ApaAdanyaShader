@@ -55,8 +55,11 @@ void main(){
     c=applyMotionBlur(texcoord,c);
     #endif
     #ifdef FILM_GRAIN
+    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    // Physical silver halide emulsion response: peak grain in midtones/shadows, fading in bright highlights
+    float grainMask = (1.0 - smoothstep(0.60, 0.98, luma)) * smoothstep(0.01, 0.12, luma + 0.04);
     float grain = ignDither(gl_FragCoord.xy + vec2(float(frameCounter % 32) * 19.19, float(frameCounter % 32) * 7.73));
-    c += (grain - 0.5) * (FILM_GRAIN_STRENGTH * 0.08);
+    c += (grain - 0.5) * (FILM_GRAIN_STRENGTH * 0.10) * grainMask;
     #endif
     #ifdef COLOR_DITHERING
     ivec2 fc = ivec2(gl_FragCoord.xy) & 3;

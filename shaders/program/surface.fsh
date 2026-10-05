@@ -92,32 +92,38 @@ void main(){
     #endif
     #ifdef RAIN_PUDDLES
     vec3 nw=worldDirection(N);
-    float wet=wetness*smoothstep(0.90,0.98,lmcoord.y)*max(nw.y,0.0);
+    float skyExposure=smoothstep(0.85,0.98,lmcoord.y);
+    float wetTop=wetness*skyExposure*max(nw.y,0.0);
+    float wetWall=wetness*skyExposure*(1.0-abs(nw.y))*0.65;
+    float wet=max(wetTop,wetWall);
     if(wet>0.001){
-        float puddle=smoothstep(0.40,0.65,noise2D(worldPos.xz*0.23))*wet;
+        // Porous absorption darkening: porous surfaces (stone, dirt, brick) absorb water and darken
+        albedo*=1.0-wet*(0.14+porosity*0.32);
+        // Vertical surfaces develop a thin glossy water film
+        roughness=mix(roughness,0.22,wetWall*0.70*(1.0-porosity*0.5));
+        float puddle=smoothstep(0.38,0.62,noise2D(worldPos.xz*0.23))*wetTop;
         if(puddle>0.0001){
-            roughness=mix(roughness,0.09,puddle*(1.0-porosity*0.65));
-            albedo*=1.0-wet*(0.12+porosity*0.30);
+            roughness=mix(roughness,0.08,puddle*(1.0-porosity*0.65));
             #if !defined(NETHER) && !defined(END)
             if(rainStrength > 0.04 && puddle > 0.01) {
-            vec2 ripPos = worldPos.xz * 2.4;
-            float rt = frameTimeCounter * 4.2;
-            vec2 ripGrad = vec2(0.0);
-            for(int r = 0; r < 2; r++) {
-                vec2 cell = floor(ripPos);
-                vec2 f = fract(ripPos) - 0.5;
-                float h = hash12(cell + float(r) * 19.31);
-                float age = fract(rt * 0.75 + h);
-                float dist = length(f);
-                float ring = sin(clamp(dist - age * 0.44, -0.2, 0.2) * 31.4159);
-                float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0-smoothstep(age * 0.44, age * 0.44 + 0.08, dist));
-                ripGrad += normalize(f + 1e-4) * ring * fade;
-                ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
+                vec2 ripPos = worldPos.xz * 2.4;
+                float rt = frameTimeCounter * 4.2;
+                vec2 ripGrad = vec2(0.0);
+                for(int r = 0; r < 2; r++) {
+                    vec2 cell = floor(ripPos);
+                    vec2 f = fract(ripPos) - 0.5;
+                    float h = hash12(cell + float(r) * 19.31);
+                    float age = fract(rt * 0.75 + h);
+                    float dist = length(f);
+                    float ring = sin(clamp(dist - age * 0.44, -0.2, 0.2) * 31.4159);
+                    float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0-smoothstep(age * 0.44, age * 0.44 + 0.08, dist));
+                    ripGrad += normalize(f + 1e-4) * ring * fade;
+                    ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
+                }
+                vec3 ripNormalW = normalize(vec3(-ripGrad.x * 0.16, 1.0, -ripGrad.y * 0.16));
+                N = normalize(mix(N, mat3(gbufferModelView) * ripNormalW, puddle * min(rainStrength * 1.4, 0.85)));
             }
-            vec3 ripNormalW = normalize(vec3(-ripGrad.x * 0.16, 1.0, -ripGrad.y * 0.16));
-            N = normalize(mix(N, mat3(gbufferModelView) * ripNormalW, puddle * min(rainStrength * 1.4, 0.85)));
-        }
-        #endif
+            #endif
         }
     }
     #endif

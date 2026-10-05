@@ -76,19 +76,50 @@ void main(){
         float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
         if(outdoor>0.001){
             float rayLength=min(dist,100.0);
-            float sunPhase=pow(sat(dot(rd,worldDirection(shadowLightPosition))),24.0);
-            float phase=0.025+sunPhase*0.28;
+            // Physically-based Henyey-Greenstein atmospheric aerosol forward scattering (g = 0.72)
+            float cosTheta=dot(rd,worldDirection(shadowLightPosition));
+            float denom=1.5184-1.44*cosTheta;
+            float hg=0.4816*inversesqrt(max(denom*denom*denom,0.00001));
+            float phase=0.030+hg*0.22;
             float lightFactor=phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
             if(lightFactor>0.0005){
-                float sum=0.0;
+                float sum=0.0, weightSum=0.0;
                 float jitter=ignDither(gl_FragCoord.xy);
-                // Optimized exponential step clustering: concentrates precision near camera
+                // Optimized exponential step clustering with height-dependent ground mist density
                 for(int i=0;i<VL_SAMPLES;i++){
                     float stepFrac=pow((float(i)+jitter)/float(VL_SAMPLES),1.30);
                     vec3 p=rd*rayLength*stepFrac;
-                    sum+=shadowVisibility(p,vec3(0.0),1.0,false);
+                    float hExtinction=exp(-max((cameraPosition.y+p.y)-64.0,0.0)*0.012);
+                    sum+=shadowVisibility(p,vec3(0.0),1.0,false)*hExtinction;
+                    weightSum+=hExtinction;
                 }
-                c+=lightColor()*(sum/float(VL_SAMPLES))*lightFactor;
+                c+=lightColor()*(sum/max(weightSum,0.001))*lightFactor;
+            }
+        }
+        #endif
+        #if !defined(NETHER) && !defined(END)
+        // Volumetric atmospheric dust motes & airborne spores (The Last of Us signature aesthetic)
+        if(dist > 0.8 && depth < 0.999999) {
+            float moteDist = min(dist, 14.0);
+            float moteJitter = ignDither(gl_FragCoord.xy);
+            float motes = 0.0;
+            for(int m = 0; m < 3; m++) {
+                float mt = (float(m) + moteJitter) / 3.0;
+                float dSample = 1.0 + mt * (moteDist - 1.0);
+                vec3 pWorld = cameraPosition + rd * dSample;
+                vec3 drift = vec3(frameTimeCounter * 0.06, sin(frameTimeCounter * 0.08 + pWorld.x) * 0.05, frameTimeCounter * 0.04);
+                vec3 cell = floor((pWorld + drift) * 1.8);
+                vec3 f = fract((pWorld + drift) * 1.8) - 0.5;
+                float h = hash13(cell);
+                if(h > 0.94) {
+                    float spark = smoothstep(0.18, 0.02, length(f));
+                    spark *= smoothstep(1.0, 2.5, dSample) * (1.0 - smoothstep(10.0, 14.0, dSample));
+                    motes += spark * (h - 0.94) * 16.0;
+                }
+            }
+            if(motes > 0.001) {
+                vec3 moteLight = mix(vec3(0.08, 0.12, 0.18), lightColor(), daylight() * smoothstep(20.0, 180.0, float(eyeBrightnessSmooth.y)));
+                c += moteLight * motes * 0.28;
             }
         }
         #endif

@@ -151,7 +151,9 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
     #endif
     float s=sat(dot(-V,L)); float s2=s*s;
-    float subsurface=foliage*(s2*s2*s)*0.5;
+    // Organic leaf forward scattering: wrapped light through thin leaves + forward transmission lobe
+    float leafTransmission=sat(dot(-N,L)*0.45+0.55)*(s2*s2*s);
+    float subsurface=foliage*(leafTransmission*0.70+sat(dot(-N,L))*0.30)*0.65;
     vec3 specular=vec3(0.0);
     if(vis>0.001 && nl>0.0001) specular=specularBRDF(N,V,L,roughness,f0)*direct;
     vec3 diffuse=diffuseResponse(albedo,f0,metal);
