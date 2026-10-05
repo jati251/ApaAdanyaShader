@@ -9,6 +9,7 @@ uniform float frameTimeCounter, rainStrength, wetness, viewWidth, viewHeight, ne
 uniform float frameTime;
 uniform int worldTime, isEyeInWater, frameCounter;
 uniform ivec2 eyeBrightnessSmooth;
+uniform vec4 lightningBoltPosition;
 #if UPSCALE_QUALITY == 1
 #define AA_RENDER_SCALE 0.76923077
 #elif UPSCALE_QUALITY == 2
@@ -72,6 +73,14 @@ vec3 lightColor() {
     float elev=abs(sunDirection().y);
     vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.85,2.52,2.05),smoothstep(0.02,0.38,elev));
     return mix(vec3(0.055,0.085,0.16)*NIGHT_BRIGHTNESS,day,daylight())*(1.0-rainStrength*0.78);
+    #endif
+}
+vec3 stormFlash() {
+    #if !defined(NETHER) && !defined(END)
+    float distance2=dot(lightningBoltPosition.xz,lightningBoltPosition.xz);
+    return vec3(0.48,0.62,0.85)*lightningBoltPosition.w/(1.0+distance2*0.000025);
+    #else
+    return vec3(0.0);
     #endif
 }
 vec3 distortShadow(vec3 p) { p.xy/=0.15+length(p.xy)*0.85; p.z*=0.2; return p; }

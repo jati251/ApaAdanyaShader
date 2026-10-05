@@ -19,16 +19,17 @@ void main() {
     history=now;
     float tag=float(frameCounter%1024+1);
     metadata=vec4(sunDirection().y,rainStrength,mod(frameTimeCounter,8.0),tag);
+    if(lightningBoltPosition.w>0.0) return;
     if(now.a<0.0 || frameCounter<2 || frameTime<=0.0 || frameTime>0.2) return;
     if(length(cameraPosition-previousCameraPosition)>8.0) return;
     if(abs(gbufferProjection[1][1]-gbufferPreviousProjection[1][1])>0.02) return;
     vec3 rd=worldDirection(viewPosition(texcoord,1.0));
     if(abs(rd.y)<0.015) return;
-    float anchor=(CLOUD_ALTITUDE+55.0-cameraPosition.y)/max(abs(rd.y),0.015);
+    float anchor=(CLOUD_ALTITUDE+55.0-cameraPosition.y)/rd.y;
     // A single plane cannot reproject a cloud volume reliably from inside it.
     if(anchor<110.0 || anchor>5500.0) return;
     vec3 relative=rd*anchor+cameraPosition-previousCameraPosition;
-    relative+=vec3(1.2,0.0,0.5)*frameTime;
+    relative+=vec3(1.15,0.0,0.48)*frameTime;
     vec4 previous=gbufferPreviousProjection*(gbufferPreviousModelView*vec4(relative,1.0));
     if(previous.w<=0.0) return;
     vec2 uv=previous.xy/previous.w*0.5+0.5;

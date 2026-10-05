@@ -2,14 +2,11 @@
 
 Minecraft Java shaderpack for Iris + Sodium on Windows and macOS. Development target: Minecraft 26.3 / Iris 1.11.7. All shader stages use GLSL 330; no compute shaders, Metal bridge, RTX hardware or additional upscaling mod are required. Automated GPU validation runs on Apple M1; Windows driver and in-game validation are still pending.
 
-## What changed
+## Current update
 
-- Bloom now completes both separable blur axes at quarter width/height. The scene resolve samples the finished bloom once instead of doing seven vertical blur taps per scene pixel. Both axes retain the original Gaussian kernel. This adds one small pass and reuses `colortex4`.
-- Temporal stabilization stores scene-linear HDR color before bloom, depth of field and grading. History samples are depth-tested individually before interpolation, clipped against a current-frame YCoCg neighborhood and reduced for changing colors. Camera movement reprojects history instead of switching it off at a quarter-pixel threshold. Hands bypass history; entities and water have conservative history weights. Sharpening runs after the resolve and is never fed back into history.
-- Direct specular lighting uses height-correlated Smith GGX visibility. Normal-derivative roughness filtering also reaches the material buffer, so reflected surfaces use the filtered roughness. LabPBR porosity controls wet-surface darkening and puddle reflectivity.
-- SSR/GI rays project their origin and direction once, refine intersections and revalidate the final depth crossing. Screen-edge environment fallback remains. AO/GI reconstruction skips its texture gathering outside the effects' contribution distances.
-- Fixed preset values missing from the settings lists, and a negative-input fractional-power case in the Vibrant color profile.
-- Added optional AMD FSR 1 EASU + RCAS with viewport-aware scene/depth/history sampling, plus a basic-geometry path so outlines/leashes share the scaled viewport.
+See [Realism setup and feature status](REALISM.md) for the water/cloud/weather update, original effects resource pack, native and FSR profiles, performance tradeoffs, Windows transfer instructions and actual DLSS / frame-generation limitations. The primary target is RTX 3080 Ti; macOS is a supported development and validation platform.
+
+The game most recently saved **Realism + FSR Ultra Quality** settings; **Realism (Optimized)** is the native-resolution alternative. **Realism + FSR Ultra Quality** uses the same effects with EASU/RCAS scaling; **Realism + High Screen-Space Tracing** increases SSR/GI samples. Saved profiles are in `presets/`.
 
 ## Enable the upscaler
 
@@ -24,7 +21,7 @@ Choose a quality profile first, then open **Shader Pack Settings → Performance
 
 These percentages describe rendered pixels, **not measured FPS gains**. Shadow maps, geometry submission, CPU simulation, buffer clears and parts of the renderer retain their original costs. EASU and RCAS add full-screen work. Existing buffers retain their allocations; this is a shading optimization, not a VRAM reduction. Upscaling can be slower when the GPU's scene shading is already cheap or the game is CPU-limited.
 
-**FSR RCAS Sharpness** controls final sharpening; zero disables RCAS. Native sharpening is bypassed while FSR is active to avoid sharpening twice. Choosing another quality profile resets upscaling to Native. Existing instance overrides have not been changed.
+**FSR RCAS Sharpness** controls final sharpening; zero disables RCAS. Native sharpening is bypassed while FSR is active to avoid sharpening twice. Choosing another quality profile resets upscaling to Native. The game most recently saved Realism + FSR Ultra Quality settings; prior settings have been backed up.
 
 This is a real spatial upscaler: geometry and scene/effect passes render a smaller viewport, EASU reconstructs the display-sized image, then RCAS sharpens it. The shaderpack does not downsample a fully rendered scene and call it a performance improvement. The Minecraft HUD remains outside the shader's world upscale.
 

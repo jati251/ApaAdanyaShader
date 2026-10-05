@@ -195,3 +195,13 @@ value.UPSCALE_QUALITY.2=Quality (67%)
 value.UPSCALE_QUALITY.3=Balanced (59%)
 option.UPSCALE_SHARPNESS=Ketajaman FSR RCAS
 option.UPSCALE_SHARPNESS.comment=Penajaman adaptif AMD RCAS setelah upscale. Nol menonaktifkan penajaman.
+
+profile.REALISM=Realistis (Optimal)
+profile.REALISM.comment=Resolusi native, awan volumetrik, detail laut dan pencahayaan tidak langsung setengah resolusi.
+
+screen.RAYTRACING=Ray Tracing (Screen Space)
+screen.RAYTRACING.comment=Ray marching depth-buffer untuk refleksi dan cahaya tidak langsung. Bukan hardware RT atau path tracing.
+profile.REALISM_FSR=Realistis + FSR Ultra Quality
+profile.REALISM_FSR.comment=Efek sama dengan Realistis, dimensi internal 77 persen, upscaling AMD EASU / RCAS.
+profile.REALISM_RT=Realistis + Tracing Screen-Space Tinggi
+profile.REALISM_RT.comment=48 langkah refleksi dan 6 sinar cahaya tidak langsung. Beban GPU lebih tinggi; bukan hardware RT atau frame generation.

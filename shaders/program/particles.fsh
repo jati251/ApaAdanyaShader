@@ -55,35 +55,6 @@ void main(){
     illumination=vec3(1.0);
     #endif
 
-    #ifndef WEATHER
-    // AAA Incandescent Blackbody Radiator for fire, campfire, torches, and lava embers
-    bool isFire = (albedo.r > 0.52 && albedo.r > albedo.b * 1.6 && (albedo.r + albedo.g) > 0.65);
-    bool isSoulFire = (albedo.b > 0.52 && albedo.b > albedo.r * 1.4 && albedo.g > albedo.r * 1.1);
-    bool isLightning = (albedo.r > 0.92 && albedo.g > 0.92 && albedo.b > 0.92 && dot(viewPos, viewPos) > 4.0);
-
-    if(isFire){
-        // Reconstruct physical temperature gradient from white-hot core (2800K) to crimson rim
-        float heat = clamp(tex.r * 0.7 + tex.g * 0.3, 0.0, 1.0);
-        vec3 coreCol = vec3(14.0, 10.5, 5.0);
-        vec3 flameCol = vec3(6.5, 2.2, 0.25);
-        vec3 emberCol = vec3(2.0, 0.30, 0.02);
-        vec3 blackbody = mix(emberCol, mix(flameCol, coreCol, smoothstep(0.60, 0.95, heat)), smoothstep(0.15, 0.60, heat));
-        float pulse = 1.0 + sin(frameTimeCounter * 18.0 + dot(viewPos, vec3(11.2, 7.3, 5.7))) * 0.08;
-        illumination = blackbody * pulse;
-    } else if(isSoulFire){
-        // Soul fire: electric cyan-violet incandescent plasma
-        float heat = clamp(tex.b * 0.6 + tex.g * 0.4, 0.0, 1.0);
-        vec3 coreCol = vec3(4.0, 11.0, 16.0);
-        vec3 flameCol = vec3(0.5, 4.5, 8.0);
-        vec3 emberCol = vec3(0.1, 1.2, 3.5);
-        vec3 blackbody = mix(emberCol, mix(flameCol, coreCol, smoothstep(0.55, 0.95, heat)), smoothstep(0.15, 0.55, heat));
-        illumination = blackbody;
-    } else if(isLightning){
-        // Blinding ionized plasma lightning core (triggers rich HDR bloom)
-        illumination = vec3(35.0, 42.0, 55.0);
-    }
-    #endif
-
     #if defined(TRANSLUCENT) && defined(AA_SOFT_PARTICLES)
     vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
     float opaque=textureScreen(depthtex1,uv).r;
@@ -93,7 +64,7 @@ void main(){
     }
     #endif
     #ifdef WEATHER
-    // AAA Cinematic Rain: forward light scattering, torchlight glistening
+    // Forward scattering through rain/snow uses the original weather texture mask.
     vec3 V = normalize(-viewPos);
     vec3 L = normalize(shadowLightPosition);
     float rainGlint = pow(sat(dot(V, -L)), 6.0) * daylight();
@@ -101,6 +72,7 @@ void main(){
     illumination = illumination * 1.15 + lightColor() * rainGlint * 1.2 + vec3(1.8, 0.85, 0.35) * torchGlint;
     tex.a*=WEATHER_OPACITY;
     #endif
+    illumination+=stormFlash()*pow(lmcoord.y,3.0)*0.4;
     color=vec4(albedo*illumination,tex.a);
     #ifndef TRANSLUCENT
     normalData=vec4(normalize(-viewPos)*0.5+0.5,1.0);

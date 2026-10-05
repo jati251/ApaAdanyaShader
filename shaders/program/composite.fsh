@@ -34,10 +34,11 @@ void main(){
     #endif
     bool hand=textureScreen(colortex2,texcoord).a>0.5 && depth<0.56;
     if(isEyeInWater==1){
-        // AC4 Caribbean Underwater Optical Model: tropical absorption and submerged caustics
+        // Absorption along the eye-to-surface path.
         vec3 trans=exp(-vec3(0.24,0.075,0.038)*dist/WATER_CLARITY);
         vec3 waterEquil=vec3(0.005,0.085,0.15)*mix(0.15,1.0,daylight());
-        if(depth<0.999999){
+        #ifdef WATER_CAUSTICS
+        if(depth<0.999999 && !hand){
             vec3 wPos=(gbufferModelViewInverse*vec4(vp,1.0)).xyz+cameraPosition;
             float ct=frameTimeCounter*1.6;
             float ca1=sin(wPos.x*2.2+wPos.z*1.5+ct*1.3);
@@ -45,8 +46,9 @@ void main(){
             float ca3=sin(wPos.x*3.5+wPos.z*0.9+ct*2.0);
             float caustic=pow(sat(1.0-abs(ca1+ca2)*0.5),5.0)*0.7+pow(sat(1.0-abs(ca2+ca3)*0.5),4.0)*0.3;
             float waterDepthFade=exp(-max(cameraPosition.y-wPos.y,0.0)*0.28);
-            c+=vec3(0.04,0.18,0.22)*caustic*waterDepthFade*daylight()*trans;
+            c+=vec3(0.04,0.18,0.22)*caustic*waterDepthFade*daylight()*smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y));
         }
+        #endif
         c=c*trans+waterEquil*(1.0-trans);
     }else if(isEyeInWater==2){
         c=mix(c,vec3(2.0,0.22,0.012),1.0-exp(-dist*1.5));

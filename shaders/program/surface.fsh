@@ -4,6 +4,7 @@
 #endif
 #include "/lib/lighting.glsl"
 #include "/lib/parallax.glsl"
+#include "/lib/fire.glsl"
 uniform sampler2D gtexture;
 uniform sampler2D normals;
 #ifdef RESOURCE_SPECULAR
@@ -12,6 +13,7 @@ uniform sampler2D specular;
 uniform float alphaTestRef;
 #ifdef ENTITY
 uniform vec4 entityColor;
+uniform int entityId;
 #endif
 in vec2 texcoord,lmcoord;
 in vec4 glcolor;
@@ -112,7 +114,7 @@ void main(){
                 float age = fract(rt * 0.75 + h);
                 float dist = length(f);
                 float ring = sin(clamp(dist - age * 0.44, -0.2, 0.2) * 31.4159);
-                float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * smoothstep(age * 0.44 + 0.08, age * 0.44, dist);
+                float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0-smoothstep(age * 0.44, age * 0.44 + 0.08, dist));
                 ripGrad += normalize(f + 1e-4) * ring * fade;
                 ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
             }
@@ -124,6 +126,14 @@ void main(){
     #endif
     roughness=filteredRoughness(N,roughness);
     vec3 shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO);
+    bool flame=materialId>1005.5 && materialId<1007.5;
+    #ifdef ENTITY
+    flame=flame || entityId==1101;
+    #endif
+    if(flame){
+        shaded=flameRadiance(tex.rgb,worldPos,materialId>1006.5);
+        emission=1.0;
+    }
     color=vec4(shaded,tex.a);
     #ifdef RESOURCE_SPECULAR
     reflectanceData=vec4(f0,metal);

@@ -110,6 +110,7 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #elif defined(END)
     ambient=vec3(0.06,0.035,0.09);
     #endif
+    ambient+=stormFlash()*pow(lm.y,3.0)*(0.35+0.65*max(nw.y,0.0));
     vec3 torch=vec3(1.8,0.72,0.23)*pow(lm.x,3.0)*TORCH_BRIGHTNESS;
     vec3 direct=vec3(0.0);
     #if !defined(NETHER) && !defined(END)

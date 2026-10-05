@@ -1,6 +1,7 @@
 #include "/lib/common.glsl"
 #include "/lib/lighting.glsl"
 #include "/lib/environment.glsl"
+#include "/lib/water.glsl"
 
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
@@ -26,23 +27,18 @@ void main(){
 
     vec3 V = normalize(-viewPos);
 
-    // Highly optimized analytic animated waves for distant water
-    vec2 p = worldPos.xz;
-    float t = frameTimeCounter * 1.5;
-    vec2 slope = vec2(
-        cos(p.x * 0.40 + p.y * 0.20 - t) * 0.035 + cos(p.x * 0.85 - p.y * 0.45 + t * 1.3) * 0.018,
-        sin(p.x * 0.25 - p.y * 0.35 + t) * 0.035 + sin(p.x * 0.60 + p.y * 0.75 - t * 0.9) * 0.018
-    ) * WATER_WAVES;
-
-    vec3 nw = normalize(vec3(-slope.x, 1.0, -slope.y));
-    vec3 N = normalize(mat3(gbufferModelView) * nw);
+    float crest;
+    vec2 slope=waterSlope(worldPos.xz,dFdx(worldPos.xz),dFdy(worldPos.xz),crest);
+    vec3 base=worldDirection(normalize(viewNormal));
+    vec3 nw=normalize(base+vec3(-slope.x,0.0,-slope.y)*smoothstep(0.65,0.95,abs(base.y)));
+    vec3 N=normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
 
     // Robust sky light retrieval regardless of Iris transformer coordinate packing
     float skyLight = clamp(max(lmcoord.x, lmcoord.y), 0.0, 1.0);
 
     // Physical Fresnel reflectance matching vanilla water
     float NdotV = sat(dot(N, V));
-    float fresnel = 0.0204 + 0.9796 * pow(1.0 - NdotV, 5.0);
+    float fresnel = waterFresnel(NdotV,isEyeInWater==1);
 
     // Environment reflections (sky & clouds) matching vanilla water
     vec3 R = reflect(-V, N);
@@ -52,12 +48,6 @@ void main(){
     vec3 L = normalize(shadowLightPosition);
     vec3 glint = specularBRDF(N, V, L, filteredRoughness(N,WATER_ROUGHNESS), vec3(0.0204)) * lightColor() * skyLight * cloudShadow(worldPos);
 
-    // Distant sun and moon ocean glitter
-    float sunGlitter = pow(sat(dot(reflect(-L, N), V)), 140.0) * 0.50 * skyLight * daylight();
-    float moonGlitter = pow(sat(dot(reflect(-L, N), V)), 180.0) * 2.00 * skyLight * (1.0 - daylight()) * NIGHT_BRIGHTNESS;
-    glint += mix(vec3(0.35, 0.55, 0.85) * moonGlitter, vec3(sunGlitter), daylight());
-
-    // AC4 Caribbean deep water equilibrium color matching vanilla water (water.fsh)
     vec3 deepWater = vec3(0.005, 0.038, 0.12) * mix(0.12, 1.0, daylight()) * (0.2 + skyLight * 0.8);
     vec3 waterResult = mix(deepWater, skyReflect, fresnel) + glint;
 

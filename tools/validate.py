@@ -177,6 +177,8 @@ try:
     render_checks.run(globals())
     import quality_checks
     quality_checks.run(globals())
+    import weather_checks
+    weather_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
 finally:

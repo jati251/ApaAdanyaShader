@@ -10,5 +10,11 @@ void main(){
     float azimuth=(texcoord.x-0.5)*2.0*PI,elevation=(texcoord.y-0.5)*PI;
     vec3 rd=vec3(cos(azimuth)*cos(elevation),sin(elevation),sin(azimuth)*cos(elevation));
     vec3 sky=skyRadiance(rd);
+    #if CLOUDS == 2
+    vec4 clouds=cloudLayerSteps(rd,gl_FragCoord.xy,8,0.5);
+    sky=sky*(1.0-clouds.a)+clouds.rgb;
+    #elif CLOUDS == 1
+    sky=renderFastClouds(rd,sky);
+    #endif
     color=vec4(min(sky,vec3(6.0)),1.0);
 }

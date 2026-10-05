@@ -195,3 +195,13 @@ value.UPSCALE_QUALITY.2=Quality (67%)
 value.UPSCALE_QUALITY.3=Balanced (59%)
 option.UPSCALE_SHARPNESS=FSR RCAS Sharpness
 option.UPSCALE_SHARPNESS.comment=Sharpen the upscaled image with AMD RCAS. Zero disables sharpening.
+
+profile.REALISM=Realism (Optimized)
+profile.REALISM.comment=Native resolution, volumetric clouds, ocean detail and half-resolution indirect lighting.
+
+screen.RAYTRACING=Ray Tracing (Screen Space)
+screen.RAYTRACING.comment=Depth-buffer ray marching for reflections and indirect light. No hardware RT, off-screen geometry or path tracing.
+profile.REALISM_FSR=Realism + FSR Ultra Quality
+profile.REALISM_FSR.comment=Same effects as Realism with 77 percent internal dimensions and AMD EASU / RCAS upscaling.
+profile.REALISM_RT=Realism + High Screen-Space Tracing
+profile.REALISM_RT.comment=48 reflection steps and 6 indirect rays. Higher GPU cost; no hardware RT or frame generation.
