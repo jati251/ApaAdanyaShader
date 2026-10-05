@@ -98,9 +98,11 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     vec3 L=normalize(shadowLightPosition), V=normalize(-vp);
     float nl=max(dot(N,L),0.0);
     float vis=0.0;
+    #if !defined(NETHER) && !defined(END)
     if((nl>0.0001 || foliage>0.5) && lm.y>0.05) {
         vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
     }
+    #endif
     vec3 ambient=mix(vec3(0.018,0.028,0.055)*NIGHT_BRIGHTNESS,vec3(0.22,0.35,0.55),daylight());
     ambient*=pow(lm.y,1.6)*(0.40+0.60*max(nw.y*0.5+0.5,0.0));
     #ifdef NETHER
@@ -110,9 +112,8 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #endif
     vec3 torch=vec3(1.8,0.72,0.23)*pow(lm.x,3.0)*TORCH_BRIGHTNESS;
     vec3 direct=vec3(0.0);
+    #if !defined(NETHER) && !defined(END)
     if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
-    #if defined(NETHER) || defined(END)
-    direct=vec3(0.0);
     #endif
     float subsurface=foliage*pow(sat(dot(-V,L)),5.0)*0.5;
     vec3 specular=vec3(0.0);

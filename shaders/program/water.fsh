@@ -105,9 +105,17 @@ void main(){
     #endif
     float fresnel=0.0204+0.9796*pow(1.0-sat(dot(N,V)),5.0);
     if(isEyeInWater==1) fresnel=mix(fresnel,1.0,smoothstep(0.70,0.76,1.0-dot(N,V)*dot(N,V)));
+    vec3 glint=vec3(0.0);
+    #if !defined(NETHER) && !defined(END)
     vec3 L=normalize(shadowLightPosition);
-    float vis=shadowVisibility(worldPos-cameraPosition,worldDirection(N),sat(dot(N,L)),true);
-    vec3 glint=specularBRDF(N,V,L,filteredRoughness(N,WATER_ROUGHNESS),vec3(0.0204))*lightColor()*vis*lmcoord.y*cloudShadow(worldPos);
+    float nl=dot(N,L);
+    if(nl>0.001 && lmcoord.y>0.05){
+        float vis=shadowVisibility(worldPos-cameraPosition,worldDirection(N),nl,true);
+        if(vis>0.001){
+            glint=specularBRDF(N,V,L,filteredRoughness(N,WATER_ROUGHNESS),vec3(0.0204))*lightColor()*vis*lmcoord.y*cloudShadow(worldPos);
+        }
+    }
+    #endif
     vec3 result=mix(transmitted,reflected,fresnel)+glint;
     #ifdef WATER_FOAM
     // Smooth shoreline blending with 3D noise foam

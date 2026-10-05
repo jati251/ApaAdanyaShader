@@ -50,29 +50,33 @@ vec3 skyRadiance(vec3 rd) {
         }
 
         // --- Multi-layer Atmospheric Solar Corona & Mie Glow ---
-        // 1. Delicate inner corona hugging the solar disc (~1.5 to 2.5 deg)
-        float innerHalo = pow(sat(sunDot), 750.0);
-        vec3 innerCol = mix(vec3(1.10, 0.90, 0.60), vec3(1.60, 0.65, 0.15), sunsetFactor);
-        sky += innerCol * innerHalo * 0.85 * day * (1.0 - rainStrength);
+        if (sunDot > 0.6) {
+            // 2. Soft atmospheric Mie scattering halo (~8 to 12 deg)
+            float midHalo = pow(sunDot, 80.0);
+            vec3 midCol = mix(vec3(0.20, 0.17, 0.12), vec3(0.60, 0.22, 0.05), sunsetFactor);
+            sky += midCol * midHalo * 0.50 * day * (1.0 - rainStrength * 0.75);
 
-        // 2. Soft atmospheric Mie scattering halo (~8 to 12 deg)
-        float midHalo = pow(sat(sunDot), 80.0);
-        vec3 midCol = mix(vec3(0.20, 0.17, 0.12), vec3(0.60, 0.22, 0.05), sunsetFactor);
-        sky += midCol * midHalo * 0.50 * day * (1.0 - rainStrength * 0.75);
+            // 1. Delicate inner corona hugging the solar disc (~1.5 to 2.5 deg)
+            if (sunDot > 0.95) {
+                float innerHalo = pow(sunDot, 750.0);
+                vec3 innerCol = mix(vec3(1.10, 0.90, 0.60), vec3(1.60, 0.65, 0.15), sunsetFactor);
+                sky += innerCol * innerHalo * 0.85 * day * (1.0 - rainStrength);
+            }
 
-        // 3. Subtle optical diffraction flare / starburst spikes
-        if (sunDot > 0.992) {
-            vec3 sunUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-            vec3 sunRight = normalize(cross(sd, sunUp));
-            vec3 sunRealUp = cross(sunRight, sd);
-            vec2 sunUV = vec2(dot(rd, sunRight), dot(rd, sunRealUp));
-            float angle = atan(sunUV.y, sunUV.x);
-            float rays1 = sin(angle * 6.0) * 0.5 + 0.5;
-            float rays2 = sin(angle * 10.0 + 1.25) * 0.5 + 0.5;
-            float spikePattern = pow(rays1 * 0.60 + rays2 * 0.40, 2.0);
-            float flareFade = smoothstep(0.992, 0.998, sunDot);
-            float glare = pow(sat(sunDot), 300.0) * spikePattern * flareFade;
-            sky += mix(vec3(0.8, 0.65, 0.4), vec3(1.2, 0.40, 0.08), sunsetFactor) * glare * 0.35 * day * (1.0 - rainStrength);
+            // 3. Subtle optical diffraction flare / starburst spikes
+            if (sunDot > 0.992) {
+                vec3 sunUp = abs(sd.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+                vec3 sunRight = normalize(cross(sd, sunUp));
+                vec3 sunRealUp = cross(sunRight, sd);
+                vec2 sunUV = vec2(dot(rd, sunRight), dot(rd, sunRealUp));
+                float angle = atan(sunUV.y, sunUV.x);
+                float rays1 = sin(angle * 6.0) * 0.5 + 0.5;
+                float rays2 = sin(angle * 10.0 + 1.25) * 0.5 + 0.5;
+                float spikePattern = pow(rays1 * 0.60 + rays2 * 0.40, 2.0);
+                float flareFade = smoothstep(0.992, 0.998, sunDot);
+                float glare = pow(sunDot, 300.0) * spikePattern * flareFade;
+                sky += mix(vec3(0.8, 0.65, 0.4), vec3(1.2, 0.40, 0.08), sunsetFactor) * glare * 0.35 * day * (1.0 - rainStrength);
+            }
         }
     }
 
@@ -95,14 +99,18 @@ vec3 skyRadiance(vec3 rd) {
         }
 
         // Soft nocturnal atmospheric lunar halo
-        float moonHalo = pow(sat(moonDot), 120.0) * 0.18;
-        vec3 moonAura = vec3(0.03, 0.06, 0.12) * NIGHT_BRIGHTNESS * moonHalo;
-        sky += moonAura * (1.0 - day) * (1.0 - rainStrength * 0.8);
+        if (moonDot > 0.7) {
+            float moonHalo = pow(moonDot, 120.0) * 0.18;
+            vec3 moonAura = vec3(0.03, 0.06, 0.12) * NIGHT_BRIGHTNESS * moonHalo;
+            sky += moonAura * (1.0 - day) * (1.0 - rainStrength * 0.8);
+        }
     }
     #endif
     #ifdef STARS
-    vec3 starCell = floor(rd * 650.0);
-    sky += vec3(pow(hash13(starCell), 950.0)) * smoothstep(0.02, 0.3, rd.y) * (1.0 - day) * (1.0 - rainStrength) * 0.5;
+    if (day < 0.95 && rd.y > 0.02 && rainStrength < 0.9) {
+        vec3 starCell = floor(rd * 650.0);
+        sky += vec3(pow(hash13(starCell), 950.0)) * smoothstep(0.02, 0.3, rd.y) * (1.0 - day) * (1.0 - rainStrength) * 0.5;
+    }
     #endif
     return sky;
     #endif
