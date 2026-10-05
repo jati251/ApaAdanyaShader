@@ -36,6 +36,11 @@ void main(){
     vec3 base=worldDirection(normalize(viewNormal));
     vec3 nw=normalize(base+vec3(-slope.x,0.0,-slope.y)*smoothstep(0.65,0.95,abs(base.y)));
     vec3 N=normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
+    // Smooth grazing clamp: prevents 180-degree normal inversion flicker on low camera angles
+    float ndotv=dot(N,V);
+    if(ndotv < 0.01) {
+        N=normalize(N+V*(0.01-ndotv));
+    }
 
     // Robust sky light retrieval regardless of Iris transformer coordinate packing
     float skyLight = clamp(lmcoord.y, 0.0, 1.0);

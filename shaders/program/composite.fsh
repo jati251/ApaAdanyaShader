@@ -33,15 +33,15 @@ void main(){
     #endif
     bool hand=textureScreen(colortex2,texcoord).a>0.5 && depth<0.56;
     if(isEyeInWater==1){
-        // Absorption along the eye-to-surface path.
-        vec3 trans=exp(-vec3(0.24,0.075,0.038)*dist/WATER_CLARITY);
-        vec3 waterEquil=vec3(0.005,0.085,0.15)*mix(0.15,1.0,daylight());
+        // Absorption along the eye-to-surface path in murky natural freshwater
+        vec3 trans=exp(-waterAbsorption()*dist);
+        vec3 waterEquil=vec3(0.018,0.032,0.020)*mix(0.15,1.0,daylight())*smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y));
         #ifdef WATER_CAUSTICS
         if(depth<0.999999 && !hand){
             vec3 wPos=(gbufferModelViewInverse*vec4(vp,1.0)).xyz+cameraPosition;
-            float caustic=waterCaustic(wPos.xz,frameTimeCounter*(0.65*WIND_SPEED));
-            float waterDepthFade=exp(-max(cameraPosition.y-wPos.y,0.0)*0.28);
-            c+=vec3(0.04,0.18,0.22)*caustic*waterDepthFade*daylight()*smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y));
+            float caustic=waterCaustic(wPos.xz,mod(frameTimeCounter,6283.1853)*(0.65*WIND_SPEED));
+            float waterDepthFade=exp(-max(cameraPosition.y-wPos.y,0.0)*0.45);
+            c+=vec3(0.080,0.095,0.045)*caustic*waterDepthFade*daylight()*smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y));
         }
         #endif
         c=c*trans+waterEquil*(1.0-trans);

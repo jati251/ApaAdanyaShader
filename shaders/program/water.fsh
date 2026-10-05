@@ -98,7 +98,11 @@ void main(){
     vec3 N=waterNormal(waveCrest),V=normalize(-viewPos);
     vec3 meshN=normalize(viewNormal);
     if(dot(meshN,V)<0.0) meshN=-meshN;
-    if(dot(N,V)<0.0) N=-N;
+    // Smooth grazing clamp: prevents 180-degree normal inversion flicker on low camera angles
+    float ndotv=dot(N,V);
+    if(ndotv < 0.01) {
+        N=normalize(N+V*(0.01-ndotv));
+    }
     bool validBehind;
     vec3 behind=opaquePosition(screenUV,validBehind);
     float bottomDepth=validBehind?max(worldUpDelta(viewPos-behind),0.0):80.0;
@@ -129,9 +133,6 @@ void main(){
         bool submerged=!validRefracted || worldUpDelta(viewPos-refractPos)>0.01;
         if((!validRefracted || behindPlane) && (underwater || submerged)) {
             refractUV=candidate;
-            behind=refractPos;
-            validBehind=validRefracted;
-            thickness=validBehind?min(length(behind-viewPos),80.0):80.0;
         }
     }
     #endif
@@ -144,7 +145,7 @@ void main(){
     vec3 absorption = underwater?vec3(0.0):waterAbsorption();
     vec3 transmittance = exp(-absorption * thickness);
 
-    // Caribbean Gradient: Crystal Turquoise Shallows -> Deep Oceanic Sapphire
+    // Murky natural freshwater: earthy moss/olive shallows transitioning to deep sediment-peat
     float day = daylight();
     vec3 waterColor = waterBodyColor(thickness,lmcoord.y);
 
@@ -154,29 +155,29 @@ void main(){
     #if !defined(NETHER) && !defined(END)
     vec3 L = normalize(shadowLightPosition);
     float sunScatterLobe = pow(sat(dot(V, -L)), 4.0) * 0.70 + pow(sat(dot(V, -L) * 0.5 + 0.5), 2.0) * 0.30;
-    vec3 sssColor = vec3(0.02, 0.46, 0.42);
+    vec3 sssColor = vec3(0.045, 0.082, 0.038);
     float sssCrest = 0.50 + 0.80 * sat(waveCrest);
     vec3 waveSSS = sssColor * lightColor() * sunScatterLobe * (1.0 - transmittance.g) * min(thickness, 4.0) * 0.16 * lmcoord.y * sssCrest;
     if(!underwater) transmitted += waveSSS;
 
-    // Gentle natural foam in shallow shoreline wash
+    // Gentle natural foam in shallow shoreline wash (continuous multi-frequency noise)
     if(!underwater && validBehind && bottomDepth < 0.38) {
-        float foamNoise = hash12(floor(worldPos.xz * 3.5));
+        float foamNoise = sin(worldPos.x * 5.2 + sin(worldPos.z * 4.1)) * cos(worldPos.z * 5.2 + sin(worldPos.x * 4.1)) * 0.5 + 0.5;
         float foamEdge = smoothstep(0.35, 0.03, bottomDepth);
         float foamWave = smoothstep(0.20, 0.65, waveCrest + foamEdge * 0.35);
         float foam = foamEdge * foamWave * (0.65 + 0.35 * foamNoise);
-        vec3 foamCol = vec3(0.85, 0.93, 0.98) * (lightColor() * 0.85 + 0.15) * lmcoord.y;
-        transmitted = mix(transmitted, foamCol, foam * 0.72);
+        vec3 foamCol = vec3(0.92, 0.93, 0.88) * (lightColor() * 0.85 + 0.15) * lmcoord.y;
+        transmitted = mix(transmitted, foamCol, foam * 0.68);
     }
     #endif
 
     #ifdef WATER_CAUSTICS
     // Focused organic cellular caustics on submerged surfaces
     vec2 cPos = ((gbufferModelViewInverse*vec4(behind,1.0)).xyz+cameraPosition).xz;
-    float causticWave = waterCaustic(cPos, frameTimeCounter * (0.65 * WIND_SPEED));
+    float causticWave = waterCaustic(cPos, mod(frameTimeCounter, 6283.1853) * (0.65 * WIND_SPEED));
     float causticFootprint=max(length(dFdx(cPos)),length(dFdy(cPos)))*3.6;
     float causticFilter=1.0-smoothstep(0.7,2.8,causticFootprint);
-    vec3 caustColor = vec3(0.04, 0.16, 0.18) * causticWave * causticFilter * exp(-thickness * 0.28) * day * lmcoord.y;
+    vec3 caustColor = vec3(0.080, 0.095, 0.045) * causticWave * causticFilter * exp(-thickness * 0.45) * day * lmcoord.y;
     if(validBehind && !underwater) transmitted += caustColor * transmittance;
     #endif
 
