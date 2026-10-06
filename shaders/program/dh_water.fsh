@@ -13,10 +13,15 @@ in vec2 texcoord, lmcoord;
 in vec4 glcolor;
 in vec3 viewNormal, viewPos, worldPos;
 
+#if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
 /* RENDERTARGETS: 0,1,2 */
-layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
+#else
+/* RENDERTARGETS: 0,2 */
+layout(location = 1) out vec4 materialData;
+#endif
+layout(location = 0) out vec4 color;
 
 void main(){
     vec2 waveDx=dFdx(worldPos.xz),waveDy=dFdy(worldPos.xz);
@@ -91,6 +96,8 @@ void main(){
     vec3 waterResult = mix(body, skyReflect, fresnel) + glint;
 
     color = vec4(max(waterResult, vec3(0.0)), 1.0);
+    #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
     normalData = vec4(N * 0.5 + 0.5, 1.0);
+    #endif
     materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.25);
 }

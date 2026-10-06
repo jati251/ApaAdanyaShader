@@ -248,6 +248,8 @@ try:
         import water_motion_checks
         water_motion_checks.run(globals())
         sys.exit(0)
+    import low_tier_checks
+    low_tier_checks.run(globals())
     import render_checks
     render_checks.run(globals())
     import quality_checks

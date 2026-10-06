@@ -9,11 +9,16 @@ in vec4 glcolor;
 in vec3 viewNormal, viewPos, worldPos;
 flat in float materialId;
 
+#if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
 /* RENDERTARGETS: 0,1,2,15 */
-layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 normalData;
 layout(location = 2) out vec4 materialData;
 layout(location = 3) out vec4 responseData;
+#else
+/* RENDERTARGETS: 0,2 */
+layout(location = 1) out vec4 materialData;
+#endif
+layout(location = 0) out vec4 color;
 
 void main(){
     #if UPSCALE_QUALITY > 0
@@ -50,7 +55,9 @@ void main(){
     vec3 shaded = shadeMaterial(albedo, N, viewPos, lm, roughness, 0.0, 0.0, vec3(0.04),0.0,1.0,ambientFraction);
 
     color = vec4(shaded, 1.0);
+    #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
     responseData=vec4(diffuseResponse(albedo,vec3(0.04),0.0),ambientFraction);
     normalData = vec4(N * 0.5 + 0.5, 1.0);
+    #endif
     materialData = vec4(roughness, skyLight, 0.0, 0.0);
 }

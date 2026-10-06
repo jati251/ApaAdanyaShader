@@ -16,11 +16,14 @@ in vec4 glcolor;
 in vec3 viewPos;
 #ifdef TRANSLUCENT
 /* RENDERTARGETS: 0 */
-#else
+#elif defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
 /* RENDERTARGETS: 0,1,2,15 */
 layout(location=1) out vec4 normalData;
 layout(location=2) out vec4 materialData;
 layout(location=3) out vec4 responseData;
+#else
+/* RENDERTARGETS: 0,2 */
+layout(location=1) out vec4 materialData;
 #endif
 layout(location=0) out vec4 color;
 void main(){
@@ -77,8 +80,10 @@ void main(){
     color=vec4(albedo*illumination,tex.a);
     #ifndef TRANSLUCENT
     // Billboards have no stable material receiver: never inherit the terrain response behind them.
+    #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
     responseData=vec4(0.0);
     normalData=vec4(normalize(-viewPos)*0.5+0.5,1.0);
+    #endif
     materialData=vec4(1.0,lmcoord.y,0.0,0.0);
     #endif
 }

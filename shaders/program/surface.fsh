@@ -20,6 +20,7 @@ in vec4 glcolor;
 in vec3 viewNormal,viewPos,worldPos;
 in vec4 tangent;
 flat in float materialId;
+#if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
 #ifdef RESOURCE_SPECULAR
 /* RENDERTARGETS: 0,1,2,3,15 */
 layout(location=3) out vec4 reflectanceData;
@@ -28,9 +29,13 @@ layout(location=4) out vec4 responseData;
 /* RENDERTARGETS: 0,1,2,15 */
 layout(location=3) out vec4 responseData;
 #endif
-layout(location=0) out vec4 color;
 layout(location=1) out vec4 normalData;
 layout(location=2) out vec4 materialData;
+#else
+/* RENDERTARGETS: 0,2 */
+layout(location=1) out vec4 materialData;
+#endif
+layout(location=0) out vec4 color;
 void main(){
     #if UPSCALE_QUALITY > 0
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
@@ -170,11 +175,13 @@ void main(){
         }
     }
     color=vec4(shaded,tex.a);
+    #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
     responseData=vec4(diffuseResponse(albedo,f0,metal)*materialAO,ambientFraction);
     #ifdef RESOURCE_SPECULAR
     reflectanceData=vec4(f0,metal);
     #endif
     normalData=vec4(N*0.5+0.5,1.0);
+    #endif
     float hand=0.0;
     #ifdef ENTITY
     hand=0.25;

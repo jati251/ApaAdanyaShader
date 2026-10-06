@@ -317,7 +317,7 @@ vec3 renderFastClouds(vec3 rd, vec3 background) {
         vec3 sunCol = lightColor();
 
         // Pseudo-volumetric self-shadowing: sample slightly towards the sun
-        float fbmSun = cloudFractal(pos + sd.xz * 0.012);
+        float fbmSun = noise2D(pos + sd.xz * 0.012);
         float shade = clamp(1.0 - (fbmSun - threshold) * 2.4, 0.42, 1.0);
 
         // Forward Mie scattering (silver lining highlight facing sun)

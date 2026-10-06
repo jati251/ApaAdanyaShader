@@ -1,7 +1,7 @@
 # Profile: LOW
 # Low (Lightweight) / Rendah (Ringan)
-# 512 shadows with 2-tap PCF, 2D clouds, FXAA and neutral tone mapping. GI and adaptive exposure off.
-# Bayangan 512 dengan PCF 2 sampel, awan 2D, FXAA dan tone mapping netral. GI dan exposure adaptif mati.
+# 512 shadows with 2-tap PCF, 2D clouds, FSR Quality (67%), FXAA and neutral tone mapping. GI and adaptive exposure off.
+# Bayangan 512 dengan PCF 2 sampel, awan 2D, FSR Quality (67%), FXAA dan tone mapping netral. GI dan exposure adaptif mati.
 AUTO_EXPOSURE=false
 BLOOM=false
 BLOOM_STRENGTH=0.08
@@ -75,8 +75,8 @@ TEMPORAL_CLOUDS=false
 TEMPORAL_INDIRECT=false
 TONEMAP_OPERATOR=2
 TORCH_BRIGHTNESS=1.0
-UPSCALE_QUALITY=0
-UPSCALE_SHARPNESS=0.40
+UPSCALE_QUALITY=2
+UPSCALE_SHARPNESS=0.50
 VIGNETTE=true
 VIGNETTE_STRENGTH=0.20
 VL_SAMPLES=4

@@ -217,11 +217,11 @@ option.TEMPORAL_INDIRECT.comment=Reprojects GI/AO with per-tap depth and world-n
 
 option.EXPOSURE.comment=Manual exposure multiplier. With adaptive exposure enabled it scales the metered result; otherwise uses the day/night baseline.
 
-profile.POTATO.comment=Minimal effects, neutral tone mapping. Shadows, clouds, GI, SSR, adaptive exposure and history off.
+profile.POTATO.comment=Minimal effects, neutral tone mapping and FSR Quality (67%) at sharpness 0.50. Shadows, clouds, GI, SSR, adaptive exposure and history off.
 
-profile.LOW.comment=512 shadows with 2-tap PCF, 2D clouds, FXAA and neutral tone mapping. GI and adaptive exposure off.
+profile.LOW.comment=512 shadows with 2-tap PCF, 2D clouds, FSR Quality (67%), FXAA and neutral tone mapping. GI and adaptive exposure off.
 
-profile.MEDIUM.comment=1024 shadows, temporal AO, 16-step SSR, 10-step half-resolution clouds, adaptive exposure and neutral tone mapping. No PBR/POM or diffuse GI.
+profile.MEDIUM.comment=512 shadows, temporal AO, 12-step SSR, 8-step half-resolution clouds, native resolution, adaptive exposure and neutral tone mapping. No PBR/POM or diffuse GI.
 
 profile.HIGH.comment=2048 contact-hardening shadows, 3 GI rays, 28 SSR steps, 16 cloud steps. Temporal GI/AO, LabPBR/POM, neutral daylight and tone mapping; lens blur off.
 

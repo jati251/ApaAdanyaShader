@@ -217,11 +217,11 @@ option.TEMPORAL_INDIRECT.comment=Reproyeksi GI/AO memeriksa kedalaman dan normal
 
 option.EXPOSURE.comment=Pengali exposure manual. Saat exposure adaptif aktif, mengalikan hasil pengukuran; jika mati, memakai baseline siang/malam.
 
-profile.POTATO.comment=Efek minimal dengan tone mapping netral. Bayangan, awan, GI, SSR, exposure adaptif dan history mati.
+profile.POTATO.comment=Efek minimal, tone mapping netral dan FSR Quality (67%) dengan ketajaman 0.50. Bayangan, awan, GI, SSR, exposure adaptif dan history mati.
 
-profile.LOW.comment=Bayangan 512 dengan PCF 2 sampel, awan 2D, FXAA dan tone mapping netral. GI dan exposure adaptif mati.
+profile.LOW.comment=Bayangan 512 dengan PCF 2 sampel, awan 2D, FSR Quality (67%), FXAA dan tone mapping netral. GI dan exposure adaptif mati.
 
-profile.MEDIUM.comment=Bayangan 1024, AO temporal, SSR 16 langkah, awan setengah resolusi 10 langkah, exposure adaptif dan tone mapping netral. PBR/POM serta GI diffuse mati.
+profile.MEDIUM.comment=Bayangan 512, AO temporal, SSR 12 langkah, awan setengah resolusi 8 langkah, resolusi native, exposure adaptif dan tone mapping netral. PBR/POM serta GI diffuse mati.
 
 profile.HIGH.comment=Bayangan kontak 2048, 3 sinar GI, SSR 28 langkah, awan 16 langkah. GI/AO temporal, LabPBR/POM, daylight dan tone mapping netral; blur lensa mati.
 

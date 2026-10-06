@@ -1,0 +1,7 @@
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: GPU low-tier two-target output locations, retained material masks and full Medium/High/custom-specular attachments
+PASS: GPU Potato/Low opaque and DH preservation, eager/lazy sky parity, both MRT outputs, native/FSR and all dimensions

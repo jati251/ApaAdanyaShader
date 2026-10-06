@@ -97,7 +97,7 @@ void main(){
             }
         }
         #endif
-        #if !defined(NETHER) && !defined(END)
+        #if !defined(NETHER) && !defined(END) && defined(VOLUMETRIC_LIGHT)
         // Volumetric atmospheric dust motes & airborne spores (The Last of Us signature aesthetic)
         if(dist > 0.8 && depth < 0.999999) {
             float moteDist = min(dist, 14.0);
@@ -128,4 +128,3 @@ void main(){
     }
     color=vec4(max(c,vec3(0.0)),1.0);
 }
-

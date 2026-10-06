@@ -35,9 +35,6 @@ const vec4 colortex1ClearColor=vec4(0.5,0.5,1.0,0.0);
 const vec4 colortex2ClearColor=vec4(1.0,0.0,0.0,0.0);
 void main(){
     float depth=depthScreen(depthtex0,texcoord);
-    vec3 vp=viewPosition(texcoord,depth);
-    vec3 V_dir=normalize(vp);
-    vec3 rd=worldDirection(V_dir);
     vec3 scene=textureScreen(colortex0,texcoord).rgb;
     bool isDH=false;
     #ifdef DISTANT_HORIZONS
@@ -46,6 +43,22 @@ void main(){
     float dhDepth=depthScreen(dhDepthTex0,texcoord);
     if(depth>=0.999999 && dhDepth<1.0){
         isDH=true;
+    }
+    #endif
+    // Low tiers only reconstruct sky rays; opaque vanilla/DH already has lighting.
+    vec3 vp=vec3(0.0),V_dir=vec3(0.0),rd=vec3(0.0);
+    #if defined(SSAO) || defined(SSGI) || defined(SSR)
+    bool needsView=true;
+    #else
+    bool needsView=depth>=0.999999 && !isDH;
+    #endif
+    if(needsView){
+        vp=viewPosition(texcoord,depth);
+        V_dir=normalize(vp);
+        rd=worldDirection(V_dir);
+    }
+    #if defined(DISTANT_HORIZONS) && (defined(SSAO) || defined(SSGI) || defined(SSR))
+    if(isDH){
         vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
         vec4 vpDH=dhProjectionInverse*clipDH;
         vp=vpDH.xyz/vpDH.w;

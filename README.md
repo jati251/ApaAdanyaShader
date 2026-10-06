@@ -16,7 +16,7 @@ Seluruh sepuluh profil tersedia dalam menu dan sebagai file lengkap di `presets/
 | --- | --- | --- | --- | --- |
 | Potato | Mati | GI/SSR/awan mati | Mati / mati | Mati |
 | Rendah | 512, 2 sampel PCF | GI/SSR mati, awan 2D | Mati / mati | Mati |
-| Sedang | 1024, 4 sampel PCF | GI mati, SSR 16, awan 10 | Adaptif / AO temporal | Mati |
+| Sedang | 512, 4 sampel PCF | GI mati, SSR 12, awan 8 | Adaptif / AO temporal | Mati |
 | Tinggi | 2048, 6 sampel contact-hardening | GI 3, SSR 28, awan 16 | Adaptif / GI-AO temporal | Mati |
 | Ultra | 2048, 8 sampel contact-hardening | GI 5, SSR 40, awan 22 | Adaptif / GI-AO temporal | Mati |
 | Extreme | 4096, 8 sampel contact-hardening | GI 6 resolusi penuh, SSR 56, awan 28 | Adaptif / indirect history mati | DOF, motion blur, grain |
@@ -24,6 +24,8 @@ Seluruh sepuluh profil tersedia dalam menu dan sebagai file lengkap di `presets/
 | Realistis + FSR | Sama dengan Realistis | Sama, dimensi internal 77% | Adaptif / GI-AO temporal | Mati |
 | Realistis + Tracing Tinggi | 2048, 8 sampel contact-hardening | GI 6, SSR 48, awan 24 | Adaptif / GI-AO temporal | Mati |
 | Realistis Sinematik | 4096, 8 sampel contact-hardening | GI 5, SSR 48, awan 24 | Adaptif / GI-AO temporal | DOF f/4, motion blur |
+
+Potato dan Rendah memakai FSR Quality dengan dimensi internal 67% dan ketajaman 0.50. Sedang dan profil di atasnya tetap native kecuali varian FSR.
 
 Angka GI adalah jumlah sinar; SSR dan awan adalah jumlah langkah. AO/GI memakai setengah lebar/tinggi kecuali Extreme; awan volumetrik memakai rekonstruksi setengah resolusi. History indirect hanya bekerja ketika rekonstruksi cahaya aktif. Extreme memakai AO/GI resolusi penuh, sehingga history indirect sengaja dimatikan. Semua profil yang memakai stabilisasi temporal tetap memakai FXAA karena geometri belum memakai jitter.
 

@@ -99,7 +99,7 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 
 // FSR 1 spatial upscaling; zero preserves native rendering.
 #define UPSCALE_QUALITY 0 // [0 1 2 3]
-#define UPSCALE_SHARPNESS 0.40 // [0.0 0.20 0.40 0.60 0.80 1.0]
+#define UPSCALE_SHARPNESS 0.40 // [0.0 0.20 0.40 0.50 0.60 0.80 1.0]
 
 // Effects also have independent reconstruction.
 #define CLOUD_RECONSTRUCTION // Half-resolution volumetric cloud layer
