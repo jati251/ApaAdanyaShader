@@ -40,6 +40,8 @@ vec3 applyTAA(vec2 uv,vec3 currentRGB,out float historyDepth) {
     #endif
     bool hand=depth<0.56 && mask>0.5;
     historyDepth=hand?-2.0:(sky?-1.0:min(-vp.z,60000.0));
+    // Water reflections move independently of the flat mesh depth.
+    if(mask>0.20 && mask<0.30) {historyDepth=-3.0; return currentRGB;}
     vec3 delta=cameraPosition-previousCameraPosition;
     if(hand || frameCounter<2 || frameTime<=0.0 || frameTime>0.2 || dot(delta,delta)>4.0) return currentRGB;
     if(abs(gbufferProjection[1][1]-gbufferPreviousProjection[1][1])>0.01) return currentRGB;

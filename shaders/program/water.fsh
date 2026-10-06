@@ -19,13 +19,11 @@ layout(location=0) out vec4 color;
 layout(location=1) out vec4 materialData;
 
 #include "/lib/water.glsl"
+#include "/lib/water_reflection.glsl"
 
-vec3 waterNormal(out float waveCrest){
-    vec2 slope=waterSlope(worldPos.xz,dFdx(worldPos.xz),dFdy(worldPos.xz),waveCrest);
+vec3 waterNormal(vec2 slope){
     vec3 base=worldDirection(normalize(viewNormal));
-    // Keep waterfalls and the side faces of a water block aligned with their mesh.
-    float horizontal=smoothstep(0.65,0.95,abs(base.y));
-    vec3 nw=normalize(base+vec3(-slope.x,0.0,-slope.y)*horizontal);
+    vec3 nw=waterSurfaceNormal(base,slope);
     return normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
 }
 
@@ -82,6 +80,10 @@ vec3 waterReflectionSample(vec2 hit,float roughness) {
 }
 
 void main(){
+    // Evaluate derivatives before alpha/material branches and discarded lanes.
+    vec2 waveDx=dFdx(worldPos.xz),waveDy=dFdy(worldPos.xz);
+    float waveCrest;
+    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,waveCrest);
     #if UPSCALE_QUALITY > 0
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
@@ -94,29 +96,22 @@ void main(){
     }
     vec2 screenUV=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
     bool underwater=isEyeInWater==1;
-    float waveCrest=0.0;
-    vec3 N=waterNormal(waveCrest),V=normalize(-viewPos);
-    vec3 meshN=normalize(viewNormal);
+    vec3 N=waterNormal(slope),V=normalize(-viewPos);
+    vec3 meshN=normalize(mat3(gbufferModelView)*waterSurfaceNormal(worldDirection(normalize(viewNormal)),vec2(0.0)));
     if(dot(meshN,V)<0.0) meshN=-meshN;
-    // Smooth grazing clamp: prevents 180-degree normal inversion flicker on low camera angles
-    float ndotv=dot(N,V);
-    if(ndotv < 0.01) {
-        N=normalize(N+V*(0.01-ndotv));
-    }
+    // Both the wave normal and reflected ray retain their physical direction.
     bool validBehind;
     vec3 behind=opaquePosition(screenUV,validBehind);
     float bottomDepth=validBehind?max(worldUpDelta(viewPos-behind),0.0):80.0;
-    // Large ocean slopes flatten continuously near solid banks and shallow steps.
-    float shoreWaves=underwater?1.0:smoothstep(0.05,1.25,bottomDepth);
-    N=normalize(mix(meshN,N,shoreWaves));
     vec3 R=reflect(-V,N);
-    if(dot(R,meshN)<0.02) R=normalize(R+meshN*(0.02-dot(R,meshN)));
     // Unresolved capillary waves broaden highlights rather than vanish into a mirror.
-    float footprint=max(length(dFdx(worldPos.xz)),length(dFdy(worldPos.xz)));
+    float footprint=max(length(waveDx),length(waveDy));
     float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
         +0.012*smoothstep(0.15,2.0,footprint)));
+    float reflectionSpread=waterReflectionSpread(R,roughness);
     float thickness=validBehind?clamp(length(behind-viewPos),0.0,80.0):80.0;
     vec2 refractUV=screenUV;
+    float refractWeight=0.0;
     #ifdef WATER_REFRACTION
     vec3 incident=normalize(viewPos);
     vec3 refracted=refract(incident,N,isEyeInWater==1?1.333:0.7502);
@@ -133,11 +128,17 @@ void main(){
         bool submerged=!validRefracted || worldUpDelta(viewPos-refractPos)>0.01;
         if((!validRefracted || behindPlane) && (underwater || submerged)) {
             refractUV=candidate;
+            float clearance=validRefracted?dot(refractPos,candidateRay)-planeDistance:1.0;
+            float waterDepth=validRefracted?worldUpDelta(viewPos-refractPos):1.0;
+            refractWeight=edgeFade(candidate)*smoothstep(0.02,0.30,clearance)
+                *(underwater?1.0:smoothstep(0.01,0.30,waterDepth))
+                *smoothstep(0.0,0.50,thickness);
         }
     }
     #endif
     // Water dispersion is tiny; one validated lookup avoids colored foreground leaks.
-    vec3 transmitted=textureScreen(colortex6,refractUV).rgb;
+    vec3 transmitted=mix(textureScreen(colortex6,screenUV).rgb,
+        textureScreen(colortex6,refractUV).rgb,refractWeight);
 
     // Wavelength-dependent absorption through the water column.
     // Above-surface terrain/sky is reached through air. Eye-to-surface water
@@ -163,7 +164,7 @@ void main(){
     // Gentle natural foam in shallow shoreline wash (continuous multi-frequency noise)
     if(!underwater && validBehind && bottomDepth < 0.38) {
         float foamNoise = sin(worldPos.x * 5.2 + sin(worldPos.z * 4.1)) * cos(worldPos.z * 5.2 + sin(worldPos.x * 4.1)) * 0.5 + 0.5;
-        float foamEdge = smoothstep(0.35, 0.03, bottomDepth);
+        float foamEdge = 1.0-smoothstep(0.03, 0.35, bottomDepth);
         float foamWave = smoothstep(0.20, 0.65, waveCrest + foamEdge * 0.35);
         float foam = foamEdge * foamWave * (0.65 + 0.35 * foamNoise);
         vec3 foamCol = vec3(0.92, 0.93, 0.88) * (lightColor() * 0.85 + 0.15) * lmcoord.y;
@@ -183,18 +184,33 @@ void main(){
 
     // Underside light must be spatially continuous, not a fluid-quad lightmap grid.
     float skyExposure=underwater?smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y)):lmcoord.y;
-    vec3 reflected = environmentRadiance(worldDirection(R)) * skyExposure*skyExposure;
+    vec3 worldRay=worldDirection(R);
+    vec3 reflected=waterEnvironmentReflection(worldRay,reflectionSpread)*skyExposure*skyExposure;
     #ifdef SSR
-    vec2 hit;
-    float confidence;
-    if(traceScreen(depthtex1, viewPos + N * 0.08, R, 0.22, SSR_STEPS, hit,confidence)
-        && waterReflectionAboveSurface(hit,underwater)) {
-        vec3 ssrColor = waterReflectionSample(hit,roughness);
-        reflected = mix(reflected, ssrColor, edgeFade(hit)*confidence);
+    vec3 reflectionSum=vec3(0);
+    // Integrate a fixed ray cone. A missed trace retains its environment tap,
+    // instead of replacing the entire reflection with a new hit in one frame.
+    for(int tap=0;tap<7;tap++) {
+        vec3 worldSample=waterReflectionRay(worldRay,reflectionSpread,tap);
+        vec3 ray=normalize(mat3(gbufferModelView)*worldSample);
+        vec3 radiance=environmentRadiance(worldSample)*skyExposure*skyExposure;
+        float visibleRay=underwater?1.0:smoothstep(0.0,0.08,dot(ray,meshN));
+        vec2 hit;
+        float confidence;
+        if(visibleRay>0.001 && traceScreen(depthtex1,viewPos+meshN*0.04,ray,0.22,SSR_STEPS,hit,confidence)
+            && waterReflectionAboveSurface(hit,underwater)) {
+            bool hitValid;
+            vec3 hitPosition=opaquePosition(hit,hitValid);
+            float surfaceFade=underwater?1.0:smoothstep(-0.02,0.25,worldUpDelta(hitPosition-viewPos));
+            float coverage=edgeFade(hit)*confidence*surfaceFade*visibleRay;
+            radiance=mix(radiance,waterReflectionSample(hit,roughness),coverage);
+        }
+        reflectionSum+=radiance*waterReflectionTapWeight(tap);
     }
+    reflected=reflectionSum;
     #endif
 
-    float fresnel=waterFresnel(dot(N,V),isEyeInWater==1);
+    float fresnel=waterFresnel(dot(N,V),underwater)*waterFacetVisibility(dot(N,V),roughness,underwater);
 
     // Ocean Sun & Moon Glitter: physically based specular with anisotropic diamond glints
     vec3 glint = vec3(0.0);
@@ -215,6 +231,3 @@ void main(){
 
     color = vec4(max(result, vec3(0.0)), 1.0);
 }
-
-
-

@@ -1,21 +1,21 @@
 #ifndef AA_WATER
 #define AA_WATER
 
-// Photorealistic directional water simulation with 2D non-linear crescent wave synthesis
+// World-anchored swells with analytic, pixel-filtered normals.
 vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
-    // Multi-directional wind-aligned propagation: natural angular spread without parallel stripes
+    // Crossing swells around the prevailing wind direction.
     const vec2 dirs[7] = vec2[7](
         vec2(0.8660, 0.5000),  // 30 deg: primary rolling ground swell (wind axis)
-        vec2(0.9272, 0.3746),  // 22 deg: secondary lake swell (-8 deg)
-        vec2(0.7660, 0.6428),  // 40 deg: surface swell (+10 deg)
-        vec2(0.9659, 0.2588),  // 15 deg: wind chop (-15 deg)
-        vec2(0.6691, 0.7431),  // 48 deg: crossing chop (+18 deg)
+        vec2(0.9848, -0.1736),
+        vec2(0.5736, 0.8192),
+        vec2(0.9659, 0.2588),
+        vec2(0.1736, 0.9848),
         vec2(0.8910, 0.4540),  // 27 deg: capillary ripples (-3 deg)
         vec2(0.7986, 0.6018)   // 37 deg: liquid micro-sheen (+7 deg)
     );
-    const float freq[7]   = float[7](0.085, 0.18, 0.42, 1.05, 2.70, 6.80, 16.5);
-    const float amp[7]    = float[7](0.32,  0.16, 0.075, 0.032, 0.013, 0.0045, 0.0015);
-    const float speeds[7] = float[7](0.26,  0.40, 0.65, 1.08, 1.75, 2.90, 4.60);
+    const float freq[7]   = float[7](0.18, 0.34, 0.72, 1.55, 3.80, 8.40, 18.0);
+    const float amp[7]    = float[7](0.48, 0.25, 0.105, 0.042, 0.017, 0.006, 0.0022);
+    const float speeds[7] = float[7](0.52, 0.73, 1.08, 1.56, 2.36, 3.51, 5.15);
 
     vec2 slope = vec2(0.0);
     crest = 0.0;
@@ -23,73 +23,87 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
     #ifndef WIND_SPEED
     #define WIND_SPEED 1.0
     #endif
-    float time = mod(frameTimeCounter, 6283.1853) * (0.85 * WIND_SPEED);
+    float time = frameTimeCounter * (0.85 * WIND_SPEED);
 
     // Organic swell envelope modulates height over space, preventing rigid repetition
-    float swellEnv = 0.85 + 0.15 * sin(dot(p, vec2(0.038, 0.024)) - time * 0.18);
-    vec2 swellSlope = vec2(0.0);
+    float envelopePhase=dot(p,vec2(0.038,0.024))-time*0.18;
+    float swellEnv=0.85+0.15*sin(envelopePhase);
+    vec2 envelopeGradient=0.15*cos(envelopePhase)*vec2(0.038,0.024);
 
     for(int i = 0; i < WATER_OCTAVES; i++) {
         vec2 d = dirs[i];
         vec2 perp = vec2(-d.y, d.x);
         float k = freq[i];
 
-        // Band-limiting based on pixel footprint prevents far-distance moiré / shimmering
-        float footprint = k * length(vec2(dot(dx, d), dot(dy, d)));
-        float band = 1.0 - smoothstep(0.7, 2.8, footprint);
-        if(band <= 0.001) continue;
+        vec2 pos = p;
+        float phaseSpeed = speeds[i] * time;
 
-        // Hydrodynamic advection: higher-frequency ripples ride on swell crests
-        vec2 pos = (i >= 2) ? (p + swellSlope * (0.05 / (1.0 + k * 0.06))) : p;
-
-        float phaseSpeed = mod(speeds[i] * time, 628.31853);
-
-        // 2D Non-linear crescent wave:
-        // Transverse phase modulates longitudinal wave, transforming straight 1D lines
-        // into organic 2D crescent-shaped liquid ripples with zero parallel stripes or grid lines
+        // Transverse modulation curves each crest in world space.
         float phaseLong  = dot(pos, d) * k - phaseSpeed + float(i) * 2.39996;
         float phaseTrans = dot(pos, perp) * (k * 0.65) - phaseSpeed * 0.70 + float(i) * 1.61803;
 
         float curve = sin(phaseTrans);
         float psi = phaseLong + 0.75 * curve;
 
-        // Gerstner / Trochoidal profile: sharp peaked crests and broad, glassy, calm troughs
+        // Cubic crests and broad troughs; geometry remains Minecraft fluid mesh.
         float s = sin(psi);
         float profile = (1.0 + s) * 0.5;
-        float peak = profile * profile;
+        float peak = profile * profile * profile;
 
         // Analytical 2D gradient of crescent wave
         vec2 gradPhase = d * k + perp * (k * (0.65 * 0.75) * cos(phaseTrans));
-        float a = amp[i] * ((i < 2) ? swellEnv : 1.0) * band;
-        vec2 octaveSlope = gradPhase * (cos(psi) * (1.0 + s) * (a * 0.5));
+        float a = amp[i] * ((i < 2) ? swellEnv : 1.0);
+        // The cubic crest contains three harmonics. Filtering only the base
+        // frequency leaves its sharper harmonics aliasing during camera motion.
+        vec2 pixelPhase=vec2(dot(gradPhase,dx),dot(gradPhase,dy));
+        float variance=dot(pixelPhase,pixelPhase)/12.0;
+        vec3 band=exp(-0.5*variance*vec3(1.0,4.0,9.0));
+        float derivative=0.46875*cos(psi)*band.x
+            +0.375*sin(2.0*psi)*band.y-0.09375*cos(3.0*psi)*band.z;
+        vec2 octaveSlope=gradPhase*(a*derivative);
+        if(i < 2) octaveSlope+=envelopeGradient*(amp[i]*peak*band.x);
 
         slope += octaveSlope;
-        if(i < 2) swellSlope += octaveSlope;
+        // Foam and crest light follow the physical wave, not camera pixel size.
         crest += peak * a;
     }
 
     #if !defined(NETHER) && !defined(END)
     if(rainStrength > 0.03) {
         vec2 ripPos = p * 2.6;
-        float rt = mod(frameTimeCounter * 4.2, 6283.1853);
+        float rt = frameTimeCounter * 3.15;
+        float rippleScale = 2.6;
         vec2 ripGrad = vec2(0.0);
         for(int r = 0; r < 2; r++) {
             vec2 cell = floor(ripPos);
             vec2 f = fract(ripPos) - 0.5;
             float h = hash12(cell + float(r) * 19.31);
-            float age = fract(rt * 0.75 + h);
+            float age = fract(rt + h);
             float dist = length(f);
             float ring = sin(clamp(dist - age * 0.40, -0.2, 0.2) * 31.4159);
-            float cellFade = smoothstep(0.48, 0.30, dist);
-            float fade = (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0 - smoothstep(age * 0.40, age * 0.40 + 0.08, dist)) * cellFade;
-            ripGrad += normalize(f + 1e-4) * ring * fade;
+            float cellFade = 1.0-smoothstep(0.30, 0.48, dist);
+            float fade = smoothstep(0.0, 0.08, age) * (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0 - smoothstep(age * 0.40, age * 0.40 + 0.08, dist)) * cellFade;
+            // The ring frequency is in cell space, so each smaller layer
+            // needs its own world-space pixel filter at grazing angles.
+            float rippleFootprint = max(length(dx), length(dy)) * rippleScale * 31.4159;
+            float rippleBand = 1.0 - smoothstep(0.7, 2.8, rippleFootprint);
+            ripGrad += normalize(f + 1e-4) * ring * fade * rippleBand;
             ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
+            rippleScale *= 1.48;
         }
         slope += ripGrad * (rainStrength * 0.22);
     }
     #endif
 
     return slope * (WATER_WAVES * storm);
+}
+
+vec3 waterSurfaceNormal(vec3 meshNormal,vec2 slope) {
+    // Fluid top normals can differ across the two triangles of one block.
+    // Use one wave plane for tops; preserve vertical waterfalls and side faces.
+    vec3 base=normalize(meshNormal);
+    if(abs(base.y)>0.65) return normalize(vec3(-slope.x,sign(base.y),-slope.y));
+    return base;
 }
 
 float waterFresnel(float nv, bool underwater) {

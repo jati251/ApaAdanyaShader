@@ -2,9 +2,13 @@
 
 Shaderpack untuk Minecraft Java 26.3, Iris 1.11.7 dan Sodium 0.9.2. Renderer memakai GLSL 330, material LabPBR, pencahayaan langsung, efek screen-space, air, atmosfer dan history temporal. Buffer tambahan memerlukan Iris 1.10.5 atau lebih baru.
 
+Target utama pemakaian: Windows dengan RTX 3080 Ti. Kualitas visual diprioritaskan; Mac M1 tetap harus bisa menjalankan shader, tanpa menjadikan performanya batas kualitas untuk PC tersebut.
+
 ## Pemakaian
 
 Pilih **ApaAdanyaShader** di Iris, lalu pilih profil pada Shader Pack Settings. Instance ini memakai tombol **R** untuk reload shader dan **I** untuk membuka pilihan shader. Memilih profil mengatur ulang seluruh opsi sesuai profil; sesuaikan opsi manual setelahnya. Pengaturan custom aktif ada di file `ApaAdanyaShader.txt` di sebelah folder shaderpack.
+
+Pengaturan air custom saat ini memakai 7 lapisan gelombang, kekuatan 0.85 dan SSR 48 langkah. Saat memindahkan shader ke Windows, salin juga file `ApaAdanyaShader.txt` untuk mempertahankan pengaturan tersebut. Gelombang memakai normal prosedural pada mesh fluida; tidak mengubah simulasi atau tinggi geometri air Minecraft. Pantulan air memakai tujuh arah sampel yang tetap di koordinat dunia, tanpa pemaksaan arah ke horizon. Normal puncak gelombang difilter per harmonik, dan air melewati TAA/motion blur yang tidak memiliki gerak pantulan; antialiasing FXAA tetap berlaku.
 
 Seluruh sepuluh profil tersedia dalam menu dan sebagai file lengkap di `presets/`. File ekspor berisi nilai yang sama persis dengan profil Iris; deskripsi menu tersedia dalam bahasa Indonesia dan Inggris. Untuk penggunaan biasa, pilih Realistis. Pilih varian FSR jika ingin membandingkan resolusi internal lebih rendah.
 

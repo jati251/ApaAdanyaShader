@@ -133,6 +133,7 @@ def source(path, values, dh):
 #define RGBA8 32856
 #define RGBA16F 34842
 #define R16F 33325
+#define IS_IRIS
 uniform mat4 aa_ModelView, aa_Projection, aa_TextureMatrix[8];
 uniform mat3 aa_NormalMatrix;
 '''
@@ -194,6 +195,10 @@ try:
     if '--images-only' in sys.argv:
         variants = []
     requested_programs={arg.split('=',1)[1] for arg in sys.argv if arg.startswith('--program=')}
+    if '--shadow-only' in sys.argv:
+        requested_programs = {'shadow'}
+    if '--water-only' in sys.argv:
+        requested_programs = {'gbuffers_water','dh_water','composite','composite3','composite6'}
     if requested_programs:
         assert requested_programs <= {p.stem for p in ROOT.glob('*.vsh')}, 'Unknown requested shader program'
     for name, values in variants:
@@ -224,6 +229,20 @@ try:
         print(f'PASS: {name}, with/without DH', flush=True)
     if total:
         print(f'PASS: {total} program variants compiled and linked', flush=True)
+    import shadow_checks
+    shadow_checks.run(globals())
+    if '--shadow-only' in sys.argv:
+        sys.exit(0)
+    if '--water-only' in sys.argv:
+        import weather_checks
+        weather_checks.run(globals())
+        import water_surface_checks
+        water_surface_checks.run(globals())
+        import water_vertex_checks
+        water_vertex_checks.run(globals())
+        import water_motion_checks
+        water_motion_checks.run(globals())
+        sys.exit(0)
     import render_checks
     render_checks.run(globals())
     import quality_checks
@@ -234,6 +253,8 @@ try:
     realism_checks.run(globals())
     import water_surface_checks
     water_surface_checks.run(globals())
+    import water_vertex_checks
+    water_vertex_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
     import photoreal_checks

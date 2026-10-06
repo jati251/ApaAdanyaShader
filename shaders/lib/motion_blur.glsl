@@ -63,8 +63,12 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // Keep held items 100% crisp without blurring or dragging trails
     // -------------------------------------------------------------
     float depth = depthScreen(depthtex0, uv);
+    float materialMask = textureScreen(colortex2, uv).a;
+    // Water's animated reflection/refraction does not share the mesh velocity.
+    // Camera-only blur drags the pattern during a jump, then snaps it back.
+    if(materialMask>0.20 && materialMask<0.30) return currentRGB;
     #ifndef MOTION_BLUR_HAND
-    if (depth < 0.56 && textureScreen(colortex2, uv).a > 0.5) {
+    if (depth < 0.56 && materialMask > 0.5) {
         return currentRGB;
     }
     #endif
@@ -134,8 +138,10 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
         }
 
         float tapDepth=depthScreen(depthtex0,sampleUV,depthSize);
+        float tapMask=textureScreen(colortex2,sampleUV).a;
+        if(tapMask>0.20 && tapMask<0.30) continue;
         #ifndef MOTION_BLUR_HAND
-        if(tapDepth<0.56 && textureScreen(colortex2,sampleUV).a>0.5) continue;
+        if(tapDepth<0.56 && tapMask>0.5) continue;
         #endif
         bool tapSky;
         vec3 tapPos=getViewPos(sampleUV,tapDepth,tapSky);

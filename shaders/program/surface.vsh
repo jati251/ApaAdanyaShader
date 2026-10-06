@@ -26,6 +26,14 @@ void main() {
     materialId=0.0;
     #if defined(TERRAIN) || defined(WATER) || defined(HAND) || defined(ENTITY)
     materialId=mc_Entity.x;
+    #if defined(WATER) && defined(IS_IRIS)
+    if(abs(materialId-1003.0)<0.5) {
+        // Iris/Sodium decodes terrain vertices with camera-relative region
+        // offsets. A separately captured bobbed inverse can move these points.
+        worldPos=gl_Vertex.xyz+cameraPosition;
+        viewNormal=normalize(mat3(gbufferModelView)*gl_Normal);
+    }
+    #endif
     #ifdef WAVING_FOLIAGE
     if(materialId>1000.5 && materialId<1002.5){
         vec3 offset=waveOffset(worldPos,materialId,step(texcoord.y,mc_midTexCoord.y));

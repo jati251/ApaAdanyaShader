@@ -11,6 +11,11 @@ void main() {
     viewNormal = normalize(gl_NormalMatrix * gl_Normal);
     viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
     worldPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz + cameraPosition;
+    #ifdef IS_IRIS
+    // Iris decodes DH vertices with the camera-relative modelOffset applied.
+    worldPos = gl_Vertex.xyz + cameraPosition;
+    viewNormal = normalize(mat3(gbufferModelView) * gl_Normal);
+    #endif
     gl_Position = ftransform();
     gl_Position=scaleSceneClip(gl_Position,vec2(1.0));
 }

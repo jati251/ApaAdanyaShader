@@ -29,14 +29,45 @@ def run(api):
         vec2 slope=waterSlope(texcoord*30.0,vec2(footprint,0.0),vec2(0.0,footprint),crest);
         color=vec4(slope,crest,1.0);'''
     near=render(body,'uniform float footprint;',{'footprint':.01})
-    # The longest swell is now ~74 blocks: an 80-block footprint is unresolved.
+    # The longest swell is ~35 blocks: an 80-block footprint is unresolved.
     distant=render(body,'uniform float footprint;',{'footprint':80.0})
-    mid=render(body,'uniform float footprint;',{'footprint':30.0})
+    mid=render(body,'uniform float footprint;',{'footprint':4.0})
     energy=lambda p:sum(p[i]**2+p[i+1]**2 for i in range(0,len(p),4))
     assert energy(distant)<energy(near)*.01, 'Unresolved waves must be suppressed'
     assert energy(distant)<energy(mid)<energy(near), 'Distant water lost its resolvable swell'
+    assert max(abs(a-b) for a,b in zip(near[2::4],distant[2::4]))<1e-5, 'Approaching water changed the physical crest field'
+    rainy_near=render(body,'uniform float footprint;',{'footprint':.001,'rainStrength':1.0})
+    dry_near=render(body,'uniform float footprint;',{'footprint':.001})
+    rainy_far=render(body,'uniform float footprint;',{'footprint':80.0,'rainStrength':1.0})
+    assert energy(rainy_near)>energy(dry_near), 'Resolved rain ripples disappeared'
+    assert energy(rainy_far)<energy(rainy_near)*.001, 'Subpixel rain ripples remain unfiltered during camera motion'
+    # Once both ring layers are unresolved, rain may scale the swell but must
+    # not leave a camera-sampled cellular pattern over it.
+    rainy_mid=render(body,'uniform float footprint;',{'footprint':.1,'rainStrength':1.0})
+    dry_mid=render(body,'uniform float footprint;',{'footprint':.1})
+    error=max(abs(rainy_mid[i]-dry_mid[i]*1.65) for i in range(len(dry_mid)) if i%4<2)
+    assert error<1e-5, f'Unresolved rain normal contamination: {error:.6f}'
+    rain_clock=6283.1853/4.2
+    rain_before=render(body,'uniform float footprint;',{'footprint':.001,'rainStrength':1.0,'frameTimeCounter':rain_clock-.0002})
+    rain_after=render(body,'uniform float footprint;',{'footprint':.001,'rainStrength':1.0,'frameTimeCounter':rain_clock+.0002})
+    assert max(abs(a-b) for a,b in zip(rain_before,rain_after))<.01, 'Rain ripple clock reset changes the normal field'
+    print('PASS: GPU rain ripple filtering at near/grazing camera footprints',flush=True)
     moved=render(body,'uniform float footprint;',{'footprint':.01,'frameTimeCounter':3.5})
     assert max(abs(a-b) for a,b in zip(moved,near))>.03, 'Water spectrum is not animated'
+    before=render(body,'uniform float footprint;',{'footprint':.01,'frameTimeCounter':6283.183})
+    after=render(body,'uniform float footprint;',{'footprint':.01,'frameTimeCounter':6283.187})
+    assert max(abs(a-b) for a,b in zip(before,after))<.015, 'Water wave clock has a phase discontinuity'
+    gradients=render('''vec2 p=texcoord*30.0; float h,hx0,hx1,hy0,hy1;
+        vec2 s=waterSlope(p,vec2(0.01,0),vec2(0,0.01),h);
+        waterSlope(p-vec2(0.002,0),vec2(0.01,0),vec2(0,0.01),hx0);
+        waterSlope(p+vec2(0.002,0),vec2(0.01,0),vec2(0,0.01),hx1);
+        waterSlope(p-vec2(0,0.002),vec2(0.01,0),vec2(0,0.01),hy0);
+        waterSlope(p+vec2(0,0.002),vec2(0.01,0),vec2(0,0.01),hy1);
+        vec2 numerical=vec2(hx1-hx0,hy1-hy0)/0.004*WATER_WAVES;
+        color=vec4(abs(s-numerical),length(s),1);''')
+    assert max(gradients[0::4]+gradients[1::4])<.002, 'Wave normals disagree with the crest height field'
+    assert max(gradients[2::4])>.12, 'Enhanced waves lost their stronger crest slopes'
+    print('PASS: GPU water continuous wave phase and analytic crest gradients',flush=True)
     # Density must be zero outside the slab used for ray intersection.
     density=render('''vec3 p=vec3(texcoord.x*2500.0,CLOUD_ALTITUDE-1.0,texcoord.y*2500.0);
         float below=sampleCloudDensity(p,true);

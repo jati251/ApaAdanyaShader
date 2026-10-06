@@ -19,14 +19,9 @@ void main(){
     vec4 p=gl_ModelViewMatrix*gl_Vertex;
     vec3 relWorld=(shadowModelViewInverse*p).xyz;
 
-    // Early Culling 2: Radial distance shadow culling.
-    // Discard geometry outside shadow sampling radius (+25% safety margin)
-    // to avoid rasterizing distant terrain chunks into the shadow map.
-    float maxDist=shadowDistance*1.25;
-    if(dot(relWorld.xz, relWorld.xz) > maxDist * maxDist) {
-        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-        return;
-    }
+    // Preserve triangle geometry across the shadow-distance boundary. Moving
+    // individual vertices to a clip point stretches partially culled triangles.
+    // Iris culls shadow casters; shadowVisibility handles receiver distance.
 
     #ifdef WAVING_FOLIAGE
     if(materialId > 1000.5 && materialId < 1002.5) {
