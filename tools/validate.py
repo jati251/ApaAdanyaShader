@@ -85,6 +85,11 @@ for name,constructor in re.findall(r'const\s+vec4\s+((?:colortex\d+|shadowcolor\
     for component in components:
         assert re.fullmatch(r'\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?[fF]?\s*',component), f'Iris {name} requires literal components: {constructor}'
 print('PASS: Iris clear-color directives use four explicit literal components',flush=True)
+cache_size=re.search(r'const\s+ivec2\s+size\s*=\s*ivec2\((\d+),\s*(\d+)\)', (ROOT/'lib/environment.glsl').read_text())
+if cache_size:
+    configured=re.search(r'^size\.buffer\.colortex7=(\d+)\s+(\d+)\s*$',PROPS,re.M)
+    assert configured and cache_size.groups()==configured.groups(), 'Static sky-cache size differs from Iris buffer allocation'
+    print('PASS: static sky-cache dimensions match Iris buffer allocation',flush=True)
 for key,(value,_) in options.items():
     if isinstance(value,bool):
         assert re.search(r'#ifn?def\s+'+key+r'\b',all_source), f'{key}: option not discoverable by Iris'
@@ -257,6 +262,10 @@ try:
     water_vertex_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
+    import dh_checks
+    dh_checks.run(globals())
+    if "--dh-benchmark" in sys.argv:
+        dh_checks.benchmark(globals())
     import photoreal_checks
     photoreal_checks.run(globals())
 finally:

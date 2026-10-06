@@ -15,8 +15,7 @@ float lensDepthFromValue(vec2 uv, float d) {
     #ifdef DISTANT_HORIZONS
     float dh=depthScreen(dhDepthTex0,uv);
     if(dh<0.999999) {
-        vec4 p=dhProjectionInverse*vec4(uv*2.0-1.0,dh*2.0-1.0,1.0);
-        return max(-p.z/p.w,0.05);
+        return max(-projectedViewDepth(dhProjectionInverse,uv,dh),0.05);
     }
     #endif
     return 10000.0;

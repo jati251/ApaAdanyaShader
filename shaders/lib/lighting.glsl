@@ -11,6 +11,7 @@ float cloudShadow(vec3 world){
     vec2 origin=floor(cameraPosition.xz/128.0)*128.0;
     vec2 uv=(ground-origin)/2048.0+0.5;
     float fade=smoothstep(0.44,0.50,max(abs(uv.x-0.5),abs(uv.y-0.5)));
+    if(fade>=1.0) return 1.0;
     float value=texture(colortex8,clamp(uv,vec2(0.002),vec2(0.998))).r;
     return mix(value,1.0,fade);
     #endif
@@ -44,6 +45,7 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
 
     float bias = max(0.00035 * (1.0 - clamp(ndl, 0.0, 1.0)), 0.00010);
     float fade = smoothstep(shadowDistance * 0.8, shadowDistance, length(relativeWorld.xz));
+    if(fade>=1.0) return 1.0;
 
     if(!filtered || SHADOW_SAMPLES <= 1) {
         return mix(step(sc.z - bias, texture(shadowtex0, sc.xy).r), 1.0, fade);
@@ -146,7 +148,7 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #endif
     ambient+=stormFlash()*(lm.y*lm.y*lm.y)*(0.35+0.65*max(nw.y,0.0));
     vec3 torch=vec3(1.8,0.72,0.23)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
-    #if !defined(HAND)
+    #if !defined(HAND) && !defined(AA_DH_TERRAIN)
     int maxHeldLight=max(heldBlockLightValue,heldBlockLightValue2);
     if(maxHeldLight>0){
         float heldStrength=float(maxHeldLight)/15.0;
@@ -171,7 +173,18 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     float leafTransmission=sat(dot(-N,L)*0.45+0.55)*(s2*s2*s);
     float subsurface=foliage*(leafTransmission*0.70+sat(dot(-N,L))*0.30)*0.65;
     vec3 specular=vec3(0.0);
+    #ifdef AA_DH_TERRAIN
+    float lodDistance2=dot(vp,vp);
+    float specularWeight=1.0-smoothstep(4096.0,16384.0,lodDistance2);
+    if(vis>0.001 && nl>0.0001 && specularWeight>0.0)
+        specular=specularBRDF(N,V,L,roughness,f0)*direct*specularWeight;
+    float diffuseFactor=1.0;
+    if(lodDistance2<16384.0)
+        diffuseFactor=mix(burleyDiffuse(N,V,L,roughness),1.0,smoothstep(9216.0,16384.0,lodDistance2));
+    #else
     if(vis>0.001 && nl>0.0001) specular=specularBRDF(N,V,L,roughness,f0)*direct;
+    float diffuseFactor=burleyDiffuse(N,V,L,roughness);
+    #endif
     vec3 diffuse=diffuseResponse(albedo,f0,metal);
     vec3 ambientTerm=diffuse*(ambient+torch+vec3(0.008)*CAVE_BRIGHTNESS)*materialAO;
     #ifndef SSR
@@ -179,7 +192,7 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #endif
     vec3 emitChroma=albedo/max(max(albedo.r,max(albedo.g,albedo.b)),0.001);
     vec3 saturatedEmit=mix(albedo,emitChroma*albedo,0.35);
-    vec3 result=ambientTerm+diffuse*(nl*burleyDiffuse(N,V,L,roughness)+subsurface)*direct*0.60+specular+saturatedEmit*emission*5.0;
+    vec3 result=ambientTerm+diffuse*(nl*diffuseFactor+subsurface)*direct*0.60+specular+saturatedEmit*emission*5.0;
     // Screen AO may attenuate ambient light only, never direct sun or emission.
     const vec3 luminance=vec3(0.2126,0.7152,0.0722);
     ambientFraction=sat(dot(ambientTerm,luminance)/max(dot(result,luminance),1e-5));

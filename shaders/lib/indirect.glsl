@@ -9,7 +9,7 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
             #endif
             #endif
             #ifdef SSAO
-            if(distToCam<48.0) {
+            if(distToCam<48.0 && mat.b<1.0) {
                 float occ=0.0;
                 ivec2 depthSize=screenTextureSize(depthtex0);
                 vec2 projScale=vec2(gbufferProjection[0][0],gbufferProjection[1][1])/max(-vp.z,1.0)*0.5;
@@ -36,7 +36,7 @@ vec4 sampleIndirect(vec2 uv, vec3 vp, vec3 N, vec4 mat, vec2 pixel) {
             }
             #endif
             #ifdef SSGI
-            if(distToCam<42.0) {
+            if(distToCam<42.0 && GI_STRENGTH>0.0) {
                 float distWeight=1.0-smoothstep(24.0,42.0,distToCam);
                 vec3 tangent=normalize(cross(N,abs(N.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0)));
                 vec3 bitangent=cross(N,tangent); vec3 bounce=vec3(0.0);

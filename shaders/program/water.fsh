@@ -82,8 +82,6 @@ vec3 waterReflectionSample(vec2 hit,float roughness) {
 void main(){
     // Evaluate derivatives before alpha/material branches and discarded lanes.
     vec2 waveDx=dFdx(worldPos.xz),waveDy=dFdy(worldPos.xz);
-    float waveCrest;
-    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,waveCrest);
     #if UPSCALE_QUALITY > 0
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
@@ -95,6 +93,8 @@ void main(){
         color=vec4(shadeSurface(albedo,normalize(viewNormal),viewPos,lmcoord,0.24,0.0,0.0,vec3(0.04)),tex.a); return;
     }
     vec2 screenUV=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
+    float waveCrest;
+    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,waveCrest);
     bool underwater=isEyeInWater==1;
     vec3 N=waterNormal(slope),V=normalize(-viewPos);
     vec3 meshN=normalize(mat3(gbufferModelView)*waterSurfaceNormal(worldDirection(normalize(viewNormal)),vec2(0.0)));
@@ -175,42 +175,43 @@ void main(){
     #ifdef WATER_CAUSTICS
     // Focused organic cellular caustics on submerged surfaces
     vec2 cPos = ((gbufferModelViewInverse*vec4(behind,1.0)).xyz+cameraPosition).xz;
-    float causticWave = waterCaustic(cPos, mod(frameTimeCounter, 6283.1853) * (0.65 * WIND_SPEED));
     float causticFootprint=max(length(dFdx(cPos)),length(dFdy(cPos)))*3.6;
     float causticFilter=1.0-smoothstep(0.7,2.8,causticFootprint);
-    vec3 caustColor = vec3(0.080, 0.095, 0.045) * causticWave * causticFilter * exp(-thickness * 0.45) * day * lmcoord.y;
-    if(validBehind && !underwater) transmitted += caustColor * transmittance;
+    if(validBehind && !underwater && causticFilter>0.0 && day>0.0 && lmcoord.y>0.0) {
+        float causticWave=waterCaustic(cPos,mod(frameTimeCounter,6283.1853)*(0.65*WIND_SPEED));
+        vec3 caustColor=vec3(0.080,0.095,0.045)*causticWave*causticFilter*exp(-thickness*0.45)*day*lmcoord.y;
+        transmitted+=caustColor*transmittance;
+    }
     #endif
 
     // Underside light must be spatially continuous, not a fluid-quad lightmap grid.
     float skyExposure=underwater?smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y)):lmcoord.y;
     vec3 worldRay=worldDirection(R);
-    vec3 reflected=waterEnvironmentReflection(worldRay,reflectionSpread)*skyExposure*skyExposure;
+    float fresnel=waterFresnel(dot(N,V),underwater)*waterFacetVisibility(dot(N,V),roughness,underwater);
+    vec3 reflected=vec3(0.0);
+    // One primary screen ray with a filtered environment cone on misses.
+    if(fresnel>0.0) {
     #ifdef SSR
-    vec3 reflectionSum=vec3(0);
-    // Integrate a fixed ray cone. A missed trace retains its environment tap,
-    // instead of replacing the entire reflection with a new hit in one frame.
-    for(int tap=0;tap<7;tap++) {
-        vec3 worldSample=waterReflectionRay(worldRay,reflectionSpread,tap);
-        vec3 ray=normalize(mat3(gbufferModelView)*worldSample);
-        vec3 radiance=environmentRadiance(worldSample)*skyExposure*skyExposure;
+        vec3 envRadiance=waterEnvironmentReflection(worldRay,reflectionSpread)*skyExposure*skyExposure;
+        vec3 ray=normalize(mat3(gbufferModelView)*worldRay);
+        reflected=envRadiance;
         float visibleRay=underwater?1.0:smoothstep(0.0,0.08,dot(ray,meshN));
         vec2 hit;
         float confidence;
-        if(visibleRay>0.001 && traceScreen(depthtex1,viewPos+meshN*0.04,ray,0.22,SSR_STEPS,hit,confidence)
-            && waterReflectionAboveSurface(hit,underwater)) {
+        if(visibleRay>0.001 && traceScreen(depthtex1,viewPos+meshN*0.04,ray,0.22,SSR_STEPS,hit,confidence)) {
             bool hitValid;
             vec3 hitPosition=opaquePosition(hit,hitValid);
-            float surfaceFade=underwater?1.0:smoothstep(-0.02,0.25,worldUpDelta(hitPosition-viewPos));
-            float coverage=edgeFade(hit)*confidence*surfaceFade*visibleRay;
-            radiance=mix(radiance,waterReflectionSample(hit,roughness),coverage);
+            float surfaceHeight=worldUpDelta(hitPosition-viewPos);
+            float surfaceFade=underwater?1.0:smoothstep(-0.02,0.25,surfaceHeight);
+            if(underwater || (hitValid && surfaceHeight>=-0.02)) {
+                float coverage=edgeFade(hit)*confidence*surfaceFade*visibleRay;
+                if(coverage>0.0) reflected=mix(envRadiance,waterReflectionSample(hit,roughness),coverage);
+            }
         }
-        reflectionSum+=radiance*waterReflectionTapWeight(tap);
-    }
-    reflected=reflectionSum;
+    #else
+    if(skyExposure>0.0) reflected=waterEnvironmentReflection(worldRay,reflectionSpread)*skyExposure*skyExposure;
     #endif
-
-    float fresnel=waterFresnel(dot(N,V),underwater)*waterFacetVisibility(dot(N,V),roughness,underwater);
+    }
 
     // Ocean Sun & Moon Glitter: physically based specular with anisotropic diamond glints
     vec3 glint = vec3(0.0);

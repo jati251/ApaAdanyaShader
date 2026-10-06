@@ -1,4 +1,5 @@
 #include "/lib/common.glsl"
+#define AA_DH_TERRAIN
 #include "/lib/lighting.glsl"
 
 uniform sampler2D depthtex0;
@@ -19,7 +20,7 @@ void main(){
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
     // Prevent DH LOD terrain from ever overlapping or clipping with near vanilla terrain
-    if (length(viewPos) < 24.0) discard;
+    if (dot(viewPos,viewPos) < 576.0) discard;
 
     // DH terrain runs before vanilla terrain. Its depth is not available here;
     // normal terrain covers this layer later in the frame.
@@ -44,9 +45,9 @@ void main(){
     float blockLight = clamp(lmcoord.x, 0.0, 1.0);
     vec2 lm = vec2(blockLight, skyLight);
 
-    // Call standard surface shading for 100% mathematical parity with vanilla chunks
+    // Shared ambient/shadows with a smoothly simplified distant diffuse/specular lobe.
     float ambientFraction;
-    vec3 shaded = shadeMaterial(albedo, N, viewPos, lm, filteredRoughness(N,roughness), 0.0, 0.0, vec3(0.04),0.0,1.0,ambientFraction);
+    vec3 shaded = shadeMaterial(albedo, N, viewPos, lm, roughness, 0.0, 0.0, vec3(0.04),0.0,1.0,ambientFraction);
 
     color = vec4(shaded, 1.0);
     responseData=vec4(diffuseResponse(albedo,vec3(0.04),0.0),ambientFraction);

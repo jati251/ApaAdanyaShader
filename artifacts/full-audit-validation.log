@@ -60,7 +60,3 @@ PASS: GPU solar PCSS lit/shadowed bounds and increasing blocker-distance penumbr
 PASS: GPU exposure limits, measured luminance, gradual/frame-rate-independent adaptation and reset
 PASS: GPU signal-specific GI/AO reprojection, static reuse, depth/normal rejection and camera reset
 PASS: GPU sRGB reference/roundtrip, neutral noon/warm sunset, near-clear/distance fog, disk-free fog and neutral middle gray
-PASS: 34 before/after GPU renders; maximum absolute delta 0.12099951
-INFO: mean absolute channel delta 0.00001943
-INFO: visual differences reported without an equivalence assertion (approved quality tradeoff)
-PASS: GPU resolved contact shadows unchanged; subpixel rays culled; 4K restores resolved detail

@@ -1,0 +1,38 @@
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: GPU rain ripple filtering at near/grazing camera footprints
+PASS: GPU water continuous wave phase and analytic crest gradients
+PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection
+PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU real water underside remains continuous across fluid lightmap tiles
+PASS: GPU shoreline reflections reject submerged geometry above water
+PASS: GPU rough water reflections filter high-contrast sky/foliage edges
+PASS: GPU water top normals match across fluid triangles; waterfall normals preserved
+PASS: GPU actual water normals stay anchored during a camera jump at fixed wave time
+PASS: GPU actual grazing water optics retain curved rays and mask hidden facets
+PASS: GPU jumping preserves water pixels while opaque camera motion blur remains active
+PASS: GPU water optics ignore incompatible TAA history while opaque history stays active
+PASS: GPU gbuffers_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU dh_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU perspective water remains continuous over small camera steps at shoreline/jump heights, dry/rainy
+PASS: GPU water ray-cone SSR misses match filtered environment fallback
+PASS: GPU rain ripple filtering at near/grazing camera footprints
+PASS: GPU water continuous wave phase and analytic crest gradients
+PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection
+PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU real water underside remains continuous across fluid lightmap tiles
+PASS: GPU shoreline reflections reject submerged geometry above water
+PASS: GPU rough water reflections filter high-contrast sky/foliage edges
+PASS: GPU water top normals match across fluid triangles; waterfall normals preserved
+PASS: GPU actual water normals stay anchored during a camera jump at fixed wave time
+PASS: GPU actual grazing water optics retain curved rays and mask hidden facets
+PASS: GPU jumping preserves water pixels while opaque camera motion blur remains active
+PASS: GPU water optics ignore incompatible TAA history while opaque history stays active
+PASS: GPU gbuffers_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU dh_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU perspective water remains continuous over small camera steps at shoreline/jump heights, dry/rainy
+PASS: GPU water ray-cone SSR misses match filtered environment fallback
+PASS: 56 before/after GPU renders; maximum absolute delta 0.00014979
+PASS: GPU resolved contact shadows unchanged; subpixel rays culled; 4K restores resolved detail

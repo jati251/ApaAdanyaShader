@@ -89,7 +89,7 @@ void main(){
             // Pixel-perfect contact occlusion for small geometry, grass, and crevices
             vec3 lightDirV=normalize(shadowLightPosition);
             float ndl=dot(N,lightDirV);
-            if(ndl>0.01 && response.a<0.88) {
+            if(ndl>0.01 && response.a<0.88 && vp.z>-36.0) {
                 ivec2 depthSize=screenTextureSize(depthtex0);
                 float rtShadow=traceScreenShadow(depthtex0,depthSize,vp+N*0.05,lightDirV,2.5,10);
                 if(rtShadow>0.001) {
@@ -142,4 +142,3 @@ void main(){
     #endif
     color=vec4(max(scene,vec3(0.0)),1.0); opaqueCopy=color;
 }
-

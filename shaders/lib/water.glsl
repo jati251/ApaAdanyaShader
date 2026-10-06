@@ -57,14 +57,19 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
         // frequency leaves its sharper harmonics aliasing during camera motion.
         vec2 pixelPhase=vec2(dot(gradPhase,dx),dot(gradPhase,dy));
         float variance=dot(pixelPhase,pixelPhase)/12.0;
-        vec3 band=exp(-0.5*variance*vec3(1.0,4.0,9.0));
-        float derivative=0.46875*cos(psi)*band.x
-            +0.375*sin(2.0*psi)*band.y-0.09375*cos(3.0*psi)*band.z;
+        float e=exp(-0.5*variance);
+        // Audit quality tradeoff: stop unresolved upper bands, including crests.
+        if(i>=2 && e<0.002) break;
+        float e2=e*e,e4=e2*e2;
+        vec3 band=vec3(e,e4,e4*e4*e);
+        float c=cos(psi);
+        float derivative=0.46875*c*band.x
+            +0.375*(2.0*s*c)*band.y-0.09375*(c*(4.0*c*c-3.0))*band.z;
         vec2 octaveSlope=gradPhase*(a*derivative);
         if(i < 2) octaveSlope+=envelopeGradient*(amp[i]*peak*band.x);
 
         slope += octaveSlope;
-        // Foam and crest light follow the physical wave, not camera pixel size.
+        // Crests follow the retained physical bands; upper bands may be culled.
         crest += peak * a;
     }
 
@@ -74,7 +79,11 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
         float rt = frameTimeCounter * 3.15;
         float rippleScale = 2.6;
         vec2 ripGrad = vec2(0.0);
+        float pixelFootprint=max(length(dx),length(dy));
         for(int r = 0; r < 2; r++) {
+            // Smaller layers only increase the footprint; every remaining band is zero.
+            float rippleBand=1.0-smoothstep(0.7,2.8,pixelFootprint*rippleScale*31.4159);
+            if(rippleBand<=0.0) break;
             vec2 cell = floor(ripPos);
             vec2 f = fract(ripPos) - 0.5;
             float h = hash12(cell + float(r) * 19.31);
@@ -85,8 +94,6 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
             float fade = smoothstep(0.0, 0.08, age) * (1.0 - age) * smoothstep(0.0, 0.06, dist) * (1.0 - smoothstep(age * 0.40, age * 0.40 + 0.08, dist)) * cellFade;
             // The ring frequency is in cell space, so each smaller layer
             // needs its own world-space pixel filter at grazing angles.
-            float rippleFootprint = max(length(dx), length(dy)) * rippleScale * 31.4159;
-            float rippleBand = 1.0 - smoothstep(0.7, 2.8, rippleFootprint);
             ripGrad += normalize(f + 1e-4) * ring * fade * rippleBand;
             ripPos = ripPos * 1.48 + vec2(7.13, 11.41);
             rippleScale *= 1.48;

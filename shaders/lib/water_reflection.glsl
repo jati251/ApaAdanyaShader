@@ -26,6 +26,19 @@ vec3 waterEnvironmentReflection(vec3 ray,float spread) {
     return result;
 }
 
+// Four fixed world-space tetrahedral taps preserve zero mean and the seven-tap
+// cone's second moment. No camera-dependent tangent-axis switch or sharp one-tap mirror.
+vec3 waterLODEnvironmentReflection(vec3 ray,float spread) {
+    const vec3 offsets[4]=vec3[4](vec3(1,1,1),vec3(1,-1,-1),vec3(-1,1,-1),vec3(-1,-1,1));
+    vec3 result=vec3(0);
+    for(int tap=0;tap<4;tap++) {
+        vec3 offset=offsets[tap]*0.4472136;
+        offset-=ray*dot(ray,offset);
+        result+=environmentRadiance(normalize(ray+offset*spread));
+    }
+    return result*0.25;
+}
+
 float waterFacetVisibility(float normalView,float roughness,bool underwater) {
     if(underwater) return 1.0;
     // A wave facet turned away from the eye must not become a second mirror

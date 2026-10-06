@@ -13,14 +13,14 @@ def run(api):
     f.texture([1,1,1,1]*pixels,1)
     f.texture([1,0,0,1]*pixels,2)
     sky=[]
-    for y in range(128):
-        elevation=(y+.5)/128*math.pi-math.pi/2
-        for x in range(256):
-            azimuth=(x+.5)/256*math.tau-math.pi
+    for y in range(64):
+        elevation=(y+.5)/64*math.pi-math.pi/2
+        for x in range(128):
+            azimuth=(x+.5)/128*math.tau-math.pi
             cloud=max(0,math.sin(azimuth*3+.4)*math.cos(elevation*12)-.05)*.55
             haze=math.exp(-abs(elevation)*4)
             sky.extend((.15+.22*haze+cloud,.25+.22*haze+cloud,.4+.16*haze+cloud,1))
-    f.texture(sky,3,256,128)
+    f.texture(sky,3,128,64)
     target=f.texture(None,4); material=f.texture(None,5)
     code=api['source'](api['ROOT']/'gbuffers_water.fsh',values,False)
     code=code.replace('in vec2 texcoord,lmcoord;','in vec2 texcoord;\n#define lmcoord vec2(0,1)')
@@ -83,7 +83,7 @@ vec3 testPlane(vec2 uv) {
         error=max(abs(a-b) for a,b in zip(traced,fallback))
         assert error<.0002, f'Rotating camera changed SSR-miss lobe orientation: {error:.6f}'
     print('PASS: GPU perspective water remains continuous over small camera steps at shoreline/jump heights, dry/rainy',flush=True)
-    print('PASS: GPU water ray-cone SSR misses match filtered environment fallback',flush=True)
+    print('PASS: GPU primary-ray SSR misses match filtered environment fallback',flush=True)
     if '--write-previews' in api['sys'].argv:
         from PIL import Image
         out=api['ROOT'].parent/'artifacts'

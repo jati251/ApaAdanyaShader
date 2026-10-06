@@ -106,6 +106,8 @@ void main(){
             for(int m = 0; m < 3; m++) {
                 float mt = (float(m) + moteJitter) / 3.0;
                 float dSample = 1.0 + mt * (moteDist - 1.0);
+                // Both visibility fades are exactly zero outside this interval.
+                if(dSample<=1.0 || dSample>=14.0) continue;
                 vec3 pWorld = cameraPosition + rd * dSample;
                 vec3 drift = vec3(frameTimeCounter * 0.06, sin(frameTimeCounter * 0.08 + pWorld.x) * 0.05, frameTimeCounter * 0.04);
                 vec3 cell = floor((pWorld + drift) * 1.8);
@@ -126,5 +128,4 @@ void main(){
     }
     color=vec4(max(c,vec3(0.0)),1.0);
 }
-
 

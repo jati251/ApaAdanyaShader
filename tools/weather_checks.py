@@ -13,8 +13,9 @@ def run(api):
     target=f.texture(None,0)
     uniforms={'gbufferModelViewInverse':identity,'sunPosition':[0.4,0.7,0.3],
               'cameraPosition':[0.,80.,0.],'frameTimeCounter':3.0,'rainStrength':0.0}
-    def render(body,extra='',inputs=None):
-        fragment=prefix+water+'\nin vec2 texcoord;\nlayout(location=0) out vec4 color;\n'+extra+'\nvoid main(){'+body+'}\n'
+    def render(body,extra='',inputs=None,octaves=None):
+        bands='' if octaves is None else f'\n#undef WATER_OCTAVES\n#define WATER_OCTAVES {octaves}\n'
+        fragment=prefix+bands+water+'\nin vec2 texcoord;\nlayout(location=0) out vec4 color;\n'+extra+'\nvoid main(){'+body+'}\n'
         program=f.program('prepare.fsh',values,fragment=fragment)
         return f.render(program,[target],dict(uniforms,**(inputs or {})))
     pixels=render('''float nv=texcoord.x;
@@ -35,7 +36,11 @@ def run(api):
     energy=lambda p:sum(p[i]**2+p[i+1]**2 for i in range(0,len(p),4))
     assert energy(distant)<energy(near)*.01, 'Unresolved waves must be suppressed'
     assert energy(distant)<energy(mid)<energy(near), 'Distant water lost its resolvable swell'
-    assert max(abs(a-b) for a,b in zip(near[2::4],distant[2::4]))<1e-5, 'Approaching water changed the physical crest field'
+    # The approved audit truncates unresolved upper octaves, including crests.
+    # Far water must retain both swell crests; loss is bounded by upper amplitudes.
+    swell=render(body,'uniform float footprint;',{'footprint':80.0},octaves=2)
+    assert max(abs(a-b) for a,b in zip(swell[2::4],distant[2::4]))<1e-5, 'Octave culling removed the base swell crests'
+    assert all(-1e-5<=a-b<=0.1722+1e-5 for a,b in zip(near[2::4],distant[2::4])), 'Culled crest contribution exceeded upper-band amplitude'
     rainy_near=render(body,'uniform float footprint;',{'footprint':.001,'rainStrength':1.0})
     dry_near=render(body,'uniform float footprint;',{'footprint':.001})
     rainy_far=render(body,'uniform float footprint;',{'footprint':80.0,'rainStrength':1.0})

@@ -12,7 +12,7 @@ def run(api):
     f.texture([0.2,0.4,0.6,1]*pixels,0)
     f.texture([1,1,1,1]*pixels,1)
     f.texture([1,0,0,1]*pixels,2)
-    f.texture([0.3,0.4,0.6,1]*pixels,3)
+    f.texture([0.3,0.4,0.6,1]*(128*64),3,128,64)
     target=f.texture(None,4); material=f.texture(None,5)
     outputs={}
     for checker in (False,True):
@@ -114,7 +114,7 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
     optics=optics.replace('if(!underwater) transmitted += waveSSS;','')
     f.texture([0,0,0,1]*pixels,0)
     f.texture([1,0,0,1]*pixels,2)
-    f.texture([1,1,1,1]*pixels,3)
+    f.texture([1,1,1,1]*(128*64),3,128,64)
     diagnostic=optics.replace('color = vec4(max(result, vec3(0.0)), 1.0);',
         'color = vec4(abs(R-reflect(-V,N)),1);')
     p=f.program('composite6.fsh',values,fragment=diagnostic)

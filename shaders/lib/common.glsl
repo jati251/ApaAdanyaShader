@@ -74,12 +74,14 @@ float noise3D(vec3 p) {
 }
 float ignDither(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 vec3 viewPosition(vec2 uv,float d) { vec4 p=gbufferProjectionInverse*vec4(uv*2.0-1.0,d*2.0-1.0,1.0); return p.xyz/p.w; }
-float viewDepth(vec2 uv,float d) {
+// Only reconstruct z/w; retain x/y terms for asymmetric or oblique projections.
+float projectedViewDepth(mat4 inverseProjection,vec2 uv,float d) {
     vec4 clip=vec4(uv*2.0-1.0,d*2.0-1.0,1.0);
-    // Only z/w are needed by ray intersection tests.
-    return dot(vec4(gbufferProjectionInverse[0][2],gbufferProjectionInverse[1][2],gbufferProjectionInverse[2][2],gbufferProjectionInverse[3][2]),clip)
-         / dot(vec4(gbufferProjectionInverse[0][3],gbufferProjectionInverse[1][3],gbufferProjectionInverse[2][3],gbufferProjectionInverse[3][3]),clip);
+    return dot(vec4(inverseProjection[0][2],inverseProjection[1][2],inverseProjection[2][2],inverseProjection[3][2]),clip)
+         / dot(vec4(inverseProjection[0][3],inverseProjection[1][3],inverseProjection[2][3],inverseProjection[3][3]),clip);
 }
+float viewDepth(vec2 uv,float d) { return projectedViewDepth(gbufferProjectionInverse,uv,d); }
+
 vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v); }
 vec3 sunDirection() { return worldDirection(sunPosition); }
 float daylight() { return smoothstep(-0.10,0.18,sunDirection().y); }
