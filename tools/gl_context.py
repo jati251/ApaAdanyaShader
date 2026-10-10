@@ -26,7 +26,8 @@ class GLContext:
             if not glfw.init():
                 raise SystemExit('GLFW could not initialize the display/OpenGL driver.')
             glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-            glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
+            advanced='--advanced' in sys.argv
+            glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4 if advanced else 3)
             glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
             glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
             self.window = glfw.create_window(32, 32, 'Shader validation', None, None)

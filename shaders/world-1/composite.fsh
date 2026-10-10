@@ -1,4 +1,3 @@
 #version 330 compatibility
 #define NETHER
-
-#include "/program/composite.fsh"
+#include "/program/volumetric_half.fsh"

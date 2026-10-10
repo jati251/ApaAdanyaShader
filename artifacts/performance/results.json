@@ -1,0 +1,177 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2",
+  "reference": "C:\\Users\\jatis\\AppData\\Roaming\\.minecraft\\instances\\experiment\\.codex-backups\\performance-20261008\\shaders",
+  "method": "GL_TIME_ELAPSED; 16 warmups, 9 alternating batches, median; prebound uniforms/FBO/images; synthetic workloads, not Minecraft FPS",
+  "results": [
+    {
+      "check": "terrain_stone",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_leaves",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_fractional_subsurface",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_metal",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "workload": "ordinary terrain, 1280x720 / voxel profile",
+      "before_ms": 0.108544,
+      "after_ms": 0.107264,
+      "reduction_percent": 1.1792452830188704,
+      "before_range_ms": [
+        0.107008,
+        0.109056
+      ],
+      "after_range_ms": [
+        0.10496,
+        0.108288
+      ]
+    },
+    {
+      "workload": "lava surface / 1280x720",
+      "before_ms": 0.124672,
+      "after_ms": 0.055296,
+      "reduction_percent": 55.64681724845997,
+      "before_range_ms": [
+        0.123904,
+        0.125184
+      ],
+      "after_range_ms": [
+        0.054784,
+        0.05632
+      ]
+    },
+    {
+      "check": "cloud_day",
+      "mean_opacity_before": 0.4852940732039735,
+      "mean_opacity_after": 0.4872291190181805,
+      "hdr_rgb_mae": 0.025461490951770915
+    },
+    {
+      "check": "cloud_rain",
+      "mean_opacity_before": 0.5636819279294139,
+      "mean_opacity_after": 0.5574664749726629,
+      "hdr_rgb_mae": 0.00904941009525744
+    },
+    {
+      "check": "cloud_sunset",
+      "mean_opacity_before": 0.4852940732039735,
+      "mean_opacity_after": 0.4872291190181805,
+      "hdr_rgb_mae": 0.006147784061358475
+    },
+    {
+      "check": "cloud_night",
+      "mean_opacity_before": 0.4852940732039735,
+      "mean_opacity_after": 0.4872291190181805,
+      "hdr_rgb_mae": 3.851842789231219e-05
+    },
+    {
+      "workload": "cloud layer, 640x360 / 20 steps",
+      "before_ms": 0.224512,
+      "after_ms": 0.155136,
+      "reduction_percent": 30.90079817559863,
+      "before_range_ms": [
+        0.22016,
+        0.227584
+      ],
+      "after_range_ms": [
+        0.152832,
+        0.15872
+      ]
+    },
+    {
+      "workload": "voxel cache / terrain",
+      "before_ms": 0.01952,
+      "after_ms": 0.006848,
+      "reduction_percent": 64.91803278688523,
+      "before_range_ms": [
+        0.019376,
+        0.027408
+      ],
+      "after_range_ms": [
+        0.006832,
+        0.007056
+      ]
+    },
+    {
+      "workload": "voxel cache / cave",
+      "before_ms": 0.012624,
+      "after_ms": 0.006944,
+      "reduction_percent": 44.9936628643853,
+      "before_range_ms": [
+        0.012592,
+        0.012816
+      ],
+      "after_range_ms": [
+        0.006928,
+        0.01224
+      ]
+    },
+    {
+      "workload": "voxel cache / dense",
+      "before_ms": 0.01704,
+      "after_ms": 0.009104,
+      "reduction_percent": 46.572769953051655,
+      "before_range_ms": [
+        0.016864,
+        0.024736
+      ],
+      "after_range_ms": [
+        0.008864,
+        0.03168
+      ]
+    },
+    {
+      "workload": "voxel cache / empty",
+      "before_ms": 0.007408,
+      "after_ms": 0.006048,
+      "reduction_percent": 18.358531317494588,
+      "before_range_ms": [
+        0.007392,
+        0.007824
+      ],
+      "after_range_ms": [
+        0.006016,
+        0.00616
+      ]
+    },
+    {
+      "workload": "voxel DDA / divergent rays, 512x288",
+      "before_ms": 0.077248,
+      "after_ms": 0.063296,
+      "reduction_percent": 18.061309030654506,
+      "before_range_ms": [
+        0.076736,
+        0.118784
+      ],
+      "after_range_ms": [
+        0.06304,
+        0.063616
+      ]
+    },
+    {
+      "workload": "Hi-Z pyramid / four passes to one, 1280x720",
+      "before_ms": 0.057568,
+      "after_ms": 0.045472,
+      "reduction_percent": 21.011673151750976,
+      "before_range_ms": [
+        0.057312,
+        0.113088
+      ],
+      "after_range_ms": [
+        0.045216,
+        0.920288
+      ]
+    }
+  ]
+}

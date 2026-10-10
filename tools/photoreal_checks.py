@@ -63,7 +63,7 @@ void main(){float v=shadowVisibility(vec3((texcoord.x-0.5)*0.10,0,0),vec3(0,0,1)
 def check_exposure(api):
     f=Fixture(api,1,1)
     values=api['resolve']('REALISM')
-    p=f.program('deferred4.fsh',values)
+    p=f.program('deferred6.fsh',values)
     target=f.texture(None,0)
     u=dict(colortex0=1,colortex16=2,frameCounter=0,frameTime=1/60,
            cameraPosition=(0.,0.,0.),previousCameraPosition=(0.,0.,0.))
@@ -89,11 +89,11 @@ def check_exposure(api):
 def check_temporal_indirect(api):
     f=Fixture(api,16,16)
     values=api['resolve']('REALISM')
-    prefix=api['source'](api['ROOT']/'deferred2.fsh',values,False).split('in vec2 texcoord;')[0]
+    prefix=api['source'](api['ROOT']/'deferred3.fsh',values,False).split('in vec2 texcoord;')[0]
     frag=prefix+'''in vec2 texcoord;layout(location=0) out vec4 color;
 void main(){color=stabilizeIndirect(texcoord,viewPosition(texcoord,0.97509751),vec3(0,0,1),vec4(0),vec4(2,2,2,0.7));}
 '''
-    p=f.program('deferred2.fsh',values,fragment=frag)
+    p=f.program('deferred3.fsh',values,fragment=frag)
     target=f.texture(None,0)
     identity=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
     n,z=0.1,1024.
@@ -159,10 +159,10 @@ def benchmark_matte_reflections(api):
     root=api['ROOT']
     try:
         api['ROOT']=backup
-        old=f.program('deferred3.fsh',values)
+        old=f.program('deferred5.fsh',values)
     finally:
         api['ROOT']=root
-    new=f.program('deferred3.fsh',values)
+    new=f.program('deferred5.fsh',values)
     identity=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]
     n,z=0.1,1024.
     a,b=-(z+n)/(z-n),-2*z*n/(z-n)

@@ -1,4 +1,10 @@
 #version 330 compatibility
 #define NETHER
-/* RENDERTARGETS: 0 */
-#include "/program/post.fsh"
+
+/* RENDERTARGETS: 0,13 */
+/*
+const int colortex13Format = RGBA16F;
+const bool colortex13Clear = false;
+*/
+
+#include "/program/composite3.fsh"

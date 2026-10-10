@@ -1,9 +1,3 @@
 #version 330 compatibility
 
-/* RENDERTARGETS: 0,13 */
-/*
-const int colortex13Format = RGBA16F;
-const bool colortex13Clear = false;
-*/
-
-#include "/program/composite3.fsh"
+#include "/program/dof_half.fsh"

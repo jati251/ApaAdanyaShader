@@ -1,0 +1,242 @@
+Compiled from "QuadParticleRenderState.java"
+public class net.minecraft.client.renderer.state.level.QuadParticleRenderState implements net.minecraft.client.renderer.state.level.ParticleGroupRenderState {
+  private static final int INITIAL_PARTICLE_CAPACITY;
+
+  private static final int FLOATS_PER_PARTICLE;
+
+  private static final int INTS_PER_PARTICLE;
+
+  private final java.util.Map<net.minecraft.client.particle.SingleQuadParticle$Layer, net.minecraft.client.renderer.state.level.QuadParticleRenderState$Storage> particles;
+
+  private int particleCount;
+
+  public net.minecraft.client.renderer.state.level.QuadParticleRenderState();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: new           #7                  // class java/util/HashMap
+         8: dup
+         9: invokespecial #9                  // Method java/util/HashMap."<init>":()V
+        12: putfield      #10                 // Field particles:Ljava/util/Map;
+        15: return
+
+  public void add(net.minecraft.client.particle.SingleQuadParticle$Layer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+    Code:
+         0: aload_0
+         1: getfield      #10                 // Field particles:Ljava/util/Map;
+         4: aload_1
+         5: invokedynamic #16,  0             // InvokeDynamic #0:apply:()Ljava/util/function/Function;
+        10: invokeinterface #20,  3           // InterfaceMethod java/util/Map.computeIfAbsent:(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+        15: checkcast     #26                 // class net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage
+        18: fload_2
+        19: fload_3
+        20: fload         4
+        22: fload         5
+        24: fload         6
+        26: fload         7
+        28: fload         8
+        30: fload         9
+        32: fload         10
+        34: fload         11
+        36: fload         12
+        38: fload         13
+        40: iload         14
+        42: iload         15
+        44: invokevirtual #28                 // Method net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage.add:(FFFFFFFFFFFFII)V
+        47: aload_0
+        48: dup
+        49: getfield      #32                 // Field particleCount:I
+        52: iconst_1
+        53: iadd
+        54: putfield      #32                 // Field particleCount:I
+        57: return
+
+  public void clear();
+    Code:
+         0: aload_0
+         1: getfield      #10                 // Field particles:Ljava/util/Map;
+         4: invokeinterface #36,  1           // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+         9: invokedynamic #40,  0             // InvokeDynamic #1:accept:()Ljava/util/function/Consumer;
+        14: invokeinterface #44,  2           // InterfaceMethod java/util/Collection.forEach:(Ljava/util/function/Consumer;)V
+        19: aload_0
+        20: iconst_0
+        21: putfield      #32                 // Field particleCount:I
+        24: return
+
+  public boolean isEmpty();
+    Code:
+         0: aload_0
+         1: getfield      #32                 // Field particleCount:I
+         4: ifne          11
+         7: iconst_1
+         8: goto          12
+        11: iconst_0
+        12: ireturn
+
+  public void buildLayer(net.minecraft.client.particle.SingleQuadParticle$Layer, com.mojang.blaze3d.vertex.VertexConsumer);
+    Code:
+         0: aload_0
+         1: getfield      #10                 // Field particles:Ljava/util/Map;
+         4: aload_1
+         5: invokeinterface #50,  2           // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+        10: checkcast     #26                 // class net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage
+        13: astore_3
+        14: aload_3
+        15: ifnonnull     19
+        18: return
+        19: aload_3
+        20: aload_0
+        21: aload_2
+        22: invokedynamic #54,  0             // InvokeDynamic #2:consume:(Lnet/minecraft/client/renderer/state/level/QuadParticleRenderState;Lcom/mojang/blaze3d/vertex/VertexConsumer;)Lnet/minecraft/client/renderer/state/level/QuadParticleRenderState$ParticleConsumer;
+        27: invokevirtual #58                 // Method net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage.forEachParticle:(Lnet/minecraft/client/renderer/state/level/QuadParticleRenderState$ParticleConsumer;)V
+        30: return
+
+  public java.util.Set<net.minecraft.client.particle.SingleQuadParticle$Layer> layers();
+    Code:
+         0: aload_0
+         1: getfield      #10                 // Field particles:Ljava/util/Map;
+         4: invokeinterface #62,  1           // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+         9: areturn
+
+  protected void renderRotatedQuad(com.mojang.blaze3d.vertex.VertexConsumer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+    Code:
+         0: new           #66                 // class org/joml/Quaternionf
+         3: dup
+         4: fload         5
+         6: fload         6
+         8: fload         7
+        10: fload         8
+        12: invokespecial #68                 // Method org/joml/Quaternionf."<init>":(FFFF)V
+        15: astore        16
+        17: aload_0
+        18: aload_1
+        19: aload         16
+        21: fload_2
+        22: fload_3
+        23: fload         4
+        25: fconst_1
+        26: ldc           #71                 // float -1.0f
+        28: fload         9
+        30: fload         11
+        32: fload         13
+        34: iload         14
+        36: iload         15
+        38: invokevirtual #72                 // Method renderVertex:(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lorg/joml/Quaternionf;FFFFFFFFII)V
+        41: aload_0
+        42: aload_1
+        43: aload         16
+        45: fload_2
+        46: fload_3
+        47: fload         4
+        49: fconst_1
+        50: fconst_1
+        51: fload         9
+        53: fload         11
+        55: fload         12
+        57: iload         14
+        59: iload         15
+        61: invokevirtual #72                 // Method renderVertex:(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lorg/joml/Quaternionf;FFFFFFFFII)V
+        64: aload_0
+        65: aload_1
+        66: aload         16
+        68: fload_2
+        69: fload_3
+        70: fload         4
+        72: ldc           #71                 // float -1.0f
+        74: fconst_1
+        75: fload         9
+        77: fload         10
+        79: fload         12
+        81: iload         14
+        83: iload         15
+        85: invokevirtual #72                 // Method renderVertex:(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lorg/joml/Quaternionf;FFFFFFFFII)V
+        88: aload_0
+        89: aload_1
+        90: aload         16
+        92: fload_2
+        93: fload_3
+        94: fload         4
+        96: ldc           #71                 // float -1.0f
+        98: ldc           #71                 // float -1.0f
+       100: fload         9
+       102: fload         10
+       104: fload         13
+       106: iload         14
+       108: iload         15
+       110: invokevirtual #72                 // Method renderVertex:(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lorg/joml/Quaternionf;FFFFFFFFII)V
+       113: return
+
+  private void renderVertex(com.mojang.blaze3d.vertex.VertexConsumer, org.joml.Quaternionf, float, float, float, float, float, float, float, float, int, int);
+    Code:
+         0: new           #76                 // class org/joml/Vector3f
+         3: dup
+         4: fload         6
+         6: fload         7
+         8: fconst_0
+         9: invokespecial #78                 // Method org/joml/Vector3f."<init>":(FFF)V
+        12: aload_2
+        13: invokevirtual #81                 // Method org/joml/Vector3f.rotate:(Lorg/joml/Quaternionfc;)Lorg/joml/Vector3f;
+        16: fload         8
+        18: invokevirtual #85                 // Method org/joml/Vector3f.mul:(F)Lorg/joml/Vector3f;
+        21: fload_3
+        22: fload         4
+        24: fload         5
+        26: invokevirtual #89                 // Method org/joml/Vector3f.add:(FFF)Lorg/joml/Vector3f;
+        29: astore        13
+        31: aload_1
+        32: aload         13
+        34: invokevirtual #92                 // Method org/joml/Vector3f.x:()F
+        37: aload         13
+        39: invokevirtual #96                 // Method org/joml/Vector3f.y:()F
+        42: aload         13
+        44: invokevirtual #99                 // Method org/joml/Vector3f.z:()F
+        47: invokeinterface #102,  4          // InterfaceMethod com/mojang/blaze3d/vertex/VertexConsumer.addVertex:(FFF)Lcom/mojang/blaze3d/vertex/VertexConsumer;
+        52: fload         9
+        54: fload         10
+        56: invokeinterface #108,  3          // InterfaceMethod com/mojang/blaze3d/vertex/VertexConsumer.setUv:(FF)Lcom/mojang/blaze3d/vertex/VertexConsumer;
+        61: iload         11
+        63: invokeinterface #112,  2          // InterfaceMethod com/mojang/blaze3d/vertex/VertexConsumer.setColor:(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;
+        68: iload         12
+        70: invokeinterface #116,  2          // InterfaceMethod com/mojang/blaze3d/vertex/VertexConsumer.setLight:(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;
+        75: pop
+        76: return
+
+  public void submit(net.minecraft.client.renderer.SubmitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState);
+    Code:
+         0: aload_0
+         1: getfield      #32                 // Field particleCount:I
+         4: ifle          14
+         7: aload_1
+         8: aload_0
+         9: invokeinterface #119,  2          // InterfaceMethod net/minecraft/client/renderer/SubmitNodeCollector.submitQuadParticleGroup:(Lnet/minecraft/client/renderer/state/level/QuadParticleRenderState;)V
+        14: return
+
+  private void lambda$buildLayer$0(com.mojang.blaze3d.vertex.VertexConsumer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: fload_2
+         3: fload_3
+         4: fload         4
+         6: fload         5
+         8: fload         6
+        10: fload         7
+        12: fload         8
+        14: fload         9
+        16: fload         10
+        18: fload         11
+        20: fload         12
+        22: fload         13
+        24: iload         14
+        26: iload         15
+        28: invokevirtual #125                // Method renderRotatedQuad:(Lcom/mojang/blaze3d/vertex/VertexConsumer;FFFFFFFFFFFFII)V
+        31: return
+
+  private static net.minecraft.client.renderer.state.level.QuadParticleRenderState$Storage lambda$add$0(net.minecraft.client.particle.SingleQuadParticle$Layer);
+    Code:
+         0: new           #26                 // class net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage
+         3: dup
+         4: invokespecial #129                // Method net/minecraft/client/renderer/state/level/QuadParticleRenderState$Storage."<init>":()V
+         7: areturn
+}

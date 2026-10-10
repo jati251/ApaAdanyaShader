@@ -1,0 +1,14 @@
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+{'check': 'volumetric_reconstruction', 'size': [1280, 720], 'quality': '0', 'dh': False, 'max_hdr_error': 0.216064453125, 'mean_hdr_error': 0.009733515094827722, 'p99_hdr_error': 0.073486328125, 'full_path_max_hdr_error': 0.000244140625}
+GPU: fog + volumetric lighting, including half pass / 1280x720: 41.1177 -> 37.5020 ms (+8.8% less time)
+{'check': 'volumetric_reconstruction', 'size': [257, 145], 'quality': '0', 'dh': True, 'max_hdr_error': 0.167724609375, 'mean_hdr_error': 0.00933482091069312, 'p99_hdr_error': 0.0716552734375, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '1', 'dh': False, 'max_hdr_error': 0.118896484375, 'mean_hdr_error': 0.008125886462983631, 'p99_hdr_error': 0.05908203125, 'full_path_max_hdr_error': 0.0}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '2', 'dh': True, 'max_hdr_error': 0.1263427734375, 'mean_hdr_error': 0.008020344974132941, 'p99_hdr_error': 0.0601806640625, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '3', 'dh': True, 'max_hdr_error': 0.1199951171875, 'mean_hdr_error': 0.00795973426065502, 'p99_hdr_error': 0.0574951171875, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [3, 3], 'quality': '0', 'dh': False, 'max_hdr_error': 0.010009765625, 'mean_hdr_error': 0.00328685619212963, 'p99_hdr_error': 0.010009765625, 'full_path_max_hdr_error': 0.0}
+PASS: full/half volumetrics, silhouettes, hand/water, odd allocations, FSR and DH

@@ -1,0 +1,21 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2",
+  "reference": "C:\\Users\\jatis\\AppData\\Roaming\\.minecraft\\instances\\experiment\\.codex-backups\\performance-round2-20261008\\shaders",
+  "method": "GL_TIME_ELAPSED; 16 warmups, 9 alternating batches, median. VL uses 64 draws batched per stage via glMultiDrawArrays, normalized per draw, including prepass and resolve. Other workloads use cached GL commands. Synthetic fixtures, not Minecraft FPS.",
+  "results": [
+    {
+      "workload": "fresh two-bounce reservoir GI / 320x180",
+      "before_ms": 0.612176,
+      "after_ms": 0.810016,
+      "reduction_percent": -32.317503463056354,
+      "before_range_ms": [
+        0.603504,
+        1.577264
+      ],
+      "after_range_ms": [
+        0.586976,
+        0.86528
+      ]
+    }
+  ]
+}

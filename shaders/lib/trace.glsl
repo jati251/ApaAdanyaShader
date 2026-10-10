@@ -1,3 +1,4 @@
+#include "/lib/hiz.glsl"
 // Project the ray once; homogeneous coordinates remain linear in ray distance.
 float traceSurfaceDepth(sampler2D depths,ivec2 depthSize,ivec2 dhDepthSize,vec2 uv,out bool valid) {
     float d=depthScreen(depths,uv,depthSize);
@@ -31,6 +32,7 @@ float traceSurfaceDepth(sampler2D depths,vec2 uv,out bool valid) {
 }
 bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int count,out vec2 hitUV,out float confidence) {
     confidence=0.0;
+    hitUV=vec2(0.0);
     ivec2 depthSize=screenTextureSize(depths),dhDepthSize=traceDHDepthSize();
     // Stable travel avoids frame-dependent hit/miss stripes on smooth water.
     float t=stride,previousT=0.0,previousDelta=-1e20;
@@ -72,7 +74,11 @@ bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int co
         previousDelta=valid?delta:-1e20;
         previousT=t;
         // Reach distant shorelines with the existing sample budget.
-        t+=stride+t*0.10;
+        float nextT=t+stride+t*0.10;
+        #ifdef AA_HIZ
+        nextT=hizAdvance(clipOrigin,clipDirection,origin,direction,uv,t,nextT,depthSize);
+        #endif
+        t=nextT;
     }
     return false;
 }

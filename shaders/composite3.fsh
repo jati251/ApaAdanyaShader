@@ -1,3 +1,3 @@
 #version 330 compatibility
 
-#include "/program/bloom_vertical.fsh"
+#include "/program/composite2.fsh"

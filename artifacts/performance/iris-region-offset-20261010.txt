@@ -1,0 +1,74 @@
+Compiled from "MixinDefaultChunkRenderer.java"
+public class net.irisshaders.iris.compat.sodium.mixin.MixinDefaultChunkRenderer {
+  private boolean[] shouldDraw;
+
+  private final boolean[] shouldDrawShadow;
+
+  public net.irisshaders.iris.compat.sodium.mixin.MixinDefaultChunkRenderer();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: getstatic     #7                  // Field net/caffeinemc/mods/sodium/client/render/chunk/terrain/DefaultTerrainRenderPasses.ALL:[Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;
+         8: arraylength
+         9: newarray       boolean
+        11: putfield      #13                 // Field shouldDrawShadow:[Z
+        14: return
+
+  private boolean[] change(net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer);
+    Code:
+         0: invokestatic  #19                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+         3: ifeq          13
+         6: aload_0
+         7: getfield      #13                 // Field shouldDrawShadow:[Z
+        10: goto          17
+        13: aload_0
+        14: getfield      #25                 // Field shouldDraw:[Z
+        17: areturn
+
+  private boolean iris$disableBlockFaceCullingInShadowPass(net.caffeinemc.mods.sodium.client.gui.SodiumOptions$PerformanceSettings);
+    Code:
+         0: invokestatic  #19                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+         3: ifeq          8
+         6: iconst_0
+         7: ireturn
+         8: aload_1
+         9: getfield      #28                 // Field net/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings.useBlockFaceCulling:Z
+        12: ireturn
+
+  private void iris$forceNearest(net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer, net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass, net.caffeinemc.mods.sodium.client.util.FogParameters, com.mojang.renderpearl.api.textures.GpuSampler, net.minecraft.client.renderer.oit.OitStage, com.llamalad7.mixinextras.injector.wrapoperation.Operation<java.lang.Void>);
+    Code:
+         0: aload         6
+         2: iconst_5
+         3: anewarray     #2                  // class java/lang/Object
+         6: dup
+         7: iconst_0
+         8: aload_1
+         9: aastore
+        10: dup
+        11: iconst_1
+        12: aload_2
+        13: aastore
+        14: dup
+        15: iconst_2
+        16: aload_3
+        17: aastore
+        18: dup
+        19: iconst_3
+        20: invokestatic  #34                 // Method net/irisshaders/iris/Iris.isPackInUseQuick:()Z
+        23: ifeq          39
+        26: invokestatic  #39                 // Method com/mojang/blaze3d/systems/RenderSystem.getSamplerCache:()Lcom/mojang/blaze3d/systems/SamplerCache;
+        29: getstatic     #45                 // Field com/mojang/renderpearl/api/textures/FilterMode.NEAREST:Lcom/mojang/renderpearl/api/textures/FilterMode;
+        32: iconst_1
+        33: invokevirtual #51                 // Method com/mojang/blaze3d/systems/SamplerCache.getClampToEdge:(Lcom/mojang/renderpearl/api/textures/FilterMode;Z)Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        36: goto          41
+        39: aload         4
+        41: aastore
+        42: dup
+        43: iconst_4
+        44: aload         5
+        46: aastore
+        47: invokeinterface #57,  2           // InterfaceMethod com/llamalad7/mixinextras/injector/wrapoperation/Operation.call:([Ljava/lang/Object;)Ljava/lang/Object;
+        52: pop
+        53: return
+}

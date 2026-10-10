@@ -1,0 +1,107 @@
+#version 330 compatibility
+#include "/lib/common.glsl"
+#include "/lib/lighting.glsl"
+#include "/lib/environment.glsl"
+#include "/lib/water.glsl"
+#include "/lib/water_reflection.glsl"
+
+uniform sampler2D depthtex0;
+uniform sampler2D depthtex1;
+uniform sampler2D dhDepthTex1,colortex6;
+uniform mat4 dhProjectionInverse;
+
+in vec2 texcoord, lmcoord;
+in vec4 glcolor;
+in vec3 viewNormal, viewPos, worldPos;
+
+#if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
+/* RENDERTARGETS: 0,1,2 */
+layout(location = 1) out vec4 normalData;
+layout(location = 2) out vec4 materialData;
+#else
+/* RENDERTARGETS: 0,2 */
+layout(location = 1) out vec4 materialData;
+#endif
+layout(location = 0) out vec4 color;
+
+void main(){
+    vec2 waveDx=dFdx(worldPos.xz),waveDy=dFdy(worldPos.xz);
+    #if UPSCALE_QUALITY > 0
+    if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
+    #endif
+    vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
+    // Use DH's rasterized surface with DH's own projection, including camera motion.
+    vec4 surfaceClip=dhProjectionInverse*vec4(uv*2.0-1.0,gl_FragCoord.z*2.0-1.0,1.0);
+    vec3 surfacePos=surfaceClip.xyz/surfaceClip.w;
+    if (dot(surfacePos,surfacePos) < 576.0) discard;
+
+    // Vanilla water draws afterwards; only opaque vanilla terrain exists here.
+    float vanillaSolidDepth = depthScreen(depthtex1,uv);
+    if (vanillaSolidDepth < 0.999999 &&
+        viewDepth(uv,vanillaSolidDepth)>surfacePos.z+0.02) discard;
+
+    // Capture derivatives before discard; shade only surviving fragments.
+    float crest;
+    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,crest);
+
+    vec3 V = normalize(-surfacePos);
+
+    vec3 base=worldDirection(normalize(viewNormal));
+    vec3 nw=waterSurfaceNormal(base,slope);
+    vec3 N=normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
+
+    // Robust sky light retrieval regardless of Iris transformer coordinate packing
+    float skyLight = clamp(lmcoord.y, 0.0, 1.0);
+
+    // Physical Fresnel reflectance matching vanilla water
+    float NdotV = dot(N, V);
+
+
+    // Environment reflections (sky & clouds) matching vanilla water
+    vec3 R = reflect(-V, N);
+
+    float skyExposure=isEyeInWater==1?smoothstep(8.0,180.0,float(eyeBrightnessSmooth.y)):skyLight;
+
+
+    // Direct sun / moon specular highlight matching vanilla water
+    vec3 L = normalize(shadowLightPosition);
+    float footprint=max(length(waveDx),length(waveDy));
+    float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
+        +0.012*smoothstep(0.15,2.0,footprint)));
+    float reflectionSpread=waterReflectionSpread(R,roughness);
+    float fresnel=waterFresnel(NdotV,isEyeInWater==1)*waterFacetVisibility(NdotV,roughness,isEyeInWater==1);
+    vec3 skyReflect=vec3(0.0);
+    if(fresnel>0.0 && skyExposure>0.0)
+        skyReflect=waterLODEnvironmentReflection(worldDirection(R),reflectionSpread)*skyExposure*skyExposure;
+    vec3 glint=vec3(0.0);
+    #if !defined(NETHER) && !defined(END)
+    if(dot(N,L)>0.0 && skyLight>0.0)
+        glint=specularBRDF(N,V,L,roughness,vec3(0.0204))*lightColor()*skyLight*cloudShadow(worldPos);
+    #endif
+
+    // Underwater transmission is unity; reflection-only facets need no bottom/body work.
+    vec3 body=vec3(0.0);
+    if(fresnel<1.0) {
+        vec3 background=textureScreen(colortex6,uv).rgb;
+        if(isEyeInWater==1) body=background;
+        else {
+            float bottom=depthScreen(dhDepthTex1,uv);
+            float thickness=80.0;
+            if(bottom<0.999999) {
+                // DH surface and bottom share a perspective ray. Depth separation
+                // times ray length reconstructs thickness without bottom xyz.
+                float bottomZ=projectedViewDepth(dhProjectionInverse,uv,bottom);
+                thickness=clamp(max(surfacePos.z-bottomZ,0.0)*length(surfacePos)/max(-surfacePos.z,0.01),0.0,80.0);
+            }
+            vec3 transmittance=exp(-waterAbsorption()*thickness);
+            body=background*transmittance+waterBodyColor(thickness,skyLight)*(1.0-transmittance);
+        }
+    }
+    vec3 waterResult = mix(body, skyReflect, fresnel) + glint;
+
+    color = vec4(max(waterResult, vec3(0.0)), 1.0);
+    #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
+    normalData = vec4(N * 0.5 + 0.5, 1.0);
+    #endif
+    materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.25);
+}

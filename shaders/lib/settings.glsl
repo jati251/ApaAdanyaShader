@@ -36,6 +36,13 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define WATER_REFRACTION // Underwater Optical Distortion
 #define WATER_CAUSTICS // Sunlight Refraction Patterns on Seabed
 #define SSR // Screen-Space Ray-Traced Reflections
+//#define LIGHT_SPACE_FALLBACK // Sun-visible off-screen geometry; requires shadows
+//#define HIZ_TRACING // Conservative min/max depth tiles; OpenGL 4.3
+//#define VOXEL_TRACING // Local 64-cubed terrain scene for off-screen rays
+//#define RESTIR_GI // Reprojected/spatial path reservoirs; half-resolution GI
+//#define SVGF_DENOISER // Temporal moments and three edge-aware a-trous passes
+#define VOXEL_STEPS 64 // [32 48 64 96]
+#define GI_BOUNCES 2 // [1 2]
 #define SSR_STEPS 24 // [8 12 16 18 24 28 32 40 48 56 64]
 #define WATER_OCTAVES 5 // [2 3 4 5 6 7]
 #define WATER_WAVES 0.65 // [0.0 0.25 0.45 0.65 0.85 1.0]
@@ -59,6 +66,10 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define PARTICLE_SOFTNESS 0.35 // [0.10 0.20 0.35 0.50 0.75]
 #define PARTICLE_LIGHTING // Directional light for particles
 #define WEATHER_OPACITY 0.65 // [0.25 0.40 0.65 0.80 1.0]
+#define SMOKE_MODE 1 // [0 1] 0: Minecraft/resource pack, 1: shader volumetric smoke
+#define SMOKE_STEPS 8 // [8 12 16]
+#define SMOKE_DISTANCE 16.0 // [8.0 12.0 16.0]
+#define SMOKE_DENSITY 0.65 // [0.35 0.65 1.0]
 
 // ========== [ POST-PROCESSING & COLOR GRADING ] ==========
 #define COLOR_PROFILE 0 // [0 1 2 3 4 5 6 7]
@@ -104,7 +115,8 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 // Effects also have independent reconstruction.
 #define CLOUD_RECONSTRUCTION // Half-resolution volumetric cloud layer
 #define TEMPORAL_CLOUDS // Reproject and clamp cloud history
-#define HALF_RES_LIGHTING // Bilateral SSAO/GI reconstruction
+#define HARDWARE_PCF // Four bilinear hardware-PCF taps with the original PCSS blocker search
+#define HALF_RES_LIGHTING // Bilateral SSAO/GI and volumetric-light reconstruction
 //#define TEMPORAL_INDIRECT // Signal-specific AO/GI history; requires HALF_RES_LIGHTING
 #define HALF_RES_DOF // Bilateral lens reconstruction
 

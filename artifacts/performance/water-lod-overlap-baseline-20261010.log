@@ -1,0 +1,16 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: GPU shadow triangles preserve projection across distance boundary at ground/80/200 blocks altitude
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\validate.py", line 337, in <module>
+    water_lod_overlap_checks.run(globals())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\water_lod_overlap_checks.py", line 84, in run
+    assert max(abs(v-sentinel[i%4]) for i,v in enumerate(output))<1e-6, \
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: DH water overwrites a vanilla-covered riverbed/translucent surface on camera motion

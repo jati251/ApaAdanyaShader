@@ -1,2 +1,3 @@
 #version 330 compatibility
-#include "/program/upscale.fsh"
+/* RENDERTARGETS: 0 */
+#include "/program/post.fsh"

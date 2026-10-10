@@ -1,0 +1,24 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+PASS: Minecraft smoke mode and shadows-off remove all smoke images, cache dispatch and half-size smoke target
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: MEDIUM, with/without DH
+PASS: 102 program variants compiled and linked
+PASS: real campfire shadow vertex atomics; warm/soul, negative coordinates, jumps, non-emitter exclusion, nearest-source collision order
+PASS: native 3D noise integration, occlusion, depth truncation, camera inside, empty scene, smooth camera/time motion
+PASS: half-resolution smoke reconstruction preserves foreground silhouettes and valid smoke
+PASS: tracing presets reuse voxel occupancy with identical roof detour and self-emitter exclusion
+PASS: overhead block creates sideways trail and upward continuation; solid-cell rejection and camera-grid-stable world flow
+GPU smoke only: 8 steps, empty: 0.046 ms at 1280x720
+GPU smoke only: 8 steps, one: 0.216 ms at 1280x720
+GPU smoke only: 8 steps, many: 0.948 ms at 1280x720
+GPU smoke only: 12 steps, empty: 0.044 ms at 1280x720
+GPU smoke only: 12 steps, one: 0.475 ms at 1280x720
+GPU smoke only: 12 steps, many: 1.143 ms at 1280x720
+GPU smoke only: 16 steps, empty: 0.040 ms at 1280x720
+GPU smoke only: 16 steps, one: 0.342 ms at 1280x720
+GPU smoke only: 16 steps, many: 1.492 ms at 1280x720
+PASS: real particle vertex shader switches marked campfire quads off/on and preserves adjacent unmarked particles

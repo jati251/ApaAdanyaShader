@@ -1,5 +1,9 @@
 #ifdef HALF_RES_LIGHTING
 uniform sampler2D colortex12;
+#ifdef AA_SVGF
+uniform sampler2D aaDenoiseA;
+uniform bool aaDenoiseReady;
+#endif
 vec4 reconstructIndirect(vec2 uv,vec3 vp,vec3 N,vec4 mat) {
     #ifdef SSAO
     const float maxDistance=48.0;
@@ -16,6 +20,9 @@ vec4 reconstructIndirect(vec2 uv,vec3 vp,vec3 N,vec4 mat) {
     for(int y=0;y<2;y++) for(int x=0;x<2;x++) {
         ivec2 q=clamp(base+ivec2(x,y),ivec2(0),size-1);
         vec4 tap=texelFetch(colortex12,q,0);
+        #ifdef AA_SVGF
+        if(aaDenoiseReady) tap=texelFetch(aaDenoiseA,q,0);
+        #endif
         if(tap.a<0.0) continue;
         vec2 coord=(vec2(q)+0.5)/vec2(size);
         vec3 tapVP=viewPosition(coord,depthScreen(depthtex0,coord,depthSize));

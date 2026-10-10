@@ -1,0 +1,40 @@
+[
+  {
+    "height": -0.2,
+    "mean_shadow_error": 0.005381977293226454,
+    "max_shadow_error": 0.625,
+    "changed_fraction": 0.021487630208333334
+  },
+  {
+    "height": -1.0,
+    "mean_shadow_error": 0.005381977293226454,
+    "max_shadow_error": 0.625,
+    "changed_fraction": 0.021487630208333334
+  },
+  {
+    "height": -8.0,
+    "mean_shadow_error": 0.005352079603407118,
+    "max_shadow_error": 0.625,
+    "changed_fraction": 0.024244791666666668
+  },
+  {
+    "height": -32.0,
+    "mean_shadow_error": 0.007771046956380209,
+    "max_shadow_error": 0.607421875,
+    "changed_fraction": 0.05321397569444444
+  },
+  {
+    "workload": "PCSS + shipped four-tap hardware filter",
+    "before_ms": 0.035936,
+    "after_ms": 0.031072,
+    "reduction_percent": 13.535173642030285,
+    "before_range_ms": [
+      0.035792,
+      0.068912
+    ],
+    "after_range_ms": [
+      0.030912,
+      0.433936
+    ]
+  }
+]

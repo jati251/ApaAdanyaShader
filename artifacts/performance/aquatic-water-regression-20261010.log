@@ -1,0 +1,34 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: REALISM_FAST, with/without DH
+PASS: 78 program variants compiled and linked
+PASS: GPU shadow triangles preserve projection across distance boundary at ground/80/200 blocks altitude
+PASS: GPU rain ripple filtering at near/grazing camera footprints
+PASS: GPU water continuous wave phase and analytic crest gradients
+PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection
+PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU real water underside remains continuous across fluid lightmap tiles
+PASS: GPU shoreline reflections reject submerged geometry above water
+PASS: GPU rough water reflections filter high-contrast sky/foliage edges
+PASS: GPU water top normals match across fluid triangles; waterfall normals preserved
+PASS: GPU actual water normals stay anchored during a camera jump at fixed wave time
+PASS: GPU actual grazing water optics retain curved rays and mask hidden facets
+PASS: GPU jumping preserves water pixels while opaque camera motion blur remains active
+PASS: GPU water optics ignore incompatible TAA history while opaque history stays active
+PASS: GPU gbuffers_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU dh_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU perspective water remains continuous over small camera steps at shoreline/jump heights, dry/rainy
+PASS: GPU primary-ray SSR misses match filtered environment fallback
+PASS: GPU depth-based water optics ignore vertex-camera mismatch at near/jump heights
+PASS: GPU refraction enabled: bounded distortion, no flat-plane zoom, dry-bank rejection, 2mm dry/rain motion
+PASS: GPU depth-based water SSR misses match environment fallback
+PASS: GPU DH water optics use their own raster projection and ignore vertex-camera mismatch
+PASS: GPU native rough reflection integrates edges, retains mirror detail and preserves radiance
+PASS: GPU actual DH water mesh preserves vanilla RGB/normal/material coverage during jumps/approach, native/FSR
+PASS: GPU DH-only water retained, two mesh diagonals agree, no moving 24-block hole
+PASS: GPU aquatic cutout shadows preserve transparent holes and solid terrain shadows
+PASS: GPU actual voxel writer excludes aquatic/land plants; fallback rays pass through aquatic cells and hit stone/tree canopy

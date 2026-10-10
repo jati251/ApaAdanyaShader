@@ -1,0 +1,17 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: GPU shadow triangles preserve projection across distance boundary at ground/80/200 blocks altitude
+PASS: GPU aquatic cutout shadows preserve transparent holes and solid terrain shadows
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\validate.py", line 342, in <module>
+    import water_lod_overlap_checks
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\aquatic_geometry_checks.py", line 76, in run
+    assert not any(fields[aquatic]), 'Aquatic vegetation deposits a false solid cube in the reflection/GI volume'
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Aquatic vegetation deposits a false solid cube in the reflection/GI volume

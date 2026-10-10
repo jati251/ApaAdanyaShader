@@ -1,0 +1,1401 @@
+Compiled from "GlSampler.java"
+public class net.irisshaders.iris.gl.sampler.GlSampler extends net.irisshaders.iris.gl.GlResource {
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_LINEAR_HW;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler LINEAR_HW;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_NEAREST_HW;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler NEAREST_HW;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_LINEAR;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler LINEAR;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_NEAREST;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler NEAREST;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler NEAREST_REPEAT;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler LINEAR_REPEAT;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_NEAREST_NEAREST;
+
+  public static final net.irisshaders.iris.gl.sampler.GlSampler MIPPED_NEAREST_REPEAT;
+
+  public net.irisshaders.iris.gl.sampler.GlSampler(boolean, boolean, boolean, boolean, boolean, boolean);
+    Code:
+         0: aload_0
+         1: invokestatic  #1                  // Method net/irisshaders/iris/gl/IrisRenderSystem.genSampler:()I
+         4: invokespecial #7                  // Method net/irisshaders/iris/gl/GlResource."<init>":(I)V
+         7: aload_0
+         8: invokevirtual #13                 // Method getId:()I
+        11: sipush        10240
+        14: iload_1
+        15: ifeq          24
+        18: sipush        9729
+        21: goto          27
+        24: sipush        9728
+        27: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+        30: aload_0
+        31: invokevirtual #13                 // Method getId:()I
+        34: sipush        10242
+        37: iload         6
+        39: ifeq          47
+        42: ldc           #26                 // int 33071
+        44: goto          50
+        47: sipush        10497
+        50: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+        53: aload_0
+        54: invokevirtual #13                 // Method getId:()I
+        57: sipush        10243
+        60: iload         6
+        62: ifeq          70
+        65: ldc           #26                 // int 33071
+        67: goto          73
+        70: sipush        10497
+        73: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+        76: iload_3
+        77: ifeq          126
+        80: aload_0
+        81: invokevirtual #13                 // Method getId:()I
+        84: sipush        10241
+        87: iload_2
+        88: ifeq          107
+        91: iload_1
+        92: ifeq          101
+        95: sipush        9987
+        98: goto          120
+       101: sipush        9986
+       104: goto          120
+       107: iload_1
+       108: ifeq          117
+       111: sipush        9985
+       114: goto          120
+       117: sipush        9984
+       120: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+       123: goto          149
+       126: aload_0
+       127: invokevirtual #13                 // Method getId:()I
+       130: sipush        10241
+       133: iload_1
+       134: ifeq          143
+       137: sipush        9729
+       140: goto          146
+       143: sipush        9728
+       146: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+       149: iload         5
+       151: ifeq          177
+       154: aload_0
+       155: invokevirtual #13                 // Method getId:()I
+       158: ldc           #29                 // int 34892
+       160: ldc           #32                 // int 34894
+       162: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+       165: aload_0
+       166: invokevirtual #13                 // Method getId:()I
+       169: ldc           #33                 // int 34893
+       171: sipush        515
+       174: invokestatic  #20                 // Method net/irisshaders/iris/gl/IrisRenderSystem.samplerParameteri:(III)V
+       177: return
+
+  public net.irisshaders.iris.gl.sampler.GlSampler(int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokespecial #7                  // Method net/irisshaders/iris/gl/GlResource."<init>":(I)V
+         5: return
+
+  protected void destroyInternal();
+    Code:
+         0: aload_0
+         1: invokevirtual #34                 // Method getGlId:()I
+         4: invokestatic  #37                 // Method net/irisshaders/iris/gl/IrisRenderSystem.destroySampler:(I)V
+         7: return
+
+  public int getId();
+    Code:
+         0: aload_0
+         1: invokevirtual #34                 // Method getGlId:()I
+         4: ireturn
+
+  static {};
+    Code:
+         0: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+         3: dup
+         4: iconst_1
+         5: iconst_1
+         6: iconst_1
+         7: iconst_1
+         8: iconst_1
+         9: iconst_1
+        10: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        13: putstatic     #43                 // Field MIPPED_LINEAR_HW:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        16: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        19: dup
+        20: iconst_1
+        21: iconst_1
+        22: iconst_0
+        23: iconst_1
+        24: iconst_1
+        25: iconst_1
+        26: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        29: putstatic     #47                 // Field LINEAR_HW:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        32: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        35: dup
+        36: iconst_0
+        37: iconst_1
+        38: iconst_1
+        39: iconst_1
+        40: iconst_1
+        41: iconst_1
+        42: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        45: putstatic     #50                 // Field MIPPED_NEAREST_HW:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        48: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        51: dup
+        52: iconst_0
+        53: iconst_1
+        54: iconst_0
+        55: iconst_1
+        56: iconst_1
+        57: iconst_1
+        58: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        61: putstatic     #53                 // Field NEAREST_HW:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        64: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        67: dup
+        68: iconst_1
+        69: iconst_1
+        70: iconst_1
+        71: iconst_0
+        72: iconst_0
+        73: iconst_1
+        74: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        77: putstatic     #56                 // Field MIPPED_LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        80: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        83: dup
+        84: iconst_1
+        85: iconst_1
+        86: iconst_0
+        87: iconst_0
+        88: iconst_0
+        89: iconst_1
+        90: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+        93: putstatic     #59                 // Field LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        96: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        99: dup
+       100: iconst_0
+       101: iconst_1
+       102: iconst_1
+       103: iconst_0
+       104: iconst_0
+       105: iconst_1
+       106: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       109: putstatic     #62                 // Field MIPPED_NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       112: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+       115: dup
+       116: iconst_0
+       117: iconst_1
+       118: iconst_0
+       119: iconst_0
+       120: iconst_0
+       121: iconst_1
+       122: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       125: putstatic     #65                 // Field NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       128: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+       131: dup
+       132: iconst_0
+       133: iconst_1
+       134: iconst_0
+       135: iconst_0
+       136: iconst_0
+       137: iconst_0
+       138: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       141: putstatic     #68                 // Field NEAREST_REPEAT:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       144: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+       147: dup
+       148: iconst_1
+       149: iconst_1
+       150: iconst_0
+       151: iconst_0
+       152: iconst_0
+       153: iconst_0
+       154: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       157: putstatic     #71                 // Field LINEAR_REPEAT:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       160: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+       163: dup
+       164: iconst_0
+       165: iconst_0
+       166: iconst_1
+       167: iconst_0
+       168: iconst_0
+       169: iconst_1
+       170: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       173: putstatic     #74                 // Field MIPPED_NEAREST_NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       176: new           #14                 // class net/irisshaders/iris/gl/sampler/GlSampler
+       179: dup
+       180: iconst_0
+       181: iconst_1
+       182: iconst_1
+       183: iconst_0
+       184: iconst_0
+       185: iconst_0
+       186: invokespecial #40                 // Method "<init>":(ZZZZZZ)V
+       189: putstatic     #77                 // Field MIPPED_NEAREST_REPEAT:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       192: return
+}
+Compiled from "IrisSamplers.java"
+public class net.irisshaders.iris.samplers.IrisSamplers {
+  public static final int ALBEDO_TEXTURE_UNIT;
+
+  public static final int OVERLAY_TEXTURE_UNIT;
+
+  public static final int LIGHTMAP_TEXTURE_UNIT;
+
+  public static final com.google.common.collect.ImmutableSet<java.lang.Integer> WORLD_RESERVED_TEXTURE_UNITS;
+
+  public static final com.google.common.collect.ImmutableSet<java.lang.Integer> SODIUM_RESERVED_TEXTURE_UNITS;
+
+  public static final com.google.common.collect.ImmutableSet<java.lang.Integer> COMPOSITE_RESERVED_TEXTURE_UNITS;
+
+  private static final com.mojang.renderpearl.api.textures.GpuSampler[] terrain;
+
+  private static final net.irisshaders.iris.gl.sampler.GlSampler[] terrainS;
+
+  private net.irisshaders.iris.samplers.IrisSamplers();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  public static void initRenderer();
+    Code:
+         0: return
+
+  public static void addRenderTargetSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder, java.util.function.Supplier<com.google.common.collect.ImmutableSet<java.lang.Integer>>, net.irisshaders.iris.targets.RenderTargets, boolean, net.irisshaders.iris.pipeline.WorldRenderingPipeline);
+    Code:
+         0: iload_3
+         1: ifeq          8
+         4: iconst_0
+         5: goto          9
+         8: iconst_4
+         9: istore        5
+        11: iload         5
+        13: istore        6
+        15: iload         6
+        17: aload_2
+        18: invokevirtual #7                  // Method net/irisshaders/iris/targets/RenderTargets.getRenderTargetCount:()I
+        21: if_icmpge     229
+        24: iload         6
+        26: istore        7
+        28: aload_1
+        29: aload_2
+        30: iload         7
+        32: invokedynamic #13,  0             // InvokeDynamic #0:getAsInt:(Ljava/util/function/Supplier;Lnet/irisshaders/iris/targets/RenderTargets;I)Ljava/util/function/IntSupplier;
+        37: astore        8
+        39: aload_1
+        40: aload_2
+        41: iload         7
+        43: invokedynamic #17,  0             // InvokeDynamic #1:get:(Ljava/util/function/Supplier;Lnet/irisshaders/iris/targets/RenderTargets;I)Ljava/util/function/Supplier;
+        48: astore        9
+        50: iload         6
+        52: invokedynamic #21,  0             // InvokeDynamic #2:makeConcatWithConstants:(I)Ljava/lang/String;
+        57: astore        10
+        59: iload         6
+        61: getstatic     #25                 // Field net/irisshaders/iris/shaderpack/properties/PackRenderTargetDirectives.LEGACY_RENDER_TARGETS:Lcom/google/common/collect/ImmutableList;
+        64: invokevirtual #31                 // Method com/google/common/collect/ImmutableList.size:()I
+        67: if_icmpge     183
+        70: getstatic     #25                 // Field net/irisshaders/iris/shaderpack/properties/PackRenderTargetDirectives.LEGACY_RENDER_TARGETS:Lcom/google/common/collect/ImmutableList;
+        73: iload         6
+        75: invokevirtual #36                 // Method com/google/common/collect/ImmutableList.get:(I)Ljava/lang/Object;
+        78: checkcast     #39                 // class java/lang/String
+        81: astore        11
+        83: aload_0
+        84: aload         11
+        86: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+        91: ifne          105
+        94: aload_0
+        95: aload         10
+        97: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+       102: ifeq          111
+       105: aload_2
+       106: iload         7
+       108: invokevirtual #47                 // Method net/irisshaders/iris/targets/RenderTargets.createIfUnsure:(I)V
+       111: iload         6
+       113: ifne          152
+       116: iload_3
+       117: ifeq          152
+       120: aload_0
+       121: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       124: aload         8
+       126: aconst_null
+       127: aload         9
+       129: iconst_2
+       130: anewarray     #39                 // class java/lang/String
+       133: dup
+       134: iconst_0
+       135: aload         10
+       137: aastore
+       138: dup
+       139: iconst_1
+       140: aload         11
+       142: aastore
+       143: invokeinterface #57,  6           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDefaultSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/state/ValueUpdateNotifier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       148: pop
+       149: goto          180
+       152: aload_0
+       153: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       156: aload         8
+       158: aload         9
+       160: iconst_2
+       161: anewarray     #39                 // class java/lang/String
+       164: dup
+       165: iconst_0
+       166: aload         10
+       168: aastore
+       169: dup
+       170: iconst_1
+       171: aload         11
+       173: aastore
+       174: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       179: pop
+       180: goto          223
+       183: aload_0
+       184: aload         10
+       186: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+       191: ifeq          200
+       194: aload_2
+       195: iload         7
+       197: invokevirtual #47                 // Method net/irisshaders/iris/targets/RenderTargets.createIfUnsure:(I)V
+       200: aload_0
+       201: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       204: aload         8
+       206: aload         9
+       208: iconst_1
+       209: anewarray     #39                 // class java/lang/String
+       212: dup
+       213: iconst_0
+       214: aload         10
+       216: aastore
+       217: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       222: pop
+       223: iinc          6, 1
+       226: goto          15
+       229: aload_0
+       230: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       233: aload         4
+       235: invokedynamic #65,  0             // InvokeDynamic #3:getAsInt:(Lnet/irisshaders/iris/pipeline/WorldRenderingPipeline;)Ljava/util/function/IntSupplier;
+       240: aconst_null
+       241: iconst_2
+       242: anewarray     #39                 // class java/lang/String
+       245: dup
+       246: iconst_0
+       247: ldc           #68                 // String dhDepthTex
+       249: aastore
+       250: dup
+       251: iconst_1
+       252: ldc           #70                 // String dhDepthTex0
+       254: aastore
+       255: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       260: pop
+       261: aload_0
+       262: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       265: aload         4
+       267: invokedynamic #72,  0             // InvokeDynamic #4:getAsInt:(Lnet/irisshaders/iris/pipeline/WorldRenderingPipeline;)Ljava/util/function/IntSupplier;
+       272: aconst_null
+       273: iconst_1
+       274: anewarray     #39                 // class java/lang/String
+       277: dup
+       278: iconst_0
+       279: ldc           #73                 // String dhDepthTex1
+       281: aastore
+       282: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       287: pop
+       288: return
+
+  public static void addNoiseSampler(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.gl.texture.TextureAccess);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokeinterface #75,  1           // InterfaceMethod net/irisshaders/iris/gl/texture/TextureAccess.getTextureId:()Ljava/util/function/IntSupplier;
+         7: getstatic     #81                 // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR_REPEAT:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        10: iconst_1
+        11: anewarray     #39                 // class java/lang/String
+        14: dup
+        15: iconst_0
+        16: ldc           #87                 // String noisetex
+        18: aastore
+        19: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        24: pop
+        25: return
+
+  public static boolean hasShadowSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder);
+    Code:
+         0: invokestatic  #92                 // Method com/google/common/collect/ImmutableList.builder:()Lcom/google/common/collect/ImmutableList$Builder;
+         3: bipush        9
+         5: anewarray     #39                 // class java/lang/String
+         8: dup
+         9: iconst_0
+        10: ldc           #96                 // String shadowtex0
+        12: aastore
+        13: dup
+        14: iconst_1
+        15: ldc           #98                 // String shadowtex0DH
+        17: aastore
+        18: dup
+        19: iconst_2
+        20: ldc           #100                // String shadowtex0HW
+        22: aastore
+        23: dup
+        24: iconst_3
+        25: ldc           #102                // String shadowtex1
+        27: aastore
+        28: dup
+        29: iconst_4
+        30: ldc           #104                // String shadowtex1HW
+        32: aastore
+        33: dup
+        34: iconst_5
+        35: ldc           #106                // String shadowtex1DH
+        37: aastore
+        38: dup
+        39: bipush        6
+        41: ldc           #108                // String shadow
+        43: aastore
+        44: dup
+        45: bipush        7
+        47: ldc           #110                // String watershadow
+        49: aastore
+        50: dup
+        51: bipush        8
+        53: ldc           #112                // String shadowcolor
+        55: aastore
+        56: invokevirtual #114                // Method com/google/common/collect/ImmutableList$Builder.add:([Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;
+        59: astore_1
+        60: iconst_0
+        61: istore_2
+        62: iload_2
+        63: bipush        8
+        65: if_icmpge     96
+        68: aload_1
+        69: iload_2
+        70: invokedynamic #122,  0            // InvokeDynamic #5:makeConcatWithConstants:(I)Ljava/lang/String;
+        75: invokevirtual #123                // Method com/google/common/collect/ImmutableList$Builder.add:(Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;
+        78: pop
+        79: aload_1
+        80: iload_2
+        81: invokedynamic #126,  0            // InvokeDynamic #6:makeConcatWithConstants:(I)Ljava/lang/String;
+        86: invokevirtual #123                // Method com/google/common/collect/ImmutableList$Builder.add:(Ljava/lang/Object;)Lcom/google/common/collect/ImmutableList$Builder;
+        89: pop
+        90: iinc          2, 1
+        93: goto          62
+        96: aload_1
+        97: invokevirtual #127                // Method com/google/common/collect/ImmutableList$Builder.build:()Lcom/google/common/collect/ImmutableList;
+       100: invokevirtual #131                // Method com/google/common/collect/ImmutableList.iterator:()Lcom/google/common/collect/UnmodifiableIterator;
+       103: astore_2
+       104: aload_2
+       105: invokeinterface #135,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+       110: ifeq          138
+       113: aload_2
+       114: invokeinterface #141,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       119: checkcast     #39                 // class java/lang/String
+       122: astore_3
+       123: aload_0
+       124: aload_3
+       125: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+       130: ifeq          135
+       133: iconst_1
+       134: ireturn
+       135: goto          104
+       138: iconst_0
+       139: ireturn
+
+  public static boolean addShadowSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.shadows.ShadowRenderTargets, com.google.common.collect.ImmutableSet<java.lang.Integer>, boolean);
+    Code:
+         0: aload_0
+         1: ldc           #110                // String watershadow
+         3: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+         8: istore        5
+        10: iload         5
+        12: ifeq          95
+        15: iconst_1
+        16: istore        4
+        18: aload_0
+        19: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+        22: aload_1
+        23: invokedynamic #145,  0            // InvokeDynamic #7:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+        28: iload_3
+        29: aload_1
+        30: invokedynamic #148,  0            // InvokeDynamic #8:get:(ZLnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+        35: iconst_2
+        36: anewarray     #39                 // class java/lang/String
+        39: dup
+        40: iconst_0
+        41: ldc           #96                 // String shadowtex0
+        43: aastore
+        44: dup
+        45: iconst_1
+        46: ldc           #110                // String watershadow
+        48: aastore
+        49: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+        54: pop
+        55: aload_0
+        56: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+        59: aload_1
+        60: invokedynamic #151,  0            // InvokeDynamic #9:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+        65: iload_3
+        66: aload_1
+        67: invokedynamic #152,  0            // InvokeDynamic #10:get:(ZLnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+        72: iconst_2
+        73: anewarray     #39                 // class java/lang/String
+        76: dup
+        77: iconst_0
+        78: ldc           #102                // String shadowtex1
+        80: aastore
+        81: dup
+        82: iconst_1
+        83: ldc           #108                // String shadow
+        85: aastore
+        86: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+        91: pop
+        92: goto          169
+        95: aload_0
+        96: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+        99: aload_1
+       100: invokedynamic #153,  0            // InvokeDynamic #11:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       105: iload_3
+       106: aload_1
+       107: invokedynamic #154,  0            // InvokeDynamic #12:get:(ZLnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+       112: iconst_2
+       113: anewarray     #39                 // class java/lang/String
+       116: dup
+       117: iconst_0
+       118: ldc           #96                 // String shadowtex0
+       120: aastore
+       121: dup
+       122: iconst_1
+       123: ldc           #108                // String shadow
+       125: aastore
+       126: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       131: istore        4
+       133: iload         4
+       135: aload_0
+       136: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       139: aload_1
+       140: invokedynamic #155,  0            // InvokeDynamic #13:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       145: iload_3
+       146: aload_1
+       147: invokedynamic #156,  0            // InvokeDynamic #14:get:(ZLnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+       152: iconst_1
+       153: anewarray     #39                 // class java/lang/String
+       156: dup
+       157: iconst_0
+       158: ldc           #102                // String shadowtex1
+       160: aastore
+       161: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       166: ior
+       167: istore        4
+       169: aload_2
+       170: ifnonnull     270
+       173: aload_0
+       174: aload_1
+       175: invokedynamic #157,  0            // InvokeDynamic #15:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       180: getstatic     #158                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       183: iconst_1
+       184: anewarray     #39                 // class java/lang/String
+       187: dup
+       188: iconst_0
+       189: ldc           #112                // String shadowcolor
+       191: aastore
+       192: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       197: ifeq          205
+       200: aload_1
+       201: iconst_0
+       202: invokevirtual #161                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.createIfEmpty:(I)V
+       205: iconst_0
+       206: istore        6
+       208: iload         6
+       210: aload_1
+       211: invokevirtual #166                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getRenderTargetCount:()I
+       214: if_icmpge     267
+       217: iload         6
+       219: istore        7
+       221: aload_0
+       222: aload_1
+       223: iload         7
+       225: invokedynamic #167,  0            // InvokeDynamic #16:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;I)Ljava/util/function/IntSupplier;
+       230: getstatic     #158                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       233: iconst_1
+       234: anewarray     #39                 // class java/lang/String
+       237: dup
+       238: iconst_0
+       239: iload         6
+       241: invokedynamic #122,  0            // InvokeDynamic #5:makeConcatWithConstants:(I)Ljava/lang/String;
+       246: aastore
+       247: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       252: ifeq          261
+       255: aload_1
+       256: iload         7
+       258: invokevirtual #161                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.createIfEmpty:(I)V
+       261: iinc          6, 1
+       264: goto          208
+       267: goto          366
+       270: aload_0
+       271: aload_2
+       272: aload_1
+       273: invokedynamic #170,  0            // InvokeDynamic #17:getAsInt:(Lcom/google/common/collect/ImmutableSet;Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       278: getstatic     #158                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       281: iconst_1
+       282: anewarray     #39                 // class java/lang/String
+       285: dup
+       286: iconst_0
+       287: ldc           #112                // String shadowcolor
+       289: aastore
+       290: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       295: ifeq          303
+       298: aload_1
+       299: iconst_0
+       300: invokevirtual #161                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.createIfEmpty:(I)V
+       303: iconst_0
+       304: istore        6
+       306: iload         6
+       308: aload_1
+       309: invokevirtual #166                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getRenderTargetCount:()I
+       312: if_icmpge     366
+       315: iload         6
+       317: istore        7
+       319: aload_0
+       320: aload_2
+       321: iload         7
+       323: aload_1
+       324: invokedynamic #173,  0            // InvokeDynamic #18:getAsInt:(Lcom/google/common/collect/ImmutableSet;ILnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       329: getstatic     #158                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       332: iconst_1
+       333: anewarray     #39                 // class java/lang/String
+       336: dup
+       337: iconst_0
+       338: iload         6
+       340: invokedynamic #122,  0            // InvokeDynamic #5:makeConcatWithConstants:(I)Ljava/lang/String;
+       345: aastore
+       346: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       351: ifeq          360
+       354: aload_1
+       355: iload         7
+       357: invokevirtual #161                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.createIfEmpty:(I)V
+       360: iinc          6, 1
+       363: goto          306
+       366: aload_1
+       367: iconst_0
+       368: invokevirtual #176                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.isHardwareFiltered:(I)Z
+       371: ifeq          409
+       374: iload_3
+       375: ifeq          409
+       378: aload_0
+       379: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       382: aload_1
+       383: invokedynamic #180,  0            // InvokeDynamic #19:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       388: aload_1
+       389: invokedynamic #181,  0            // InvokeDynamic #20:get:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+       394: iconst_1
+       395: anewarray     #39                 // class java/lang/String
+       398: dup
+       399: iconst_0
+       400: ldc           #100                // String shadowtex0HW
+       402: aastore
+       403: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       408: pop
+       409: aload_1
+       410: iconst_1
+       411: invokevirtual #176                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.isHardwareFiltered:(I)Z
+       414: ifeq          452
+       417: iload_3
+       418: ifeq          452
+       421: aload_0
+       422: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       425: aload_1
+       426: invokedynamic #184,  0            // InvokeDynamic #21:getAsInt:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/IntSupplier;
+       431: aload_1
+       432: invokedynamic #185,  0            // InvokeDynamic #22:get:(Lnet/irisshaders/iris/shadows/ShadowRenderTargets;)Ljava/util/function/Supplier;
+       437: iconst_1
+       438: anewarray     #39                 // class java/lang/String
+       441: dup
+       442: iconst_0
+       443: ldc           #104                // String shadowtex1HW
+       445: aastore
+       446: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       451: pop
+       452: iload         4
+       454: ireturn
+
+  public static boolean hasPBRSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder);
+    Code:
+         0: aload_0
+         1: ldc           #186                // String normals
+         3: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+         8: ifne          22
+        11: aload_0
+        12: ldc           #188                // String specular
+        14: invokeinterface #41,  2           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.hasSampler:(Ljava/lang/String;)Z
+        19: ifeq          26
+        22: iconst_1
+        23: goto          27
+        26: iconst_0
+        27: ireturn
+
+  public static void addLevelSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.pipeline.WorldRenderingPipeline, net.minecraft.client.renderer.texture.AbstractTexture, boolean, boolean, boolean);
+    Code:
+         0: iload_3
+         1: ifeq          38
+         4: aload_0
+         5: iconst_0
+         6: iconst_4
+         7: anewarray     #39                 // class java/lang/String
+        10: dup
+        11: iconst_0
+        12: ldc           #192                // String tex
+        14: aastore
+        15: dup
+        16: iconst_1
+        17: ldc           #194                // String texture
+        19: aastore
+        20: dup
+        21: iconst_2
+        22: ldc           #196                // String gtexture
+        24: aastore
+        25: dup
+        26: iconst_3
+        27: ldc           #198                // String u_MainSampler
+        29: aastore
+        30: invokeinterface #200,  3          // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addExternalSampler:(I[Ljava/lang/String;)V
+        35: goto          89
+        38: aload_0
+        39: aload_2
+        40: invokedynamic #204,  0            // InvokeDynamic #23:getAsInt:(Lnet/minecraft/client/renderer/texture/AbstractTexture;)Ljava/util/function/IntSupplier;
+        45: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        48: bipush        6
+        50: anewarray     #39                 // class java/lang/String
+        53: dup
+        54: iconst_0
+        55: ldc           #192                // String tex
+        57: aastore
+        58: dup
+        59: iconst_1
+        60: ldc           #194                // String texture
+        62: aastore
+        63: dup
+        64: iconst_2
+        65: ldc           #196                // String gtexture
+        67: aastore
+        68: dup
+        69: iconst_3
+        70: ldc           #198                // String u_MainSampler
+        72: aastore
+        73: dup
+        74: iconst_4
+        75: ldc           #210                // String gcolor
+        77: aastore
+        78: dup
+        79: iconst_5
+        80: ldc           #212                // String colortex0
+        82: aastore
+        83: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        88: pop
+        89: iload         4
+        91: ifeq          113
+        94: aload_0
+        95: iconst_2
+        96: iconst_1
+        97: anewarray     #39                 // class java/lang/String
+       100: dup
+       101: iconst_0
+       102: ldc           #214                // String lightmap
+       104: aastore
+       105: invokeinterface #200,  3          // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addExternalSampler:(I[Ljava/lang/String;)V
+       110: goto          138
+       113: aload_0
+       114: aload_2
+       115: invokedynamic #216,  0            // InvokeDynamic #24:getAsInt:(Lnet/minecraft/client/renderer/texture/AbstractTexture;)Ljava/util/function/IntSupplier;
+       120: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       123: iconst_1
+       124: anewarray     #39                 // class java/lang/String
+       127: dup
+       128: iconst_0
+       129: ldc           #214                // String lightmap
+       131: aastore
+       132: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       137: pop
+       138: iload         5
+       140: ifeq          162
+       143: aload_0
+       144: iconst_1
+       145: iconst_1
+       146: anewarray     #39                 // class java/lang/String
+       149: dup
+       150: iconst_0
+       151: ldc           #217                // String iris_overlay
+       153: aastore
+       154: invokeinterface #200,  3          // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addExternalSampler:(I[Ljava/lang/String;)V
+       159: goto          187
+       162: aload_0
+       163: aload_2
+       164: invokedynamic #219,  0            // InvokeDynamic #25:getAsInt:(Lnet/minecraft/client/renderer/texture/AbstractTexture;)Ljava/util/function/IntSupplier;
+       169: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+       172: iconst_1
+       173: anewarray     #39                 // class java/lang/String
+       176: dup
+       177: iconst_0
+       178: ldc           #217                // String iris_overlay
+       180: aastore
+       181: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+       186: pop
+       187: aload_1
+       188: instanceof    #220                // class net/irisshaders/iris/pipeline/IrisRenderingPipeline
+       191: ifeq          290
+       194: aload_1
+       195: checkcast     #220                // class net/irisshaders/iris/pipeline/IrisRenderingPipeline
+       198: astore        6
+       200: aload_0
+       201: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       204: aload_1
+       205: dup
+       206: invokestatic  #222                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+       209: pop
+       210: invokedynamic #228,  0            // InvokeDynamic #26:getAsInt:(Lnet/irisshaders/iris/pipeline/WorldRenderingPipeline;)Ljava/util/function/IntSupplier;
+       215: getstatic     #229                // Field net/irisshaders/iris/gl/state/StateUpdateNotifiers.normalTextureChangeNotifier:Lnet/irisshaders/iris/gl/state/ValueUpdateNotifier;
+       218: aload         6
+       220: dup
+       221: invokestatic  #222                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+       224: pop
+       225: invokedynamic #235,  0            // InvokeDynamic #27:get:(Lnet/irisshaders/iris/pipeline/IrisRenderingPipeline;)Ljava/util/function/Supplier;
+       230: iconst_1
+       231: anewarray     #39                 // class java/lang/String
+       234: dup
+       235: iconst_0
+       236: ldc           #186                // String normals
+       238: aastore
+       239: invokeinterface #238,  6          // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/state/ValueUpdateNotifier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       244: pop
+       245: aload_0
+       246: getstatic     #51                 // Field net/irisshaders/iris/gl/texture/TextureType.TEXTURE_2D:Lnet/irisshaders/iris/gl/texture/TextureType;
+       249: aload_1
+       250: dup
+       251: invokestatic  #222                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+       254: pop
+       255: invokedynamic #240,  0            // InvokeDynamic #28:getAsInt:(Lnet/irisshaders/iris/pipeline/WorldRenderingPipeline;)Ljava/util/function/IntSupplier;
+       260: getstatic     #241                // Field net/irisshaders/iris/gl/state/StateUpdateNotifiers.specularTextureChangeNotifier:Lnet/irisshaders/iris/gl/state/ValueUpdateNotifier;
+       263: aload         6
+       265: dup
+       266: invokestatic  #222                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+       269: pop
+       270: invokedynamic #244,  0            // InvokeDynamic #29:get:(Lnet/irisshaders/iris/pipeline/IrisRenderingPipeline;)Ljava/util/function/Supplier;
+       275: iconst_1
+       276: anewarray     #39                 // class java/lang/String
+       279: dup
+       280: iconst_0
+       281: ldc           #188                // String specular
+       283: aastore
+       284: invokeinterface #238,  6          // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/state/ValueUpdateNotifier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+       289: pop
+       290: return
+
+  public static void addWorldDepthSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokedynamic #245,  0            // InvokeDynamic #30:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+         7: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        10: iconst_1
+        11: anewarray     #39                 // class java/lang/String
+        14: dup
+        15: iconst_0
+        16: ldc           #248                // String depthtex0
+        18: aastore
+        19: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        24: pop
+        25: aload_0
+        26: aload_1
+        27: invokedynamic #250,  0            // InvokeDynamic #31:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+        32: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        35: iconst_1
+        36: anewarray     #39                 // class java/lang/String
+        39: dup
+        40: iconst_0
+        41: ldc           #251                // String depthtex1
+        43: aastore
+        44: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        49: pop
+        50: aload_0
+        51: aload_1
+        52: invokedynamic #253,  0            // InvokeDynamic #32:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+        57: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        60: iconst_1
+        61: anewarray     #39                 // class java/lang/String
+        64: dup
+        65: iconst_0
+        66: ldc           #254                // String depthtex2
+        68: aastore
+        69: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        74: pop
+        75: return
+
+  public static void addCompositeSamplers(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokedynamic #256,  0            // InvokeDynamic #33:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+         7: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        10: iconst_2
+        11: anewarray     #39                 // class java/lang/String
+        14: dup
+        15: iconst_0
+        16: ldc_w         #257                // String gdepthtex
+        19: aastore
+        20: dup
+        21: iconst_1
+        22: ldc           #248                // String depthtex0
+        24: aastore
+        25: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        30: pop
+        31: aload_0
+        32: aload_1
+        33: invokedynamic #259,  0            // InvokeDynamic #34:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+        38: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        41: iconst_1
+        42: anewarray     #39                 // class java/lang/String
+        45: dup
+        46: iconst_0
+        47: ldc           #251                // String depthtex1
+        49: aastore
+        50: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        55: pop
+        56: aload_0
+        57: aload_1
+        58: invokedynamic #260,  0            // InvokeDynamic #35:getAsInt:(Lnet/irisshaders/iris/targets/RenderTargets;)Ljava/util/function/IntSupplier;
+        63: getstatic     #207                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        66: iconst_1
+        67: anewarray     #39                 // class java/lang/String
+        70: dup
+        71: iconst_0
+        72: ldc           #254                // String depthtex2
+        74: aastore
+        75: invokeinterface #89,  4           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Ljava/util/function/IntSupplier;Lnet/irisshaders/iris/gl/sampler/GlSampler;[Ljava/lang/String;)Z
+        80: pop
+        81: return
+
+  public static void addCustomTextures(net.irisshaders.iris.gl.sampler.SamplerHolder, it.unimi.dsi.fastutil.objects.Object2ObjectMap<java.lang.String, net.irisshaders.iris.gl.texture.TextureAccess>);
+    Code:
+         0: aload_1
+         1: aload_0
+         2: invokedynamic #261,  0            // InvokeDynamic #36:accept:(Lnet/irisshaders/iris/gl/sampler/SamplerHolder;)Ljava/util/function/BiConsumer;
+         7: invokeinterface #265,  2          // InterfaceMethod it/unimi/dsi/fastutil/objects/Object2ObjectMap.forEach:(Ljava/util/function/BiConsumer;)V
+        12: return
+
+  public static void addCustomImages(net.irisshaders.iris.gl.sampler.SamplerHolder, java.util.Set<net.irisshaders.iris.gl.image.GlImage>);
+    Code:
+         0: aload_1
+         1: aload_0
+         2: invokedynamic #271,  0            // InvokeDynamic #37:accept:(Lnet/irisshaders/iris/gl/sampler/SamplerHolder;)Ljava/util/function/Consumer;
+         7: invokeinterface #274,  2          // InterfaceMethod java/util/Set.forEach:(Ljava/util/function/Consumer;)V
+        12: return
+
+  public static com.mojang.renderpearl.api.textures.GpuSampler getTerrainCache(int);
+    Code:
+         0: getstatic     #279                // Field net/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings.INSTANCE:Lnet/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings;
+         3: invokevirtual #285                // Method net/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings.breaksAnisotropy:()Z
+         6: ifeq          11
+         9: iconst_1
+        10: istore_0
+        11: getstatic     #288                // Field terrain:[Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        14: iload_0
+        15: aaload
+        16: ifnonnull     48
+        19: getstatic     #288                // Field terrain:[Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        22: iload_0
+        23: invokestatic  #292                // Method com/mojang/blaze3d/systems/RenderSystem.getDevice:()Lcom/mojang/renderpearl/api/device/GpuDevice;
+        26: getstatic     #298                // Field com/mojang/renderpearl/api/textures/AddressMode.CLAMP_TO_EDGE:Lcom/mojang/renderpearl/api/textures/AddressMode;
+        29: getstatic     #298                // Field com/mojang/renderpearl/api/textures/AddressMode.CLAMP_TO_EDGE:Lcom/mojang/renderpearl/api/textures/AddressMode;
+        32: getstatic     #304                // Field com/mojang/renderpearl/api/textures/FilterMode.NEAREST:Lcom/mojang/renderpearl/api/textures/FilterMode;
+        35: getstatic     #304                // Field com/mojang/renderpearl/api/textures/FilterMode.NEAREST:Lcom/mojang/renderpearl/api/textures/FilterMode;
+        38: iload_0
+        39: invokestatic  #309                // Method java/util/OptionalDouble.empty:()Ljava/util/OptionalDouble;
+        42: invokeinterface #315,  7          // InterfaceMethod com/mojang/renderpearl/api/device/GpuDevice.createSampler:(Lcom/mojang/renderpearl/api/textures/AddressMode;Lcom/mojang/renderpearl/api/textures/AddressMode;Lcom/mojang/renderpearl/api/textures/FilterMode;Lcom/mojang/renderpearl/api/textures/FilterMode;ILjava/util/OptionalDouble;)Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        47: aastore
+        48: getstatic     #288                // Field terrain:[Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        51: iload_0
+        52: aaload
+        53: areturn
+
+  public static net.irisshaders.iris.gl.sampler.GlSampler getTerrainCacheIris(int);
+    Code:
+         0: getstatic     #279                // Field net/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings.INSTANCE:Lnet/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings;
+         3: invokevirtual #285                // Method net/irisshaders/iris/shaderpack/materialmap/WorldRenderingSettings.breaksAnisotropy:()Z
+         6: ifeq          11
+         9: iconst_1
+        10: istore_0
+        11: getstatic     #321                // Field terrainS:[Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        14: iload_0
+        15: aaload
+        16: ifnonnull     41
+        19: getstatic     #321                // Field terrainS:[Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        22: iload_0
+        23: new           #82                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        26: dup
+        27: iload_0
+        28: invokestatic  #325                // Method getTerrainCache:(I)Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        31: checkcast     #329                // class com/mojang/renderpearl/backend/opengl/GlSampler
+        34: invokevirtual #331                // Method com/mojang/renderpearl/backend/opengl/GlSampler.getId:()I
+        37: invokespecial #334                // Method net/irisshaders/iris/gl/sampler/GlSampler."<init>":(I)V
+        40: aastore
+        41: getstatic     #321                // Field terrainS:[Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        44: iload_0
+        45: aaload
+        46: areturn
+
+  private static void lambda$addCustomImages$0(net.irisshaders.iris.gl.sampler.SamplerHolder, net.irisshaders.iris.gl.image.GlImage);
+    Code:
+         0: aload_1
+         1: invokevirtual #336                // Method net/irisshaders/iris/gl/image/GlImage.getSamplerName:()Ljava/lang/String;
+         4: ifnull        41
+         7: aload_0
+         8: aload_1
+         9: invokevirtual #342                // Method net/irisshaders/iris/gl/image/GlImage.getTarget:()Lnet/irisshaders/iris/gl/texture/TextureType;
+        12: aload_1
+        13: dup
+        14: invokestatic  #222                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+        17: pop
+        18: invokedynamic #346,  0            // InvokeDynamic #38:getAsInt:(Lnet/irisshaders/iris/gl/image/GlImage;)Ljava/util/function/IntSupplier;
+        23: aconst_null
+        24: iconst_1
+        25: anewarray     #39                 // class java/lang/String
+        28: dup
+        29: iconst_0
+        30: aload_1
+        31: invokevirtual #336                // Method net/irisshaders/iris/gl/image/GlImage.getSamplerName:()Ljava/lang/String;
+        34: aastore
+        35: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+        40: pop
+        41: return
+
+  private static void lambda$addCustomTextures$0(net.irisshaders.iris.gl.sampler.SamplerHolder, java.lang.String, net.irisshaders.iris.gl.texture.TextureAccess);
+    Code:
+         0: aload_0
+         1: aload_2
+         2: invokeinterface #349,  1          // InterfaceMethod net/irisshaders/iris/gl/texture/TextureAccess.getType:()Lnet/irisshaders/iris/gl/texture/TextureType;
+         7: aload_2
+         8: invokeinterface #75,  1           // InterfaceMethod net/irisshaders/iris/gl/texture/TextureAccess.getTextureId:()Ljava/util/function/IntSupplier;
+        13: aload_2
+        14: invokedynamic #352,  0            // InvokeDynamic #39:get:(Lnet/irisshaders/iris/gl/texture/TextureAccess;)Ljava/util/function/Supplier;
+        19: iconst_1
+        20: anewarray     #39                 // class java/lang/String
+        23: dup
+        24: iconst_0
+        25: aload_1
+        26: aastore
+        27: invokeinterface #61,  5           // InterfaceMethod net/irisshaders/iris/gl/sampler/SamplerHolder.addDynamicSampler:(Lnet/irisshaders/iris/gl/texture/TextureType;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;[Ljava/lang/String;)Z
+        32: pop
+        33: return
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addCustomTextures$1(net.irisshaders.iris.gl.texture.TextureAccess);
+    Code:
+         0: aload_0
+         1: invokeinterface #355,  1          // InterfaceMethod net/irisshaders/iris/gl/texture/TextureAccess.getSampling:()Lnet/irisshaders/iris/gl/sampler/GlSampler;
+         6: areturn
+
+  private static int lambda$addCompositeSamplers$2(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #359                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTextureNoHand:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addCompositeSamplers$1(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #368                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTextureNoTranslucents:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addCompositeSamplers$0(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #371                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addWorldDepthSamplers$2(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #359                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTextureNoHand:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addWorldDepthSamplers$1(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #368                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTextureNoTranslucents:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addWorldDepthSamplers$0(net.irisshaders.iris.targets.RenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #371                // Method net/irisshaders/iris/targets/RenderTargets.getDepthTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addLevelSamplers$2(net.minecraft.client.renderer.texture.AbstractTexture);
+    Code:
+         0: aload_0
+         1: invokevirtual #374                // Method net/minecraft/client/renderer/texture/AbstractTexture.getTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addLevelSamplers$1(net.minecraft.client.renderer.texture.AbstractTexture);
+    Code:
+         0: aload_0
+         1: invokevirtual #374                // Method net/minecraft/client/renderer/texture/AbstractTexture.getTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addLevelSamplers$0(net.minecraft.client.renderer.texture.AbstractTexture);
+    Code:
+         0: aload_0
+         1: invokevirtual #374                // Method net/minecraft/client/renderer/texture/AbstractTexture.getTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$15(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+         5: areturn
+
+  private static int lambda$addShadowSamplers$14(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #383                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTextureNoTranslucents:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$13(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+         5: areturn
+
+  private static int lambda$addShadowSamplers$12(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #384                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addShadowSamplers$11(com.google.common.collect.ImmutableSet, int, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+         5: invokevirtual #391                // Method com/google/common/collect/ImmutableSet.contains:(Ljava/lang/Object;)Z
+         8: ifeq          22
+        11: aload_2
+        12: iload_1
+        13: invokevirtual #397                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.get:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        16: invokevirtual #400                // Method net/irisshaders/iris/targets/RenderTarget.getAltTexture:()I
+        19: goto          30
+        22: aload_2
+        23: iload_1
+        24: invokevirtual #397                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.get:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        27: invokevirtual #405                // Method net/irisshaders/iris/targets/RenderTarget.getMainTexture:()I
+        30: ireturn
+
+  private static int lambda$addShadowSamplers$10(com.google.common.collect.ImmutableSet, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+         5: invokevirtual #391                // Method com/google/common/collect/ImmutableSet.contains:(Ljava/lang/Object;)Z
+         8: ifeq          22
+        11: aload_1
+        12: iconst_0
+        13: invokevirtual #397                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.get:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        16: invokevirtual #400                // Method net/irisshaders/iris/targets/RenderTarget.getAltTexture:()I
+        19: goto          30
+        22: aload_1
+        23: iconst_0
+        24: invokevirtual #397                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.get:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        27: invokevirtual #405                // Method net/irisshaders/iris/targets/RenderTarget.getMainTexture:()I
+        30: ireturn
+
+  private static int lambda$addShadowSamplers$9(net.irisshaders.iris.shadows.ShadowRenderTargets, int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokevirtual #408                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getColorTextureId:(I)I
+         5: ireturn
+
+  private static int lambda$addShadowSamplers$8(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: invokevirtual #408                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getColorTextureId:(I)I
+         5: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$7(boolean, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: iload_0
+         1: ifeq          8
+         4: aconst_null
+         5: goto          13
+         8: aload_1
+         9: iconst_1
+        10: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        13: areturn
+
+  private static int lambda$addShadowSamplers$6(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #383                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTextureNoTranslucents:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$5(boolean, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: iload_0
+         1: ifeq          8
+         4: aconst_null
+         5: goto          13
+         8: aload_1
+         9: iconst_0
+        10: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        13: areturn
+
+  private static int lambda$addShadowSamplers$4(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #384                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$3(boolean, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: iload_0
+         1: ifeq          8
+         4: aconst_null
+         5: goto          13
+         8: aload_1
+         9: iconst_1
+        10: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        13: areturn
+
+  private static int lambda$addShadowSamplers$2(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #383                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTextureNoTranslucents:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addShadowSamplers$1(boolean, net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: iload_0
+         1: ifeq          8
+         4: aconst_null
+         5: goto          13
+         8: aload_1
+         9: iconst_0
+        10: invokevirtual #379                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getSamplerFor:(I)Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        13: areturn
+
+  private static int lambda$addShadowSamplers$0(net.irisshaders.iris.shadows.ShadowRenderTargets);
+    Code:
+         0: aload_0
+         1: invokevirtual #384                // Method net/irisshaders/iris/shadows/ShadowRenderTargets.getDepthTexture:()Lcom/mojang/renderpearl/api/textures/GpuTexture;
+         4: invokeinterface #363,  1          // InterfaceMethod com/mojang/renderpearl/api/textures/GpuTexture.iris$getGlId:()I
+         9: ireturn
+
+  private static int lambda$addRenderTargetSamplers$3(net.irisshaders.iris.pipeline.WorldRenderingPipeline);
+    Code:
+         0: aload_0
+         1: invokeinterface #412,  1          // InterfaceMethod net/irisshaders/iris/pipeline/WorldRenderingPipeline.getDHCompat:()Lnet/irisshaders/iris/compat/dh/DHCompat;
+         6: invokevirtual #418                // Method net/irisshaders/iris/compat/dh/DHCompat.getDepthTexNoTranslucent:()I
+         9: ireturn
+
+  private static int lambda$addRenderTargetSamplers$2(net.irisshaders.iris.pipeline.WorldRenderingPipeline);
+    Code:
+         0: aload_0
+         1: invokeinterface #412,  1          // InterfaceMethod net/irisshaders/iris/pipeline/WorldRenderingPipeline.getDHCompat:()Lnet/irisshaders/iris/compat/dh/DHCompat;
+         6: invokevirtual #423                // Method net/irisshaders/iris/compat/dh/DHCompat.getDepthTex:()I
+         9: ireturn
+
+  private static net.irisshaders.iris.gl.sampler.GlSampler lambda$addRenderTargetSamplers$1(java.util.function.Supplier, net.irisshaders.iris.targets.RenderTargets, int);
+    Code:
+         0: aload_0
+         1: invokeinterface #426,  1          // InterfaceMethod java/util/function/Supplier.get:()Ljava/lang/Object;
+         6: checkcast     #392                // class com/google/common/collect/ImmutableSet
+         9: astore_3
+        10: aload_1
+        11: iload_2
+        12: invokevirtual #430                // Method net/irisshaders/iris/targets/RenderTargets.getOrCreate:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        15: astore        4
+        17: aload_3
+        18: iload_2
+        19: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        22: invokevirtual #391                // Method com/google/common/collect/ImmutableSet.contains:(Ljava/lang/Object;)Z
+        25: ifeq          34
+        28: aload         4
+        30: invokevirtual #433                // Method net/irisshaders/iris/targets/RenderTarget.getAltSampler:()Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        33: areturn
+        34: aload         4
+        36: invokevirtual #436                // Method net/irisshaders/iris/targets/RenderTarget.getMainSampler:()Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        39: areturn
+
+  private static int lambda$addRenderTargetSamplers$0(java.util.function.Supplier, net.irisshaders.iris.targets.RenderTargets, int);
+    Code:
+         0: aload_0
+         1: invokeinterface #426,  1          // InterfaceMethod java/util/function/Supplier.get:()Ljava/lang/Object;
+         6: checkcast     #392                // class com/google/common/collect/ImmutableSet
+         9: astore_3
+        10: aload_1
+        11: iload_2
+        12: invokevirtual #430                // Method net/irisshaders/iris/targets/RenderTargets.getOrCreate:(I)Lnet/irisshaders/iris/targets/RenderTarget;
+        15: astore        4
+        17: aload_3
+        18: iload_2
+        19: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        22: invokevirtual #391                // Method com/google/common/collect/ImmutableSet.contains:(Ljava/lang/Object;)Z
+        25: ifeq          34
+        28: aload         4
+        30: invokevirtual #400                // Method net/irisshaders/iris/targets/RenderTarget.getAltTexture:()I
+        33: ireturn
+        34: aload         4
+        36: invokevirtual #405                // Method net/irisshaders/iris/targets/RenderTarget.getMainTexture:()I
+        39: ireturn
+
+  static {};
+    Code:
+         0: iconst_0
+         1: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+         4: iconst_1
+         5: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+         8: iconst_2
+         9: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: iconst_3
+        13: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        16: invokestatic  #441                // Method com/google/common/collect/ImmutableSet.of:(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Lcom/google/common/collect/ImmutableSet;
+        19: putstatic     #445                // Field WORLD_RESERVED_TEXTURE_UNITS:Lcom/google/common/collect/ImmutableSet;
+        22: iconst_0
+        23: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        26: iconst_2
+        27: invokestatic  #385                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        30: invokestatic  #449                // Method com/google/common/collect/ImmutableSet.of:(Ljava/lang/Object;Ljava/lang/Object;)Lcom/google/common/collect/ImmutableSet;
+        33: putstatic     #452                // Field SODIUM_RESERVED_TEXTURE_UNITS:Lcom/google/common/collect/ImmutableSet;
+        36: invokestatic  #455                // Method com/google/common/collect/ImmutableSet.of:()Lcom/google/common/collect/ImmutableSet;
+        39: putstatic     #458                // Field COMPOSITE_RESERVED_TEXTURE_UNITS:Lcom/google/common/collect/ImmutableSet;
+        42: bipush        16
+        44: anewarray     #461                // class com/mojang/renderpearl/api/textures/GpuSampler
+        47: putstatic     #288                // Field terrain:[Lcom/mojang/renderpearl/api/textures/GpuSampler;
+        50: bipush        16
+        52: anewarray     #82                 // class net/irisshaders/iris/gl/sampler/GlSampler
+        55: putstatic     #321                // Field terrainS:[Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        58: return
+}

@@ -27,7 +27,7 @@ def run(api):
             '#define worldPos vec3(gl_FragCoord.x*0.1,64.0,gl_FragCoord.y*0.1)')
         code=code.replace('in vec4 tangent;','')
         code=code.replace('flat in float materialId;','const float materialId=1003.0;')
-        p=f.program('composite6.fsh',values,fragment=code)
+        p=f.program('composite7.fsh',values,fragment=code)
         f.call('glUseProgram',None,[c.c_uint],p)
         loc=f.call('glGetUniformLocation',c.c_int,[c.c_uint,c.c_char_p],p,b'eyeBrightnessSmooth')
         f.call('glUniform2i',None,[c.c_int,c.c_int,c.c_int],loc,200,200)
@@ -46,10 +46,10 @@ def run(api):
                       '#define viewPos vec3(0.0,0.0,-4.0)')
     prefix=code[:code.rfind('void main(){')]
     fragment=prefix+'''void main(){
-color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
-           float(waterReflectionAboveSurface(texcoord,true)),0,1);}
+color=vec4(float(waterReflectionAboveSurface(texcoord,false,vec3(0,0,-4))),
+           float(waterReflectionAboveSurface(texcoord,true,vec3(0,0,-4))),0,1);}
 '''
-    p=f.program('composite6.fsh',values,fragment=fragment)
+    p=f.program('composite7.fsh',values,fragment=fragment)
     f.texture([0.5,0,0,1]*pixels,2)
     out=f.render(p,[target,material],u)
     for y in range(f.h):
@@ -68,7 +68,7 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
             depths.extend((1.0 if bright else 0.5,0,0,1))
     f.texture(scene,0); f.texture(depths,2)
     fragment=prefix+'void main(){color=vec4(waterReflectionSample(texcoord,0.14),1);}'
-    p=f.program('composite6.fsh',values,fragment=fragment)
+    p=f.program('composite7.fsh',values,fragment=fragment)
     out=f.render(p,[target,material],u)
     dark=[out[(y*f.w+x)*4] for y in range(f.h//2+3,f.h-3)
           for x in range(3,f.w-3) if (x+y)%2==0]
@@ -81,7 +81,7 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
         vec3 side=waterSurfaceNormal(vec3(1,0,0),slope);
         color=vec4(length(a-b),length(side-vec3(1,0,0)),length(a),1);
     }'''
-    p=f.program('composite6.fsh',values,fragment=fragment)
+    p=f.program('composite7.fsh',values,fragment=fragment)
     out=f.render(p,[target,material],u)
     assert max(out[0::4])<1e-6, 'Fluid triangles have different wave planes'
     assert max(out[1::4])<1e-6, 'Waterfall normals were deformed by top-surface waves'
@@ -92,7 +92,7 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
     normal_fragment=normal_fragment.replace('    bool validBehind;',
         '    color=vec4(worldDirection(N)*0.5+0.5,1.0); return;\n    bool validBehind;')
     f.texture([1,1,1,1]*pixels,1)
-    p=f.program('composite6.fsh',values,fragment=normal_fragment)
+    p=f.program('composite7.fsh',values,fragment=normal_fragment)
     low=f.render(p,[target,material],dict(u,isEyeInWater=0,testViewPosition=(0.,-0.05,-4.)))
     jumped=f.render(p,[target,material],dict(u,isEyeInWater=0,testViewPosition=(0.,-1.8,-4.)))
     difference=max(abs(a-b) for a,b in zip(low,jumped))
@@ -117,13 +117,13 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
     f.texture([1,1,1,1]*(128*64),3,128,64)
     diagnostic=optics.replace('color = vec4(max(result, vec3(0.0)), 1.0);',
         'color = vec4(abs(R-reflect(-V,N)),1);')
-    p=f.program('composite6.fsh',values,fragment=diagnostic)
+    p=f.program('composite7.fsh',values,fragment=diagnostic)
     out=f.render(p,[target,material],dict(u,isEyeInWater=0))
     error=max(out[0::4]+out[1::4]+out[2::4])
     assert error<1e-5, f'Water reflection ray collapses onto a fixed horizon: {error:.6f}'
     diagnostic=optics.replace('color = vec4(max(result, vec3(0.0)), 1.0);',
         'color = vec4(max(result,vec3(0)),dot(N,V));')
-    p=f.program('composite6.fsh',values,fragment=diagnostic)
+    p=f.program('composite7.fsh',values,fragment=diagnostic)
     out=f.render(p,[target,material],dict(u,isEyeInWater=0))
     backfaces=[out[i] for i in range(0,len(out),4) if out[i+3]<-0.01]
     assert backfaces and max(backfaces)<1e-5, 'Back-facing wave facets became bright mirrors'
@@ -131,11 +131,11 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
 
     f.texture(scene,0)
     blur_values=dict(values,MOTION_BLUR=True,MOTION_BLUR_LOW_LATENCY=True,UPSCALE_QUALITY='0')
-    blur_prefix=api['source'](api['ROOT']/'composite6.fsh',blur_values,False).split('in vec2 texcoord;')[0]
+    blur_prefix=api['source'](api['ROOT']/'composite7.fsh',blur_values,False).split('in vec2 texcoord;')[0]
     fragment=blur_prefix+'''in vec2 texcoord; layout(location=0) out vec4 color;
     void main(){vec3 now=textureScreen(colortex0,texcoord).rgb;
     color=vec4(applyMotionBlur(texcoord,now),1);}'''
-    p=f.program('composite6.fsh',blur_values,fragment=fragment)
+    p=f.program('composite7.fsh',blur_values,fragment=fragment)
     f.texture([0.8,0,0,1]*pixels,2)
     f.texture([0.14,1,0,0.25]*pixels,6)
     blur_u=dict(u,colortex0=0,colortex2=6,depthtex0=2,
@@ -154,7 +154,7 @@ color=vec4(float(waterReflectionAboveSurface(texcoord,false)),
     fragment=taa_prefix+"""in vec2 texcoord; layout(location=0) out vec4 color;
     void main(){float z; vec3 now=textureScreen(colortex0,texcoord).rgb;
     vec3 resolved=applyTAA(texcoord,now,z); color=vec4(resolved,z);}"""
-    p=f.program('composite6.fsh',taa_values,fragment=fragment)
+    p=f.program('composite7.fsh',taa_values,fragment=fragment)
     n,far=.05,256.0
     pa,pb=-(far+n)/(far-n),-2*far*n/(far-n)
     proj=[1,0,0,0,0,1,0,0,0,0,pa,-1,0,0,pb,0]

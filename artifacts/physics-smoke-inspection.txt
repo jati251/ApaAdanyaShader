@@ -1,0 +1,855 @@
+Compiled from "SmokeVolumeRenderer.java"
+public class net.diebuddies.render.SmokeVolumeRenderer {
+  private static final int CASCADES;
+
+  private net.diebuddies.physics.smoke.volumetric.RayMarcherEffect smokeVolume;
+
+  private boolean smokeVolumeUnavailable;
+
+  private net.diebuddies.physics.smoke.fire.FireParticleRenderer fireRenderer;
+
+  private boolean firePrepared;
+
+  private final net.diebuddies.render.MainRenderer mainRenderer;
+
+  private final boolean supported;
+
+  public net.diebuddies.render.SmokeVolumeRenderer(net.diebuddies.render.MainRenderer);
+    Code:
+         0: aload_0
+         1: invokespecial #3                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #9                  // Field mainRenderer:Lnet/diebuddies/render/MainRenderer;
+         9: aload_0
+        10: invokestatic  #15                 // Method supportsVolumetricSmoke:()Z
+        13: putfield      #19                 // Field supported:Z
+        16: return
+
+  public void prepare(net.minecraft.client.multiplayer.ClientLevel, org.joml.Matrix4f, org.joml.Matrix4f, net.minecraft.world.phys.Vec3);
+    Code:
+         0: aload_0
+         1: invokevirtual #23                 // Method clearPrepared:()V
+         4: return
+
+  private void prepareFrame(net.minecraft.client.multiplayer.ClientLevel, org.joml.Matrix4f, org.joml.Matrix4f, net.minecraft.world.phys.Vec3);
+    Code:
+         0: aload_1
+         1: invokestatic  #26                 // Method net/diebuddies/physics/PhysicsMod.getInstance:(Lnet/minecraft/client/multiplayer/ClientLevel;)Lnet/diebuddies/physics/PhysicsMod;
+         4: astore        5
+         6: aload         5
+         8: invokevirtual #32                 // Method net/diebuddies/physics/PhysicsMod.getPhysicsWorld:()Lnet/diebuddies/physics/PhysicsWorld;
+        11: astore        6
+        13: aload         6
+        15: invokevirtual #36                 // Method net/diebuddies/physics/PhysicsWorld.getSmokeDomain:()Lnet/diebuddies/physics/smoke/SmokeDomain;
+        18: astore        7
+        20: invokestatic  #42                 // Method net/diebuddies/config/ConfigClient.areVolumetricSmokePhysicsEnabled:()Z
+        23: ifeq          45
+        26: aload_0
+        27: getfield      #19                 // Field supported:Z
+        30: ifeq          45
+        33: aload         7
+        35: invokevirtual #47                 // Method net/diebuddies/physics/smoke/SmokeDomain.particleCount:()I
+        38: ifle          45
+        41: iconst_1
+        42: goto          46
+        45: iconst_0
+        46: istore        8
+        48: invokestatic  #53                 // Method net/diebuddies/physics/StarterClient.iris:()Z
+        51: ifeq          64
+        54: invokestatic  #56                 // Method net/diebuddies/compat/Iris.isExtending:()Z
+        57: ifeq          64
+        60: iconst_1
+        61: goto          65
+        64: iconst_0
+        65: istore        9
+        67: iload         9
+        69: ifeq          79
+        72: aload_2
+        73: invokestatic  #61                 // Method net/diebuddies/compat/Iris.getGbufferModelView:(Lorg/joml/Matrix4fc;)Lorg/joml/Matrix4f;
+        76: goto          80
+        79: aload_2
+        80: astore        10
+        82: iload         9
+        84: ifeq          94
+        87: aload_3
+        88: invokestatic  #65                 // Method net/diebuddies/compat/Iris.getGbufferProjection:(Lorg/joml/Matrix4fc;)Lorg/joml/Matrix4f;
+        91: goto          95
+        94: aload_3
+        95: astore        11
+        97: aload_0
+        98: aload_0
+        99: aload         7
+       101: aload         10
+       103: aload         11
+       105: aload         4
+       107: iload         9
+       109: invokevirtual #68                 // Method prepareFire:(Lnet/diebuddies/physics/smoke/SmokeDomain;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lnet/minecraft/world/phys/Vec3;Z)Z
+       112: putfield      #72                 // Field firePrepared:Z
+       115: iload         8
+       117: ifeq          127
+       120: aload_0
+       121: invokevirtual #75                 // Method ensureSmokeVolume:()Z
+       124: ifne          128
+       127: return
+       128: aload_0
+       129: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+       132: aload_0
+       133: invokevirtual #82                 // Method getDownsampleFactor:()I
+       136: invokevirtual #85                 // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.setDownsampleFactor:(I)V
+       139: aload_0
+       140: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+       143: aload         7
+       145: aload         10
+       147: aload         11
+       149: aload         4
+       151: aload_0
+       152: getfield      #72                 // Field firePrepared:Z
+       155: ifeq          168
+       158: aload_0
+       159: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+       162: invokevirtual #95                 // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.colorTextureView:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+       165: goto          169
+       168: aconst_null
+       169: aload_0
+       170: getfield      #72                 // Field firePrepared:Z
+       173: ifeq          186
+       176: aload_0
+       177: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+       180: invokevirtual #101                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.depthTextureView:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+       183: goto          187
+       186: aconst_null
+       187: invokevirtual #104                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.prepare:(Lnet/diebuddies/physics/smoke/SmokeDomain;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lnet/minecraft/world/phys/Vec3;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lcom/mojang/renderpearl/api/textures/GpuTextureView;)V
+       190: return
+
+  private boolean prepareFire(net.diebuddies.physics.smoke.SmokeDomain, org.joml.Matrix4f, org.joml.Matrix4f, net.minecraft.world.phys.Vec3, boolean);
+    Code:
+         0: invokestatic  #108                // Method net/diebuddies/config/ConfigClient.areAnyFireVfxEnabled:()Z
+         3: ifeq          16
+         6: aload_1
+         7: invokevirtual #111                // Method net/diebuddies/physics/smoke/SmokeDomain.getFireParticles:()Lnet/diebuddies/physics/smoke/fire/FireParticleSimulation;
+        10: invokevirtual #115                // Method net/diebuddies/physics/smoke/fire/FireParticleSimulation.particleCount:()I
+        13: ifgt          18
+        16: iconst_0
+        17: ireturn
+        18: aload_0
+        19: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        22: ifnonnull     36
+        25: aload_0
+        26: new           #96                 // class net/diebuddies/physics/smoke/fire/FireParticleRenderer
+        29: dup
+        30: invokespecial #118                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer."<init>":()V
+        33: putfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        36: iload         5
+        38: ifeq          48
+        41: aload_0
+        42: getfield      #9                  // Field mainRenderer:Lnet/diebuddies/render/MainRenderer;
+        45: invokestatic  #119                // Method net/diebuddies/compat/Iris.setRenderingPipelineToEntities:(Lnet/diebuddies/render/MainRenderer;)V
+        48: aload_0
+        49: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        52: aload_1
+        53: invokevirtual #111                // Method net/diebuddies/physics/smoke/SmokeDomain.getFireParticles:()Lnet/diebuddies/physics/smoke/fire/FireParticleSimulation;
+        56: aload_2
+        57: aload_3
+        58: aload         4
+        60: invokevirtual #123                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.prepare:(Lnet/diebuddies/physics/smoke/fire/FireParticleSimulation;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lnet/minecraft/world/phys/Vec3;)Z
+        63: istore        6
+        65: iload         5
+        67: ifeq          77
+        70: aload_0
+        71: getfield      #9                  // Field mainRenderer:Lnet/diebuddies/render/MainRenderer;
+        74: invokestatic  #126                // Method net/diebuddies/compat/Iris.setRenderingPipelineToNone:(Lnet/diebuddies/render/MainRenderer;)V
+        77: iload         6
+        79: ireturn
+        80: astore        7
+        82: iload         5
+        84: ifeq          94
+        87: aload_0
+        88: getfield      #9                  // Field mainRenderer:Lnet/diebuddies/render/MainRenderer;
+        91: invokestatic  #126                // Method net/diebuddies/compat/Iris.setRenderingPipelineToNone:(Lnet/diebuddies/render/MainRenderer;)V
+        94: aload         7
+        96: athrow
+      Exception table:
+         from    to  target type
+            48    65    80   any
+            80    82    80   any
+
+  private boolean ensureSmokeVolume();
+    Code:
+         0: aload_0
+         1: getfield      #129                // Field smokeVolumeUnavailable:Z
+         4: ifeq          9
+         7: iconst_0
+         8: ireturn
+         9: aload_0
+        10: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        13: ifnonnull     58
+        16: aload_0
+        17: new           #86                 // class net/diebuddies/physics/smoke/volumetric/RayMarcherEffect
+        20: dup
+        21: iconst_4
+        22: iconst_1
+        23: invokespecial #132                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect."<init>":(II)V
+        26: putfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        29: aload_0
+        30: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        33: invokevirtual #135                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.isSupported:()Z
+        36: ifne          58
+        39: aload_0
+        40: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        43: invokevirtual #138                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.close:()V
+        46: aload_0
+        47: aconst_null
+        48: putfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        51: aload_0
+        52: iconst_1
+        53: putfield      #129                // Field smokeVolumeUnavailable:Z
+        56: iconst_0
+        57: ireturn
+        58: iconst_1
+        59: ireturn
+
+  public void render(com.mojang.renderpearl.api.commands.RenderPass);
+    Code:
+         0: aload_0
+         1: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+         4: ifnull        42
+         7: aload_0
+         8: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        11: invokevirtual #141                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.isPrepared:()Z
+        14: ifeq          42
+        17: aload_0
+        18: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        21: aload_1
+        22: invokevirtual #144                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.render:(Lcom/mojang/renderpearl/api/commands/RenderPass;)V
+        25: aload_0
+        26: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        29: ifnull        64
+        32: aload_0
+        33: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        36: invokevirtual #148                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.clearPrepared:()V
+        39: goto          64
+        42: aload_0
+        43: getfield      #72                 // Field firePrepared:Z
+        46: ifeq          64
+        49: aload_0
+        50: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        53: ifnull        64
+        56: aload_0
+        57: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        60: aload_1
+        61: invokevirtual #149                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.render:(Lcom/mojang/renderpearl/api/commands/RenderPass;)V
+        64: aload_0
+        65: iconst_0
+        66: putfield      #72                 // Field firePrepared:Z
+        69: return
+
+  public void clearPrepared();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: putfield      #72                 // Field firePrepared:Z
+         5: aload_0
+         6: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+         9: ifnull        19
+        12: aload_0
+        13: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        16: invokevirtual #148                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.clearPrepared:()V
+        19: aload_0
+        20: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        23: ifnull        33
+        26: aload_0
+        27: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        30: invokevirtual #150                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.clearPrepared:()V
+        33: return
+
+  private static boolean isShadowPass();
+    Code:
+         0: invokestatic  #53                 // Method net/diebuddies/physics/StarterClient.iris:()Z
+         3: ifeq          18
+         6: invokestatic  #56                 // Method net/diebuddies/compat/Iris.isExtending:()Z
+         9: ifeq          18
+        12: invokestatic  #151                // Method net/diebuddies/compat/Iris.isShadowPass:()Z
+        15: ifne          30
+        18: getstatic     #154                // Field net/diebuddies/physics/StarterClient.optifabric:Z
+        21: ifeq          34
+        24: invokestatic  #157                // Method net/diebuddies/compat/Optifine.isShadowPass:()Z
+        27: ifeq          34
+        30: iconst_1
+        31: goto          35
+        34: iconst_0
+        35: ireturn
+
+  private int getDownsampleFactor();
+    Code:
+         0: getstatic     #160                // Field net/diebuddies/config/ConfigClient.smokeVolumeQuality:I
+         3: tableswitch   { // 0 to 4
+                       0: 36
+                       1: 41
+                       2: 46
+                       3: 50
+                       4: 54
+                 default: 58
+            }
+        36: bipush        16
+        38: goto          59
+        41: bipush        8
+        43: goto          59
+        46: iconst_4
+        47: goto          59
+        50: iconst_2
+        51: goto          59
+        54: iconst_1
+        55: goto          59
+        58: iconst_1
+        59: ireturn
+
+  public void destroy();
+    Code:
+         0: aload_0
+         1: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+         4: ifnull        19
+         7: aload_0
+         8: getfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        11: invokevirtual #164                // Method net/diebuddies/physics/smoke/fire/FireParticleRenderer.close:()V
+        14: aload_0
+        15: aconst_null
+        16: putfield      #91                 // Field fireRenderer:Lnet/diebuddies/physics/smoke/fire/FireParticleRenderer;
+        19: aload_0
+        20: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        23: ifnull        38
+        26: aload_0
+        27: getfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        30: invokevirtual #138                // Method net/diebuddies/physics/smoke/volumetric/RayMarcherEffect.close:()V
+        33: aload_0
+        34: aconst_null
+        35: putfield      #78                 // Field smokeVolume:Lnet/diebuddies/physics/smoke/volumetric/RayMarcherEffect;
+        38: aload_0
+        39: iconst_0
+        40: putfield      #129                // Field smokeVolumeUnavailable:Z
+        43: return
+
+  public static boolean supportsVolumetricSmoke();
+    Code:
+         0: invokestatic  #165                // Method com/mojang/blaze3d/systems/RenderSystem.getDevice:()Lcom/mojang/renderpearl/api/device/GpuDevice;
+         3: checkcast     #171                // class com/mojang/renderpearl/frontend/FrontendGpuDevice
+         6: getfield      #173                // Field com/mojang/renderpearl/frontend/FrontendGpuDevice.backend:Lcom/mojang/renderpearl/backend/api/GpuDeviceBackend;
+         9: astore_0
+        10: aload_0
+        11: instanceof    #177                // class com/mojang/renderpearl/backend/vulkan/VulkanDevice
+        14: ifne          26
+        17: invokestatic  #179                // Method net/diebuddies/physics/smoke/volumetric/GLCompat.features:()Lnet/diebuddies/physics/smoke/volumetric/GLCompat$Features;
+        20: getfield      #185                // Field net/diebuddies/physics/smoke/volumetric/GLCompat$Features.supportsSmokeComputePipeline:Z
+        23: ifeq          30
+        26: iconst_1
+        27: goto          31
+        30: iconst_0
+        31: ireturn
+}
+Compiled from "ShaderInjectionSmoke.java"
+public class net.diebuddies.physics.smoke.ShaderInjectionSmoke {
+  private static java.lang.String position;
+
+  private static java.lang.String normalMatrix;
+
+  private static java.lang.String normal;
+
+  private static java.lang.String multiCoord0;
+
+  private static java.lang.String modelViewProjectionMatrix;
+
+  private static java.lang.String outputColor0;
+
+  private static java.lang.String outputColor1;
+
+  private static java.lang.String outputColor2;
+
+  private static java.lang.String outputColor3;
+
+  private static java.lang.String outputColor4;
+
+  private static java.lang.String lmCoord;
+
+  public net.diebuddies.physics.smoke.ShaderInjectionSmoke();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  private static void setupOptifineInjection();
+    Code:
+         0: ldc           #7                  // String vec4(vaPosition + modelOffset, 1.0)
+         2: putstatic     #9                  // Field position:Ljava/lang/String;
+         5: ldc           #15                 // String normalMatrix
+         7: putstatic     #17                 // Field normalMatrix:Ljava/lang/String;
+        10: ldc           #19                 // String vaNormal
+        12: putstatic     #21                 // Field normal:Ljava/lang/String;
+        15: ldc           #24                 // String vec4(vaUV0, 0.0, 1.0)
+        17: putstatic     #26                 // Field multiCoord0:Ljava/lang/String;
+        20: ldc           #29                 // String (projectionMatrix * modelViewMatrix)
+        22: putstatic     #31                 // Field modelViewProjectionMatrix:Ljava/lang/String;
+        25: ldc           #34                 // String outColor0
+        27: putstatic     #36                 // Field outputColor0:Ljava/lang/String;
+        30: ldc           #39                 // String outColor1
+        32: putstatic     #41                 // Field outputColor1:Ljava/lang/String;
+        35: ldc           #44                 // String outColor2
+        37: putstatic     #46                 // Field outputColor2:Ljava/lang/String;
+        40: ldc           #49                 // String outColor3
+        42: putstatic     #51                 // Field outputColor3:Ljava/lang/String;
+        45: ldc           #54                 // String outColor4
+        47: putstatic     #56                 // Field outputColor4:Ljava/lang/String;
+        50: ldc           #59                 // String (mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0)) * vec4(vaUV2, 0.0, 1.0)).xy
+        52: putstatic     #61                 // Field lmCoord:Ljava/lang/String;
+        55: return
+
+  public static java.lang.String getVertexSource(java.lang.String);
+    Code:
+         0: getstatic     #64                 // Field net/diebuddies/physics/StarterClient.optifabric:Z
+         3: ifeq          9
+         6: invokestatic  #70                 // Method setupOptifineInjection:()V
+         9: aload_0
+        10: ifnonnull     15
+        13: aconst_null
+        14: areturn
+        15: aload_0
+        16: invokestatic  #73                 // Method transformVertexSmokeShader:(Ljava/lang/String;)Ljava/lang/String;
+        19: areturn
+
+  public static java.lang.String getFragmentSource(java.lang.String);
+    Code:
+         0: getstatic     #64                 // Field net/diebuddies/physics/StarterClient.optifabric:Z
+         3: ifeq          9
+         6: invokestatic  #70                 // Method setupOptifineInjection:()V
+         9: aload_0
+        10: ifnonnull     15
+        13: aconst_null
+        14: areturn
+        15: invokestatic  #77                 // Method net/diebuddies/physics/StarterClient.iris:()Z
+        18: ifeq          26
+        21: ldc           #81                 // String
+        23: putstatic     #83                 // Field net/diebuddies/compat/Iris.smokeError:Ljava/lang/String;
+        26: aload_0
+        27: iconst_0
+        28: invokestatic  #88                 // Method transformFragmentSmokeShader:(Ljava/lang/String;Z)Ljava/lang/String;
+        31: areturn
+
+  public static java.lang.String getVertexShadowSource(java.lang.String);
+    Code:
+         0: getstatic     #64                 // Field net/diebuddies/physics/StarterClient.optifabric:Z
+         3: ifeq          9
+         6: invokestatic  #70                 // Method setupOptifineInjection:()V
+         9: aload_0
+        10: ifnonnull     15
+        13: aconst_null
+        14: areturn
+        15: aload_0
+        16: invokestatic  #73                 // Method transformVertexSmokeShader:(Ljava/lang/String;)Ljava/lang/String;
+        19: areturn
+
+  public static java.lang.String getFragmentShadowSource(java.lang.String);
+    Code:
+         0: getstatic     #64                 // Field net/diebuddies/physics/StarterClient.optifabric:Z
+         3: ifeq          9
+         6: invokestatic  #70                 // Method setupOptifineInjection:()V
+         9: aload_0
+        10: ifnonnull     15
+        13: aconst_null
+        14: areturn
+        15: invokestatic  #77                 // Method net/diebuddies/physics/StarterClient.iris:()Z
+        18: ifeq          26
+        21: ldc           #81                 // String
+        23: putstatic     #83                 // Field net/diebuddies/compat/Iris.smokeError:Ljava/lang/String;
+        26: aload_0
+        27: iconst_1
+        28: invokestatic  #88                 // Method transformFragmentSmokeShader:(Ljava/lang/String;Z)Ljava/lang/String;
+        31: areturn
+
+  private static java.lang.String transformVertexSmokeShader(java.lang.String);
+    Code:
+         0: aload_0
+         1: invokestatic  #92                 // Method net/diebuddies/util/GLSLModifier.removeComments:(Ljava/lang/String;)Ljava/lang/String;
+         4: astore_0
+         5: invokestatic  #97                 // Method getSmokeInjectionVertex:()Ljava/util/List;
+         8: astore_1
+         9: aload_0
+        10: aload_1
+        11: invokestatic  #101                // Method net/diebuddies/util/GLSLModifier.convertToString:(Ljava/util/List;)Ljava/lang/String;
+        14: invokestatic  #105                // Method net/diebuddies/util/GLSLModifier.insertBeforeFirstFunction:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        17: astore_0
+        18: aload_0
+        19: getstatic     #9                  // Field position:Ljava/lang/String;
+        22: ldc           #109                // String physics_finalPosition
+        24: invokestatic  #111                // Method org/apache/commons/lang3/StringUtils.replace:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        27: astore_0
+        28: aload_0
+        29: ldc           #117                // String physics_finalPositionID
+        31: ldc           #119                // String gl_VertexID
+        33: invokestatic  #111                // Method org/apache/commons/lang3/StringUtils.replace:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        36: astore_0
+        37: aload_0
+        38: ldc           #121                // String gl_Normal
+        40: ldc           #123                // String physics_normal
+        42: invokestatic  #111                // Method org/apache/commons/lang3/StringUtils.replace:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        45: astore_0
+        46: aload_0
+        47: ldc           #125                // String physics_normalMatrix
+        49: ldc           #127                // String gl_NormalMatrix
+        51: invokestatic  #111                // Method org/apache/commons/lang3/StringUtils.replace:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        54: astore_0
+        55: aload_0
+        56: ldc           #129                // String main
+        58: getstatic     #9                  // Field position:Ljava/lang/String;
+        61: getstatic     #21                 // Field normal:Ljava/lang/String;
+        64: getstatic     #26                 // Field multiCoord0:Ljava/lang/String;
+        67: invokedynamic #131,  0            // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        72: invokestatic  #134                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionStart:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        75: astore_0
+        76: aload_0
+        77: ldc           #137                // String ftransform
+        79: getstatic     #31                 // Field modelViewProjectionMatrix:Ljava/lang/String;
+        82: invokedynamic #139,  0            // InvokeDynamic #1:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+        87: invokestatic  #141                // Method net/diebuddies/util/GLSLModifier.replaceFunctionCalls:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        90: astore_0
+        91: aload_0
+        92: areturn
+
+  private static java.lang.String transformFragmentSmokeShader(java.lang.String, boolean);
+    Code:
+         0: aload_0
+         1: invokestatic  #92                 // Method net/diebuddies/util/GLSLModifier.removeComments:(Ljava/lang/String;)Ljava/lang/String;
+         4: astore_0
+         5: invokestatic  #144                // Method getSmokeInjectionFragment:()Ljava/util/List;
+         8: astore_2
+         9: aload_0
+        10: aload_2
+        11: invokestatic  #101                // Method net/diebuddies/util/GLSLModifier.convertToString:(Ljava/util/List;)Ljava/lang/String;
+        14: invokestatic  #105                // Method net/diebuddies/util/GLSLModifier.insertBeforeFirstFunction:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        17: astore_0
+        18: aload_0
+        19: ldc           #129                // String main
+        21: ldc           #147                // String vec3 physics_smokeColor = physics_calculateSmoke();\n
+        23: invokestatic  #134                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionStart:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        26: astore_0
+        27: iload_1
+        28: ifne          248
+        31: aload_0
+        32: invokestatic  #149                // Method net/diebuddies/util/GLSLModifier.findOutputNames:(Ljava/lang/String;)Ljava/util/Map;
+        35: astore_3
+        36: getstatic     #36                 // Field outputColor0:Ljava/lang/String;
+        39: astore        4
+        41: aload_3
+        42: iconst_0
+        43: invokestatic  #153                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        46: invokeinterface #159,  2          // InterfaceMethod java/util/Map.containsKey:(Ljava/lang/Object;)Z
+        51: ifeq          168
+        54: aload_3
+        55: iconst_0
+        56: invokestatic  #153                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        59: invokeinterface #165,  2          // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+        64: checkcast     #169                // class net/diebuddies/util/GLSLModifier$VarInfo
+        67: astore        5
+        69: aload         5
+        71: invokevirtual #171                // Method net/diebuddies/util/GLSLModifier$VarInfo.varName:()Ljava/lang/String;
+        74: astore        4
+        76: aload         4
+        78: ldc           #175                // String gbuffer_data_0
+        80: invokevirtual #177                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+        83: ifeq          116
+        86: aload_0
+        87: ldc           #129                // String main
+        89: aload         4
+        91: invokedynamic #182,  0            // InvokeDynamic #2:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+        96: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        99: astore_0
+       100: aload_0
+       101: ldc           #129                // String main
+       103: aload         4
+       105: invokedynamic #186,  0            // InvokeDynamic #3:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       110: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       113: astore_0
+       114: aload_0
+       115: areturn
+       116: aload         5
+       118: invokevirtual #187                // Method net/diebuddies/util/GLSLModifier$VarInfo.glslType:()Ljava/lang/String;
+       121: ldc           #190                // String uvec4
+       123: invokevirtual #192                // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+       126: ifeq          168
+       129: aload         4
+       131: ldc           #34                 // String outColor0
+       133: invokevirtual #177                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+       136: ifeq          168
+       139: aload_0
+       140: ldc           #129                // String main
+       142: ldc           #196                // String data.r = packUnorm4x8(vec4(clamp(physics_smokeColor.rgb, vec3(0.0), vec3(1.0)), 1.0));\n
+       144: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       147: astore_0
+       148: aload_0
+       149: ldc           #129                // String main
+       151: ldc           #198                // String data.g = packUnorm4x8(vec4(physics_pass_normal, 1.0));\n
+       153: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       156: astore_0
+       157: aload_0
+       158: ldc           #129                // String main
+       160: ldc           #200                // String outColor0 = data;\n
+       162: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       165: astore_0
+       166: aload_0
+       167: areturn
+       168: aload_0
+       169: ldc           #202                // String encodeVec2(data0
+       171: invokevirtual #204                // Method java/lang/String.contains:(Ljava/lang/CharSequence;)Z
+       174: ifeq          193
+       177: aload_0
+       178: ldc           #129                // String main
+       180: aload         4
+       182: invokedynamic #208,  0            // InvokeDynamic #4:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       187: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       190: astore_0
+       191: aload_0
+       192: areturn
+       193: aload_0
+       194: ldc           #209                // String vec4(normalize(albedo.rgb+0.000
+       196: invokevirtual #204                // Method java/lang/String.contains:(Ljava/lang/CharSequence;)Z
+       199: ifeq          234
+       202: aload_0
+       203: ldc           #129                // String main
+       205: getstatic     #36                 // Field outputColor0:Ljava/lang/String;
+       208: invokedynamic #211,  0            // InvokeDynamic #5:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       213: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       216: astore_0
+       217: aload_0
+       218: ldc           #129                // String main
+       220: getstatic     #41                 // Field outputColor1:Ljava/lang/String;
+       223: invokedynamic #212,  0            // InvokeDynamic #6:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       228: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       231: astore_0
+       232: aload_0
+       233: areturn
+       234: aload_0
+       235: ldc           #129                // String main
+       237: aload         4
+       239: invokedynamic #213,  0            // InvokeDynamic #7:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       244: invokestatic  #183                // Method net/diebuddies/util/GLSLModifier.insertAtFunctionEnd:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+       247: astore_0
+       248: aload_0
+       249: areturn
+
+  private static java.util.List<java.lang.String> getSmokeInjectionVertex();
+    Code:
+         0: ldc           #214                // String assets/physicsmod/shaders/include/iris/smoke_vertex.glsl
+         2: invokestatic  #216                // Method getSmokeInjection:(Ljava/lang/String;)Ljava/util/List;
+         5: areturn
+
+  private static java.util.List<java.lang.String> getSmokeInjectionFragment();
+    Code:
+         0: ldc           #220                // String assets/physicsmod/shaders/include/iris/smoke_fragment.glsl
+         2: invokestatic  #216                // Method getSmokeInjection:(Ljava/lang/String;)Ljava/util/List;
+         5: areturn
+
+  private static java.util.List<java.lang.String> getSmokeInjection(java.lang.String);
+    Code:
+         0: new           #222                // class it/unimi/dsi/fastutil/objects/ObjectArrayList
+         3: dup
+         4: invokespecial #224                // Method it/unimi/dsi/fastutil/objects/ObjectArrayList."<init>":()V
+         7: astore_1
+         8: ldc           #81                 // String
+        10: astore_2
+        11: iconst_0
+        12: istore_3
+        13: new           #225                // class java/io/BufferedReader
+        16: dup
+        17: new           #227                // class java/io/InputStreamReader
+        20: dup
+        21: ldc           #229                // class net/diebuddies/physics/PhysicsMod
+        23: invokevirtual #231                // Method java/lang/Class.getClassLoader:()Ljava/lang/ClassLoader;
+        26: aload_0
+        27: invokevirtual #237                // Method java/lang/ClassLoader.getResourceAsStream:(Ljava/lang/String;)Ljava/io/InputStream;
+        30: invokespecial #243                // Method java/io/InputStreamReader."<init>":(Ljava/io/InputStream;)V
+        33: invokespecial #246                // Method java/io/BufferedReader."<init>":(Ljava/io/Reader;)V
+        36: astore        4
+        38: aload         4
+        40: invokevirtual #249                // Method java/io/BufferedReader.readLine:()Ljava/lang/String;
+        43: dup
+        44: astore        5
+        46: ifnull        111
+        49: aload         5
+        51: invokevirtual #252                // Method java/lang/String.isBlank:()Z
+        54: ifne          38
+        57: aload         5
+        59: ldc           #255                // String {
+        61: invokevirtual #204                // Method java/lang/String.contains:(Ljava/lang/CharSequence;)Z
+        64: ifeq          70
+        67: iinc          3, 1
+        70: aload         5
+        72: ldc_w         #257                // String }
+        75: invokevirtual #204                // Method java/lang/String.contains:(Ljava/lang/CharSequence;)Z
+        78: ifeq          84
+        81: iinc          3, -1
+        84: aload_2
+        85: aload         5
+        87: invokedynamic #259,  0            // InvokeDynamic #8:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        92: astore_2
+        93: iload_3
+        94: ifne          38
+        97: aload_1
+        98: aload_2
+        99: invokeinterface #261,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+       104: pop
+       105: ldc           #81                 // String
+       107: astore_2
+       108: goto          38
+       111: aload         4
+       113: invokevirtual #266                // Method java/io/BufferedReader.close:()V
+       116: goto          141
+       119: astore        5
+       121: aload         4
+       123: invokevirtual #266                // Method java/io/BufferedReader.close:()V
+       126: goto          138
+       129: astore        6
+       131: aload         5
+       133: aload         6
+       135: invokevirtual #271                // Method java/lang/Throwable.addSuppressed:(Ljava/lang/Throwable;)V
+       138: aload         5
+       140: athrow
+       141: goto          151
+       144: astore        4
+       146: aload         4
+       148: invokevirtual #277                // Method java/io/IOException.printStackTrace:()V
+       151: aload_1
+       152: areturn
+      Exception table:
+         from    to  target type
+            38   111   119   Class java/lang/Throwable
+           121   126   129   Class java/lang/Throwable
+            13   141   144   Class java/io/IOException
+
+  static {};
+    Code:
+         0: ldc_w         #280                // String gl_Vertex
+         3: putstatic     #9                  // Field position:Ljava/lang/String;
+         6: ldc           #127                // String gl_NormalMatrix
+         8: putstatic     #17                 // Field normalMatrix:Ljava/lang/String;
+        11: ldc           #121                // String gl_Normal
+        13: putstatic     #21                 // Field normal:Ljava/lang/String;
+        16: ldc_w         #282                // String gl_MultiTexCoord0
+        19: putstatic     #26                 // Field multiCoord0:Ljava/lang/String;
+        22: ldc_w         #284                // String gl_ModelViewProjectionMatrix
+        25: putstatic     #31                 // Field modelViewProjectionMatrix:Ljava/lang/String;
+        28: ldc_w         #286                // String gl_FragData[0]
+        31: putstatic     #36                 // Field outputColor0:Ljava/lang/String;
+        34: ldc_w         #288                // String gl_FragData[1]
+        37: putstatic     #41                 // Field outputColor1:Ljava/lang/String;
+        40: ldc_w         #290                // String gl_FragData[2]
+        43: putstatic     #46                 // Field outputColor2:Ljava/lang/String;
+        46: ldc_w         #292                // String gl_FragData[3]
+        49: putstatic     #51                 // Field outputColor3:Ljava/lang/String;
+        52: ldc_w         #294                // String gl_FragData[4]
+        55: putstatic     #56                 // Field outputColor4:Ljava/lang/String;
+        58: ldc_w         #296                // String (mat4(vec4(0.00390625, 0.0, 0.0, 0.0), vec4(0.0, 0.00390625, 0.0, 0.0), vec4(0.0, 0.0, 0.00390625, 0.0), vec4(0.03125, 0.03125, 0.03125, 1.0)) * gl_MultiTexCoord1).xy
+        61: putstatic     #61                 // Field lmCoord:Ljava/lang/String;
+        64: return
+}
+Compiled from "MixinProgramSet.java"
+public class net.diebuddies.mixins.iris.MixinProgramSet {
+  public net.diebuddies.mixins.iris.MixinProgramSet();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  private static void readProgramSourceHead(net.irisshaders.iris.shaderpack.include.AbsolutePackPath, java.util.function.Function<net.irisshaders.iris.shaderpack.include.AbsolutePackPath, java.lang.String>, java.lang.String, net.irisshaders.iris.shaderpack.programs.ProgramSet, net.irisshaders.iris.shaderpack.properties.ShaderProperties, net.irisshaders.iris.gl.blending.BlendModeOverride, boolean, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.irisshaders.iris.shaderpack.programs.ProgramSource>);
+    Code:
+         0: aload_2
+         1: ldc           #7                  // String gbuffers_entities
+         3: invokevirtual #9                  // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+         6: ifne          27
+         9: aload_2
+        10: ldc           #15                 // String gbuffers_entities_translucent
+        12: invokevirtual #9                  // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+        15: ifne          27
+        18: aload_2
+        19: ldc           #17                 // String shadow
+        21: invokevirtual #9                  // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+        24: ifeq          37
+        27: getstatic     #19                 // Field net/diebuddies/compat/Iris.injectIntoEntityOrShadowShader:Ljava/lang/ThreadLocal;
+        30: iconst_1
+        31: invokestatic  #25                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        34: invokevirtual #31                 // Method java/lang/ThreadLocal.set:(Ljava/lang/Object;)V
+        37: return
+
+  private static void readProgramSourceTail(net.irisshaders.iris.shaderpack.include.AbsolutePackPath, java.util.function.Function<net.irisshaders.iris.shaderpack.include.AbsolutePackPath, java.lang.String>, java.lang.String, net.irisshaders.iris.shaderpack.programs.ProgramSet, net.irisshaders.iris.shaderpack.properties.ShaderProperties, net.irisshaders.iris.gl.blending.BlendModeOverride, boolean, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.irisshaders.iris.shaderpack.programs.ProgramSource>);
+    Code:
+         0: getstatic     #19                 // Field net/diebuddies/compat/Iris.injectIntoEntityOrShadowShader:Ljava/lang/ThreadLocal;
+         3: iconst_0
+         4: invokestatic  #25                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+         7: invokevirtual #31                 // Method java/lang/ThreadLocal.set:(Ljava/lang/Object;)V
+        10: return
+}
+Compiled from "MixinFinalPassRenderer.java"
+public class net.diebuddies.mixins.smoke.MixinFinalPassRenderer {
+  public net.diebuddies.mixins.smoke.MixinFinalPassRenderer();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  private void physicsmod$renderVolumetricSmoke(org.spongepowered.asm.mixin.injection.callback.CallbackInfo);
+    Code:
+         0: invokestatic  #7                  // Method net/diebuddies/compat/Iris.isExtending:()Z
+         3: ifeq          128
+         6: invokestatic  #13                 // Method net/minecraft/client/Minecraft.getInstance:()Lnet/minecraft/client/Minecraft;
+         9: getfield      #19                 // Field net/minecraft/client/Minecraft.levelRenderer:Lnet/minecraft/client/renderer/LevelRenderer;
+        12: checkcast     #23                 // class net/diebuddies/minecraft/LevelRendererAccessor
+        15: invokeinterface #25,  1           // InterfaceMethod net/diebuddies/minecraft/LevelRendererAccessor.physicsmod$getMainRenderer:()Lnet/diebuddies/render/MainRenderer;
+        20: astore_2
+        21: aload_2
+        22: invokestatic  #13                 // Method net/minecraft/client/Minecraft.getInstance:()Lnet/minecraft/client/Minecraft;
+        25: getfield      #29                 // Field net/minecraft/client/Minecraft.levelExtractor:Lnet/minecraft/client/renderer/extract/LevelExtractor;
+        28: getfield      #33                 // Field net/minecraft/client/renderer/extract/LevelExtractor.level:Lnet/minecraft/client/multiplayer/ClientLevel;
+        31: invokevirtual #39                 // Method net/diebuddies/render/MainRenderer.prepareVolumetricSmoke:(Lnet/minecraft/client/multiplayer/ClientLevel;)V
+        34: invokestatic  #45                 // Method com/mojang/blaze3d/systems/RenderSystem.getDevice:()Lcom/mojang/renderpearl/api/device/GpuDevice;
+        37: invokeinterface #51,  1           // InterfaceMethod com/mojang/renderpearl/api/device/GpuDevice.createCommandEncoder:()Lcom/mojang/renderpearl/api/commands/CommandEncoder;
+        42: invokedynamic #57,  0             // InvokeDynamic #0:get:()Ljava/util/function/Supplier;
+        47: invokestatic  #13                 // Method net/minecraft/client/Minecraft.getInstance:()Lnet/minecraft/client/Minecraft;
+        50: getfield      #61                 // Field net/minecraft/client/Minecraft.gameRenderer:Lnet/minecraft/client/renderer/GameRenderer;
+        53: invokevirtual #65                 // Method net/minecraft/client/renderer/GameRenderer.mainRenderTarget:()Lcom/mojang/blaze3d/pipeline/RenderTarget;
+        56: invokevirtual #71                 // Method com/mojang/blaze3d/pipeline/RenderTarget.getColorTextureView:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+        59: invokestatic  #77                 // Method java/util/Optional.empty:()Ljava/util/Optional;
+        62: invokestatic  #13                 // Method net/minecraft/client/Minecraft.getInstance:()Lnet/minecraft/client/Minecraft;
+        65: getfield      #61                 // Field net/minecraft/client/Minecraft.gameRenderer:Lnet/minecraft/client/renderer/GameRenderer;
+        68: invokevirtual #65                 // Method net/minecraft/client/renderer/GameRenderer.mainRenderTarget:()Lcom/mojang/blaze3d/pipeline/RenderTarget;
+        71: invokevirtual #83                 // Method com/mojang/blaze3d/pipeline/RenderTarget.getDepthTextureView:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+        74: invokestatic  #86                 // Method java/util/OptionalDouble.empty:()Ljava/util/OptionalDouble;
+        77: invokeinterface #91,  6           // InterfaceMethod com/mojang/renderpearl/api/commands/CommandEncoder.createRenderPass:(Ljava/util/function/Supplier;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Ljava/util/Optional;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Ljava/util/OptionalDouble;)Lcom/mojang/renderpearl/api/commands/RenderPass;
+        82: astore_3
+        83: aload_2
+        84: aload_3
+        85: invokevirtual #97                 // Method net/diebuddies/render/MainRenderer.renderVolumetricSmoke:(Lcom/mojang/renderpearl/api/commands/RenderPass;)V
+        88: aload_3
+        89: ifnull        128
+        92: aload_3
+        93: invokeinterface #101,  1          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.close:()V
+        98: goto          128
+       101: astore        4
+       103: aload_3
+       104: ifnull        125
+       107: aload_3
+       108: invokeinterface #101,  1          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.close:()V
+       113: goto          125
+       116: astore        5
+       118: aload         4
+       120: aload         5
+       122: invokevirtual #108                // Method java/lang/Throwable.addSuppressed:(Ljava/lang/Throwable;)V
+       125: aload         4
+       127: athrow
+       128: return
+      Exception table:
+         from    to  target type
+            83    88   101   Class java/lang/Throwable
+           107   113   116   Class java/lang/Throwable
+
+  private static java.lang.String lambda$physicsmod$renderVolumetricSmoke$0();
+    Code:
+         0: ldc           #112                // String Physics Fire And Volumetric Smoke (Iris)
+         2: areturn
+}

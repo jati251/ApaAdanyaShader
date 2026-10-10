@@ -1,0 +1,14 @@
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+Reservoir near weight 6.484708786010742 target 0.0037204655818641186 count 4.0
+Reservoir initial_history weight 6.484708786010742 target 0.0037199698854237795 count 4.0
+Reservoir reuse weight 22.465957641601562 target 0.0037095537409186363 count 16.0
+Reservoir far weight 0.0 target 0.0 count 0.0
+Reservoir sky weight 0.0 target 0.0 count 0.0
+Reservoir hand weight 0.0 target 0.0 count 0.0
+GPU: fresh two-bounce reservoir GI / 320x180: 0.6122 -> 0.8100 ms (-32.3% less time)
+PASS: reservoir output state identical for sampled receivers, sky, hand and out-of-range receivers

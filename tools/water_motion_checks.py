@@ -43,7 +43,7 @@ vec3 testPlane(vec2 uv) {
         gbufferModelViewInverse=identity,gbufferProjection=identity,gbufferProjectionInverse=identity,
         sunPosition=(0.,1.,0.),shadowLightPosition=(0.,-1.,0.),frameTimeCounter=12.,
         frameTime=1/60,near=.05,far=256.,gtexture=1,colortex6=0,depthtex1=2,colortex7=3,isEyeInWater=0)
-    program=f.program('composite6.fsh',values,fragment=code)
+    program=f.program('composite7.fsh',values,fragment=code)
     frames={}
     for rain in (0.,1.):
         for height in (.15,1.62,2.87):
@@ -57,7 +57,7 @@ vec3 testPlane(vec2 uv) {
     no_ssr=dict(values,SSR=False)
     # The prepared test geometry and main body are identical; only remove SSR.
     no_ssr_code=code.replace('#define SSR\n','// #define SSR\n')
-    program=f.program('composite6.fsh',no_ssr,fragment=no_ssr_code)
+    program=f.program('composite7.fsh',no_ssr,fragment=no_ssr_code)
     miss=f.render(program,[target,material],dict(uniforms,rainStrength=0.,cameraPosition=(0.,1.62,0.)))
     error=max(abs(a-b) for a,b in zip(miss,frames[0.,1.62]))
     assert error<.0002, f'Missed SSR rays changed environment reflection: {error:.6f}'
@@ -68,10 +68,10 @@ vec3 testPlane(vec2 uv) {
         vec3 b=normalize(vec3(sqrt(1-h*h),h,.00001));
         color=vec4(abs(waterEnvironmentReflection(a,.08)-waterEnvironmentReflection(b,.08)),1);
     }"""
-    pole_program=f.program('composite6.fsh',values,fragment=pole)
+    pole_program=f.program('composite7.fsh',values,fragment=pole)
     discontinuity=f.render(pole_program,[target,material],uniforms)
     assert max(discontinuity[0::4]+discontinuity[1::4]+discontinuity[2::4])<.0002, 'Reflection cone has an axis-switch discontinuity'
-    ssr_program=f.program('composite6.fsh',values,fragment=code)
+    ssr_program=f.program('composite7.fsh',values,fragment=code)
     for angle in (-.3,.3):
         cs,sn=math.cos(angle),math.sin(angle)
         model=[cs,0,-sn,0,0,1,0,0,sn,0,cs,0,0,0,0,1]

@@ -45,8 +45,9 @@ class Fixture:
             raise AssertionError(log.value.decode())
         return obj
 
-    def program(self, entry, values, scaled=False, fragment=None):
+    def program(self, entry, values, scaled=False, fragment=None, vertex_source=None):
         a = self.api
+        values=dict(values,__compat_fixture=True)
         vertex = a['source'](a['ROOT']/entry.replace('.fsh','.vsh'),values,False)
         vertex = vertex[:vertex.index('out vec2 texcoord;')]+'''
 out vec2 texcoord;
@@ -56,7 +57,7 @@ void main() {
     texcoord=p;
     gl_Position=vec4(p*2.0-1.0,0.0,1.0);
 '''+('gl_Position=scaleSceneClip(gl_Position,vec2(1.0));' if scaled else '')+'\n}\n'
-        vs = self.shader(0x8B31,vertex)
+        vs = self.shader(0x8B31,vertex_source or vertex)
         fs = self.shader(0x8B30,fragment or a['source'](a['ROOT']/entry,values,False))
         program = a['create_program']()
         a['attach'](program,vs); a['attach'](program,fs); a['link'](program)
@@ -109,7 +110,7 @@ def run(api):
     projection=[1,0,0,0,0,1,0,0,0,0,a,-1,0,0,b,0]
     inverse=[1,0,0,0,0,1,0,0,0,0,0,1/b,0,0,-1,a/b]
     depth=lambda z:(-a+b/z)*0.5+0.5
-    values=dict(api['resolve']('HIGH'),DOF=False,BLOOM=False,VIGNETTE=False)
+    values=dict(api['resolve']('HIGH'),UPSCALE_QUALITY='0',DOF=False,BLOOM=False,VIGNETTE=False)
     uniforms=dict(viewWidth=float(w),viewHeight=float(h),near=near,far=far,frameTime=1/60,
                   frameCounter=20,gbufferProjection=projection,gbufferProjectionInverse=inverse,
                   gbufferModelViewInverse=identity,gbufferPreviousModelView=identity,
@@ -125,7 +126,7 @@ def run(api):
     f.texture([0,0,0,0]*pixels,2)
     f.texture([1.05,1.05,1.05,4]*pixels,3)
     target=f.texture(None,4); hist=f.texture(None,5)
-    program=f.program('composite5.fsh',values)
+    program=f.program('composite6.fsh',values)
     center=((h//2)*w+w//2+1)*4
     current=scene[center]
     assert current==1.0
@@ -157,7 +158,7 @@ def run(api):
         f.texture(data,0)
         easu=f.texture(None,1); rcas=f.texture(None,2)
         values=dict(api['resolve']('HIGH'),UPSCALE_QUALITY=str(q))
-        eprog=f.program('composite7.fsh',values)
+        eprog=f.program('composite8.fsh',values)
         rprog=f.program('final.fsh',values)
         u=dict(viewWidth=float(w),viewHeight=float(h),colortex0=0,colortex14=1)
         out=f.render(eprog,[easu],u)
@@ -165,9 +166,9 @@ def run(api):
         for output in (out,sharpened):
             assert max(abs(output[i]-[0.3,0.4,0.5,1][i%4]) for i in range(len(output)))<0.003, 'FSR border contamination / constant-color shift'
         # Exercise the actual viewport transform and logical-UV mapping on an odd allocation.
-        copy_source=api['source'](api['ROOT']/'composite6.fsh',values,False)
+        copy_source=api['source'](api['ROOT']/'composite7.fsh',values,False)
         copy_source=copy_source[:copy_source.rfind('void main(){')]+'void main(){color=textureScreen(colortex0,texcoord);}'
-        copy_program=f.program('composite6.fsh',values,scaled=True,fragment=copy_source)
+        copy_program=f.program('composite7.fsh',values,scaled=True,fragment=copy_source)
         scaled_target=f.texture([-10,-10,-10,-10]*pixels,6)
         copied=f.render(copy_program,[scaled_target],u)
         for y in range(h):

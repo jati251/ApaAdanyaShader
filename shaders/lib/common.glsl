@@ -1,6 +1,32 @@
 #ifndef AA_COMMON
 #define AA_COMMON
 #include "/lib/settings.glsl"
+#if defined(IRIS_FEATURE_CUSTOM_IMAGES) && defined(IRIS_FEATURE_COMPUTE_SHADERS)
+#define AA_ADVANCED_SUPPORTED
+#if SMOKE_MODE == 1
+#if defined(SHADOWS) && !defined(NETHER) && !defined(END)
+#define AA_SMOKE
+#endif
+#endif
+#ifdef HIZ_TRACING
+#define AA_HIZ
+#endif
+#ifdef VOXEL_TRACING
+#ifdef SHADOWS
+#define AA_VOXELS
+#endif
+#endif
+#ifdef SVGF_DENOISER
+#if defined(HALF_RES_LIGHTING) && defined(TEMPORAL_INDIRECT) && defined(SSGI)
+#define AA_SVGF
+#endif
+#endif
+#endif
+#ifdef LIGHT_SPACE_FALLBACK
+#if defined(SHADOWS) && !defined(NETHER) && !defined(END) && !defined(AA_VOXELS)
+#define AA_LIGHT_SPACE
+#endif
+#endif
 uniform mat4 gbufferModelView, gbufferModelViewInverse;
 uniform mat4 gbufferProjection, gbufferProjectionInverse;
 uniform mat4 shadowModelView, shadowProjection;
@@ -85,14 +111,27 @@ float viewDepth(vec2 uv,float d) { return projectedViewDepth(gbufferProjectionIn
 vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v); }
 vec3 sunDirection() { return worldDirection(sunPosition); }
 float daylight() { return smoothstep(-0.10,0.18,sunDirection().y); }
-vec3 lightColor() {
+vec3 solarLightColor() {
     #if defined(NETHER) || defined(END)
     return vec3(0.0);
     #else
-    float elev=abs(sunDirection().y);
+    float elev=sunDirection().y;
     vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.75,2.70,2.60),smoothstep(0.02,0.38,elev));
-    return mix(vec3(0.055,0.065,0.09)*NIGHT_BRIGHTNESS,day,daylight())*(1.0-rainStrength*0.78);
+    return day*smoothstep(0.0,0.08,elev)*(1.0-rainStrength*0.78);
     #endif
+}
+vec3 lunarLightColor() {
+    #if defined(NETHER) || defined(END)
+    return vec3(0.0);
+    #else
+    return vec3(0.055,0.065,0.09)*NIGHT_BRIGHTNESS
+        *smoothstep(0.0,0.08,-sunDirection().y)*(1.0-rainStrength*0.78);
+    #endif
+}
+vec3 lightColor() {
+    // Iris switches this direction from sun to moon at the horizon. Ambient
+    // daylight may still contain warm twilight; never attach that to the moon.
+    return dot(shadowLightPosition,sunPosition)>=0.0?solarLightColor():lunarLightColor();
 }
 vec3 stormFlash() {
     #if !defined(NETHER) && !defined(END)

@@ -1,5 +1,6 @@
 #include "/lib/common.glsl"
 #include "/lib/lighting.glsl"
+#include "/lib/fire.glsl"
 #include "/lib/environment.glsl"
 #ifdef DISTANT_HORIZONS
 uniform sampler2D dhDepthTex1;
@@ -20,11 +21,16 @@ layout(location=1) out vec4 materialData;
 
 #include "/lib/water.glsl"
 #include "/lib/water_reflection.glsl"
+#include "/lib/scene_trace.glsl"
 
 vec3 waterNormal(vec2 slope){
     vec3 base=worldDirection(normalize(viewNormal));
     vec3 nw=waterSurfaceNormal(base,slope);
     return normalize(mat3(gbufferModelView)*nw)*(gl_FrontFacing?1.0:-1.0);
+}
+
+vec3 waterFragmentPosition() {
+    return viewPosition(gl_FragCoord.xy/vec2(viewWidth,viewHeight),gl_FragCoord.z);
 }
 
 vec3 opaquePosition(vec2 uv,out bool valid) {
@@ -39,19 +45,24 @@ vec3 opaquePosition(vec2 uv,out bool valid) {
         return pos.xyz/pos.w;
     }
     #endif
-    return viewPos+normalize(viewPos)*80.0;
+    vec3 surfacePos=waterFragmentPosition();
+    return surfacePos+normalize(surfacePos)*80.0;
 }
 
 float worldUpDelta(vec3 v) {
     return dot(vec3(gbufferModelViewInverse[0][1], gbufferModelViewInverse[1][1], gbufferModelViewInverse[2][1]), v);
 }
 
-bool waterReflectionAboveSurface(vec2 hit,bool underwater) {
+bool waterReflectionAboveSurface(vec2 hit,bool underwater,vec3 surfacePos) {
     if(underwater) return true;
     bool valid;
     vec3 position=opaquePosition(hit,valid);
     // Ocean reflection cannot originate from a submerged bed or underwater plant.
-    return valid && worldUpDelta(position-viewPos)>=-0.02;
+    return valid && worldUpDelta(position-surfacePos)>=-0.02;
+}
+
+bool waterReflectionAboveSurface(vec2 hit,bool underwater) {
+    return waterReflectionAboveSurface(hit,underwater,waterFragmentPosition());
 }
 
 vec3 waterReflectionSample(vec2 hit,float roughness) {
@@ -59,7 +70,11 @@ vec3 waterReflectionSample(vec2 hit,float roughness) {
     if(roughness<=0.08) return center;
     bool centerValid;
     float centerZ=traceSurfaceDepth(depthtex1,hit,centerValid);
-    vec2 radius=max(vec2(roughness*0.004),1.5/vec2(viewWidth,viewHeight));
+    // Project an angular roughness lobe, rather than a nearly one-pixel blur
+    // that leaves reflections jagged at native/high display resolutions.
+    vec2 radius=max(0.25*roughness*roughness
+        *abs(vec2(gbufferProjection[0][0],gbufferProjection[1][1])),
+        1.5/vec2(viewWidth,viewHeight));
     const vec2 offsets[4]=vec2[4](vec2(-1,0),vec2(1,0),vec2(0,-1),vec2(0,1));
     vec3 sum=center*0.40;
     float weight=0.40;
@@ -88,48 +103,63 @@ void main(){
     materialData=vec4(WATER_ROUGHNESS,lmcoord.y,0.0,0.25);
     vec4 tex=texture(gtexture,texcoord)*glcolor;
     if(tex.a<0.001) discard;
+    if(abs(materialId-1008.0)<0.5){
+        color=vec4(lavaRadiance(tex.rgb),1.0);
+        materialData=vec4(0.85,lmcoord.y,1.0,0.0);
+        return;
+    }
     if(abs(materialId-1003.0)>0.5){
         vec3 albedo=srgbToLinear(tex.rgb);
         color=vec4(shadeSurface(albedo,normalize(viewNormal),viewPos,lmcoord,0.24,0.0,0.0,vec3(0.04)),tex.a); return;
     }
     vec2 screenUV=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
+    // Optical surface and opaque depth now share the same projection and camera frame.
+    vec3 surfacePos=waterFragmentPosition();
     float waveCrest;
     vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,waveCrest);
     bool underwater=isEyeInWater==1;
-    vec3 N=waterNormal(slope),V=normalize(-viewPos);
+    vec3 N=waterNormal(slope),V=normalize(-surfacePos);
     vec3 meshN=normalize(mat3(gbufferModelView)*waterSurfaceNormal(worldDirection(normalize(viewNormal)),vec2(0.0)));
     if(dot(meshN,V)<0.0) meshN=-meshN;
     // Both the wave normal and reflected ray retain their physical direction.
     bool validBehind;
     vec3 behind=opaquePosition(screenUV,validBehind);
-    float bottomDepth=validBehind?max(worldUpDelta(viewPos-behind),0.0):80.0;
+    float bottomDepth=validBehind?max(worldUpDelta(surfacePos-behind),0.0):80.0;
     vec3 R=reflect(-V,N);
     // Unresolved capillary waves broaden highlights rather than vanish into a mirror.
     float footprint=max(length(waveDx),length(waveDy));
     float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
         +0.012*smoothstep(0.15,2.0,footprint)));
     float reflectionSpread=waterReflectionSpread(R,roughness);
-    float thickness=validBehind?clamp(length(behind-viewPos),0.0,80.0):80.0;
+    float thickness=validBehind?clamp(length(behind-surfacePos),0.0,80.0):80.0;
     vec2 refractUV=screenUV;
     float refractWeight=0.0;
     #ifdef WATER_REFRACTION
-    vec3 incident=normalize(viewPos);
+    vec3 incident=normalize(surfacePos);
     vec3 refracted=refract(incident,N,isEyeInWater==1?1.333:0.7502);
-    vec3 target=viewPos+refracted*min(thickness,2.8);
-    vec4 projected=gbufferProjection*vec4(target,1.0);
-    vec2 candidate=projected.xy/max(projected.w,0.001)*0.5+0.5;
-    if(projected.w>0.0 && all(greaterThan(candidate,vec2(0.001))) && all(lessThan(candidate,vec2(0.999)))) {
+    float opticalTravel=min(thickness,2.8);
+    vec3 flatRefracted=refract(incident,meshN,underwater?1.333:0.7502);
+    vec4 projected=gbufferProjection*vec4(surfacePos+refracted*opticalTravel,1.0);
+    vec4 flatProjected=gbufferProjection*vec4(surfacePos+flatRefracted*opticalTravel,1.0);
+    vec2 distortion=(projected.xy/max(projected.w,0.001)
+                    -flatProjected.xy/max(flatProjected.w,0.001))*0.5;
+    // Smoothly bound distortion in screen-height units, including near-camera water.
+    vec2 aspect=vec2(viewWidth/viewHeight,1.0);
+    float distortionLength=length(distortion*aspect);
+    distortion/=sqrt(1.0+distortionLength*distortionLength/(0.012*0.012));
+    vec2 candidate=screenUV+distortion;
+    if(projected.w>0.0 && flatProjected.w>0.0 && dot(flatRefracted,flatRefracted)>0.001 && all(greaterThan(candidate,vec2(0.001))) && all(lessThan(candidate,vec2(0.999)))) {
         bool validRefracted;
         vec3 refractPos=opaquePosition(candidate,validRefracted);
         vec3 candidateRay=normalize(viewPosition(candidate,0.5));
         float planeDenom=dot(meshN,candidateRay);
-        float planeDistance=dot(meshN,viewPos)/min(planeDenom,-0.0001);
+        float planeDistance=dot(meshN,surfacePos)/(planeDenom<0.0?min(planeDenom,-0.0001):max(planeDenom,0.0001));
         bool behindPlane=validRefracted && dot(refractPos,candidateRay)>planeDistance+0.02;
-        bool submerged=!validRefracted || worldUpDelta(viewPos-refractPos)>0.01;
+        bool submerged=!validRefracted || worldUpDelta(surfacePos-refractPos)>0.01;
         if((!validRefracted || behindPlane) && (underwater || submerged)) {
             refractUV=candidate;
             float clearance=validRefracted?dot(refractPos,candidateRay)-planeDistance:1.0;
-            float waterDepth=validRefracted?worldUpDelta(viewPos-refractPos):1.0;
+            float waterDepth=validRefracted?worldUpDelta(surfacePos-refractPos):1.0;
             refractWeight=edgeFade(candidate)*smoothstep(0.02,0.30,clearance)
                 *(underwater?1.0:smoothstep(0.01,0.30,waterDepth))
                 *smoothstep(0.0,0.50,thickness);
@@ -198,16 +228,30 @@ void main(){
         float visibleRay=underwater?1.0:smoothstep(0.0,0.08,dot(ray,meshN));
         vec2 hit;
         float confidence;
-        if(visibleRay>0.001 && traceScreen(depthtex1,viewPos+meshN*0.04,ray,0.22,SSR_STEPS,hit,confidence)) {
+        float screenCoverage=0.0;
+        vec3 screenReflection=vec3(0.0);
+        if(visibleRay>0.001 && traceScreen(depthtex1,surfacePos+meshN*0.04,ray,0.22,SSR_STEPS,hit,confidence)) {
             bool hitValid;
             vec3 hitPosition=opaquePosition(hit,hitValid);
-            float surfaceHeight=worldUpDelta(hitPosition-viewPos);
+            float surfaceHeight=worldUpDelta(hitPosition-surfacePos);
             float surfaceFade=underwater?1.0:smoothstep(-0.02,0.25,surfaceHeight);
             if(underwater || (hitValid && surfaceHeight>=-0.02)) {
                 float coverage=edgeFade(hit)*confidence*surfaceFade*visibleRay;
-                if(coverage>0.0) reflected=mix(envRadiance,waterReflectionSample(hit,roughness),coverage);
+                if(coverage>0.0) {
+                    screenCoverage=coverage;
+                    screenReflection=waterReflectionSample(hit,roughness);
+                }
             }
         }
+        #if defined(AA_VOXELS) || defined(AA_LIGHT_SPACE)
+        // Above-water only; omit submerged surfaces and fully covered screen rays.
+        if(!underwater && visibleRay>0.001 && screenCoverage<0.5) {
+            vec3 secondary; float secondaryConfidence;
+            if(traceSceneFallback(surfacePos+meshN*0.04,ray,24,secondary,secondaryConfidence))
+                reflected=mix(reflected,secondary,secondaryConfidence*visibleRay*(1.0-smoothstep(0.15,0.5,screenCoverage)));
+        }
+        #endif
+        reflected=mix(reflected,screenReflection,screenCoverage);
     #else
     if(skyExposure>0.0) reflected=waterEnvironmentReflection(worldRay,reflectionSpread)*skyExposure*skyExposure;
     #endif

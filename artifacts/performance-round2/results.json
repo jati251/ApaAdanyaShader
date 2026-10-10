@@ -1,0 +1,211 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2",
+  "reference": "C:\\Users\\jatis\\AppData\\Roaming\\.minecraft\\instances\\experiment\\.codex-backups\\performance-round2-20261008\\shaders",
+  "method": "GL_TIME_ELAPSED; 16 warmups, 9 alternating batches, median. VL uses 64 draws batched per stage via glMultiDrawArrays, normalized per draw, including prepass and resolve. Other workloads use cached GL commands. Synthetic fixtures, not Minecraft FPS.",
+  "results": [
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        1280,
+        720
+      ],
+      "quality": "0",
+      "dh": false,
+      "max_hdr_error": 0.216064453125,
+      "mean_hdr_error": 0.009733515094827722,
+      "p99_hdr_error": 0.073486328125,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "workload": "fog + volumetric lighting, including half pass / 1280x720",
+      "before_ms": 0.473072,
+      "after_ms": 0.40104,
+      "reduction_percent": 15.226434876720663,
+      "before_range_ms": [
+        0.458544,
+        0.767248
+      ],
+      "after_range_ms": [
+        0.375536,
+        0.412624
+      ]
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        257,
+        145
+      ],
+      "quality": "0",
+      "dh": true,
+      "max_hdr_error": 0.167724609375,
+      "mean_hdr_error": 0.00933482091069312,
+      "p99_hdr_error": 0.0716552734375,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "1",
+      "dh": false,
+      "max_hdr_error": 0.118896484375,
+      "mean_hdr_error": 0.008125886462983631,
+      "p99_hdr_error": 0.05908203125,
+      "full_path_max_hdr_error": 0.0
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "2",
+      "dh": true,
+      "max_hdr_error": 0.1263427734375,
+      "mean_hdr_error": 0.008020344974132941,
+      "p99_hdr_error": 0.0601806640625,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "3",
+      "dh": true,
+      "max_hdr_error": 0.1199951171875,
+      "mean_hdr_error": 0.00795973426065502,
+      "p99_hdr_error": 0.0574951171875,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        3,
+        3
+      ],
+      "quality": "0",
+      "dh": false,
+      "max_hdr_error": 0.010009765625,
+      "mean_hdr_error": 0.00328685619212963,
+      "p99_hdr_error": 0.010009765625,
+      "full_path_max_hdr_error": 0.0
+    },
+    {
+      "workload": "warm fixture flame pixels / 640x360",
+      "before_ms": 0.056256,
+      "after_ms": 0.023104,
+      "reduction_percent": 58.93060295790671,
+      "before_range_ms": [
+        0.056128,
+        0.14464
+      ],
+      "after_range_ms": [
+        0.02304,
+        0.02336
+      ]
+    },
+    {
+      "check": "occupied_contact_shadow_plane_parity",
+      "max_hdr_error": 0.0
+    },
+    {
+      "workload": "fresh two-bounce reservoir GI / 320x180",
+      "before_ms": 0.749536,
+      "after_ms": 0.696432,
+      "reduction_percent": 7.084916535029661,
+      "before_range_ms": [
+        0.630912,
+        0.765296
+      ],
+      "after_range_ms": [
+        0.625296,
+        1.067248
+      ]
+    },
+    {
+      "check": "denoiser_non_unit_normal_parity",
+      "max_hdr_error": 0.0
+    },
+    {
+      "workload": "three-pass GI denoiser / 640x360",
+      "before_ms": 0.043136,
+      "after_ms": 0.042816,
+      "reduction_percent": 0.7418397626112738,
+      "before_range_ms": [
+        0.042784,
+        0.063616
+      ],
+      "after_range_ms": [
+        0.042688,
+        0.0632
+      ]
+    },
+    {
+      "workload": "water SSR depth-aware filter / 1280x720",
+      "before_ms": 0.289152,
+      "after_ms": 0.307264,
+      "reduction_percent": -6.263833554670195,
+      "before_range_ms": [
+        0.059616,
+        0.494336
+      ],
+      "after_range_ms": [
+        0.059744,
+        0.39936
+      ]
+    },
+    {
+      "check": "terrain_stone",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_leaves",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_fractional_subsurface",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "check": "terrain_metal",
+      "max_hdr_rgb_error": 0.0,
+      "mean_hdr_rgb_error": 0.0
+    },
+    {
+      "workload": "ordinary terrain, 1280x720 / voxel profile",
+      "before_ms": 0.121344,
+      "after_ms": 0.102144,
+      "reduction_percent": 15.822784810126578,
+      "before_range_ms": [
+        0.121088,
+        0.122368
+      ],
+      "after_range_ms": [
+        0.101888,
+        0.102912
+      ]
+    },
+    {
+      "workload": "lava surface / 1280x720",
+      "before_ms": 0.058624,
+      "after_ms": 0.058624,
+      "reduction_percent": 0.0,
+      "before_range_ms": [
+        0.058368,
+        0.059136
+      ],
+      "after_range_ms": [
+        0.058368,
+        0.059136
+      ]
+    }
+  ]
+}

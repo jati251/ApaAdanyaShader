@@ -1,0 +1,319 @@
+Compiled from "DHGenericTransformer.java"
+public class net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer {
+  public net.irisshaders.iris.pipeline.transform.transformer.DHGenericTransformer();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  public static void transform(io.github.douira.glsl_transformer.ast.transform.ASTParser, io.github.douira.glsl_transformer.ast.node.TranslationUnit, io.github.douira.glsl_transformer.ast.query.Root, net.irisshaders.iris.pipeline.transform.parameter.Parameters);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: aload_3
+         4: iconst_0
+         5: invokestatic  #7                  // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.transform:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Lio/github/douira/glsl_transformer/ast/query/Root;Lnet/irisshaders/iris/pipeline/transform/parameter/Parameters;Z)V
+         8: aload_2
+         9: aload_0
+        10: getstatic     #13                 // Field net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.glTextureMatrix0:Lio/github/douira/glsl_transformer/ast/query/match/AutoHintedMatcher;
+        13: ldc           #17                 // String mat4(1.0)
+        15: invokevirtual #19                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceExpressionMatches:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/query/match/HintedMatcher;Ljava/lang/String;)Z
+        18: pop
+        19: aload_2
+        20: aload_0
+        21: getstatic     #25                 // Field net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.glTextureMatrix1:Lio/github/douira/glsl_transformer/ast/query/match/AutoHintedMatcher;
+        24: ldc           #17                 // String mat4(1.0)
+        26: invokevirtual #19                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceExpressionMatches:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/query/match/HintedMatcher;Ljava/lang/String;)Z
+        29: pop
+        30: aload_2
+        31: ldc           #28                 // String gl_ProjectionMatrix
+        33: ldc           #30                 // String iris_ProjectionMatrix
+        35: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+        38: pop
+        39: aload_3
+        40: getfield      #36                 // Field net/irisshaders/iris/pipeline/transform/parameter/Parameters.type:Lnet/irisshaders/iris/pipeline/transform/PatchShaderType;
+        43: getfield      #42                 // Field net/irisshaders/iris/pipeline/transform/PatchShaderType.glShaderType:Lnet/irisshaders/iris/gl/shader/ShaderType;
+        46: getstatic     #48                 // Field net/irisshaders/iris/gl/shader/ShaderType.VERTEX:Lnet/irisshaders/iris/gl/shader/ShaderType;
+        49: if_acmpne     87
+        52: aload_2
+        53: ldc           #53                 // String gl_MultiTexCoord2
+        55: ldc           #55                 // String gl_MultiTexCoord1
+        57: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+        60: pop
+        61: aload_2
+        62: aload_0
+        63: ldc           #57                 // String gl_MultiTexCoord0
+        65: ldc           #59                 // String vec4(0.0, 0.0, 0.0, 1.0)
+        67: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+        70: aload_2
+        71: aload_0
+        72: ldc           #55                 // String gl_MultiTexCoord1
+        74: ldc           #65                 // String vec4(_vert_tex_light_coord, 0.0, 1.0)
+        76: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+        79: aload_0
+        80: aload_2
+        81: iconst_4
+        82: bipush        7
+        84: invokestatic  #67                 // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.replaceGlMultiTexCoordBounded:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/query/Root;II)V
+        87: aload_3
+        88: getfield      #36                 // Field net/irisshaders/iris/pipeline/transform/parameter/Parameters.type:Lnet/irisshaders/iris/pipeline/transform/PatchShaderType;
+        91: getfield      #42                 // Field net/irisshaders/iris/pipeline/transform/PatchShaderType.glShaderType:Lnet/irisshaders/iris/gl/shader/ShaderType;
+        94: getstatic     #71                 // Field net/irisshaders/iris/gl/shader/ShaderType.FRAGMENT:Lnet/irisshaders/iris/gl/shader/ShaderType;
+        97: if_acmpne     122
+       100: aload_1
+       101: aload_0
+       102: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       105: iconst_2
+       106: anewarray     #80                 // class java/lang/String
+       109: dup
+       110: iconst_0
+       111: ldc           #82                 // String bool dh_hasTexture() { return false; }
+       113: aastore
+       114: dup
+       115: iconst_1
+       116: ldc           #84                 // String vec4 dh_sampleTexture() {\n\treturn vec4(1.0);\n }\n
+       118: aastore
+       119: invokevirtual #86                 // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNodes:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;[Ljava/lang/String;)V
+       122: aload_2
+       123: ldc           #92                 // String gl_Color
+       125: ldc           #94                 // String _vert_color
+       127: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+       130: pop
+       131: aload_3
+       132: getfield      #36                 // Field net/irisshaders/iris/pipeline/transform/parameter/Parameters.type:Lnet/irisshaders/iris/pipeline/transform/PatchShaderType;
+       135: getfield      #42                 // Field net/irisshaders/iris/pipeline/transform/PatchShaderType.glShaderType:Lnet/irisshaders/iris/gl/shader/ShaderType;
+       138: getstatic     #48                 // Field net/irisshaders/iris/gl/shader/ShaderType.VERTEX:Lnet/irisshaders/iris/gl/shader/ShaderType;
+       141: if_acmpne     153
+       144: aload_2
+       145: aload_0
+       146: ldc           #96                 // String gl_Normal
+       148: ldc           #98                 // String _vert_normal
+       150: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+       153: aload_2
+       154: aload_0
+       155: ldc           #100                // String gl_NormalMatrix
+       157: ldc           #102                // String iris_NormalMatrix
+       159: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+       162: aload_1
+       163: aload_0
+       164: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       167: ldc           #104                // String uniform mat3 iris_NormalMatrix;
+       169: invokevirtual #106                // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNode:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;Ljava/lang/String;)V
+       172: aload_1
+       173: aload_0
+       174: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       177: ldc           #110                // String uniform mat4 iris_ModelViewMatrixInverse;
+       179: invokevirtual #106                // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNode:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;Ljava/lang/String;)V
+       182: aload_1
+       183: aload_0
+       184: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       187: ldc           #112                // String uniform mat4 iris_ProjectionMatrixInverse;
+       189: invokevirtual #106                // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNode:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;Ljava/lang/String;)V
+       192: getstatic     #114                // Field net/irisshaders/iris/Iris.logger:Lnet/irisshaders/iris/IrisLogging;
+       195: aload_3
+       196: getfield      #36                 // Field net/irisshaders/iris/pipeline/transform/parameter/Parameters.type:Lnet/irisshaders/iris/pipeline/transform/PatchShaderType;
+       199: invokestatic  #120                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+       202: invokedynamic #124,  0            // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       207: invokevirtual #128                // Method net/irisshaders/iris/IrisLogging.warn:(Ljava/lang/String;)V
+       210: aload_2
+       211: ldc           #134                // String gl_ModelViewMatrix
+       213: ldc           #136                // String iris_ModelViewMatrix
+       215: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+       218: pop
+       219: aload_2
+       220: ldc           #138                // String gl_ModelViewMatrixInverse
+       222: ldc           #140                // String iris_ModelViewMatrixInverse
+       224: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+       227: pop
+       228: aload_2
+       229: ldc           #142                // String gl_ProjectionMatrixInverse
+       231: ldc           #144                // String iris_ProjectionMatrixInverse
+       233: invokevirtual #32                 // Method io/github/douira/glsl_transformer/ast/query/Root.rename:(Ljava/lang/String;Ljava/lang/String;)Z
+       236: pop
+       237: aload_3
+       238: getfield      #36                 // Field net/irisshaders/iris/pipeline/transform/parameter/Parameters.type:Lnet/irisshaders/iris/pipeline/transform/PatchShaderType;
+       241: getfield      #42                 // Field net/irisshaders/iris/pipeline/transform/PatchShaderType.glShaderType:Lnet/irisshaders/iris/gl/shader/ShaderType;
+       244: getstatic     #48                 // Field net/irisshaders/iris/gl/shader/ShaderType.VERTEX:Lnet/irisshaders/iris/gl/shader/ShaderType;
+       247: if_acmpne     325
+       250: aload_2
+       251: getfield      #146                // Field io/github/douira/glsl_transformer/ast/query/Root.identifierIndex:Lio/github/douira/glsl_transformer/ast/query/index/IdentifierIndex;
+       254: ldc           #150                // String ftransform
+       256: invokevirtual #152                // Method io/github/douira/glsl_transformer/ast/query/index/IdentifierIndex.has:(Ljava/lang/String;)Z
+       259: ifeq          279
+       262: aload_1
+       263: aload_0
+       264: getstatic     #158                // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_FUNCTIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       267: iconst_1
+       268: anewarray     #80                 // class java/lang/String
+       271: dup
+       272: iconst_0
+       273: ldc           #161                // String vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }
+       275: aastore
+       276: invokevirtual #86                 // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNodes:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;[Ljava/lang/String;)V
+       279: aload_1
+       280: aload_0
+       281: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       284: iconst_3
+       285: anewarray     #80                 // class java/lang/String
+       288: dup
+       289: iconst_0
+       290: ldc           #163                // String uniform mat4 iris_ProjectionMatrix;
+       292: aastore
+       293: dup
+       294: iconst_1
+       295: ldc           #165                // String uniform mat4 iris_ModelViewMatrix;
+       297: aastore
+       298: dup
+       299: iconst_2
+       300: ldc           #167                // String vec4 getVertexPosition() { return vec4(_vert_position, 1.0); }
+       302: aastore
+       303: invokevirtual #86                 // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNodes:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;[Ljava/lang/String;)V
+       306: aload_2
+       307: aload_0
+       308: ldc           #169                // String gl_Vertex
+       310: ldc           #171                // String getVertexPosition()
+       312: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+       315: aload_0
+       316: aload_1
+       317: aload_2
+       318: aload_3
+       319: invokestatic  #173                // Method injectVertInit:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Lio/github/douira/glsl_transformer/ast/query/Root;Lnet/irisshaders/iris/pipeline/transform/parameter/Parameters;)V
+       322: goto          347
+       325: aload_1
+       326: aload_0
+       327: getstatic     #74                 // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_DECLARATIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+       330: iconst_2
+       331: anewarray     #80                 // class java/lang/String
+       334: dup
+       335: iconst_0
+       336: ldc           #165                // String uniform mat4 iris_ModelViewMatrix;
+       338: aastore
+       339: dup
+       340: iconst_1
+       341: ldc           #163                // String uniform mat4 iris_ProjectionMatrix;
+       343: aastore
+       344: invokevirtual #86                 // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNodes:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;[Ljava/lang/String;)V
+       347: aload_2
+       348: aload_0
+       349: ldc           #179                // String gl_ModelViewProjectionMatrix
+       351: ldc           #181                // String (iris_ProjectionMatrix * iris_ModelViewMatrix)
+       353: invokevirtual #61                 // Method io/github/douira/glsl_transformer/ast/query/Root.replaceReferenceExpressions:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;Ljava/lang/String;)V
+       356: aload_2
+       357: invokestatic  #183                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.applyIntelHd4000Workaround:(Lio/github/douira/glsl_transformer/ast/query/Root;)V
+       360: return
+
+  public static void injectVertInit(io.github.douira.glsl_transformer.ast.transform.ASTParser, io.github.douira.glsl_transformer.ast.node.TranslationUnit, io.github.douira.glsl_transformer.ast.query.Root, net.irisshaders.iris.pipeline.transform.parameter.Parameters);
+    Code:
+         0: aload_1
+         1: aload_0
+         2: getstatic     #158                // Field io/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint.BEFORE_FUNCTIONS:Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;
+         5: bipush        13
+         7: anewarray     #80                 // class java/lang/String
+        10: dup
+        11: iconst_0
+        12: ldc           #187                // String vec3 _vert_position;
+        14: aastore
+        15: dup
+        16: iconst_1
+        17: ldc           #189                // String vec2 _vert_tex_light_coord;
+        19: aastore
+        20: dup
+        21: iconst_2
+        22: ldc           #191                // String int dhMaterialId;
+        24: aastore
+        25: dup
+        26: iconst_3
+        27: ldc           #193                // String vec4 _vert_color;
+        29: aastore
+        30: dup
+        31: iconst_4
+        32: ldc           #195                // String vec3 _vert_normal;
+        34: aastore
+        35: dup
+        36: iconst_5
+        37: ldc           #197                // String uniform ivec3 uOffsetChunk;
+        39: aastore
+        40: dup
+        41: bipush        6
+        43: ldc           #199                // String uniform vec3 uOffsetSubChunk;
+        45: aastore
+        46: dup
+        47: bipush        7
+        49: ldc           #201                // String uniform ivec3 uCameraPosChunk;
+        51: aastore
+        52: dup
+        53: bipush        8
+        55: ldc           #203                // String uniform vec3 uCameraPosSubChunk;
+        57: aastore
+        58: dup
+        59: bipush        9
+        61: ldc           #205                // String uniform int uSkyLight;
+        63: aastore
+        64: dup
+        65: bipush        10
+        67: ldc           #207                // String uniform int uBlockLight;
+        69: aastore
+        70: dup
+        71: bipush        11
+        73: ldc           #209                // String const vec3 irisNormals[6] = vec3[](vec3(0,0,-1),vec3(0,0,1),vec3(-1,0,0),vec3(1,0,0),vec3(0,-1,0),vec3(0,1,0));
+        75: aastore
+        76: dup
+        77: bipush        12
+        79: ldc           #211                // String void _vert_init() {\n\tvec3 trans = (aTranslateChunk + uOffsetChunk - uCameraPosChunk) * 16.0f;\n\ttrans += (aTranslateSubChunk + uOffsetSubChunk - uCameraPosSubChunk);\n\tmat4 transform = mat4(\n         aScale.x, 0.0,      0.0,      0.0,\n         0.0,      aScale.y, 0.0,      0.0,\n         0.0,      0.0,      aScale.z, 0.0,\n         trans.x,  trans.y,  trans.z,  1.0\n     );\n     _vert_position = (transform * vec4(vPosition, 1.0)).xyz;\n\t_vert_normal = irisNormals[int(floor(float(gl_VertexID) / 4))];\n\t\t\t\tfloat blockLight = (float(uBlockLight)+0.5) / 16.0;\n\t\t\t\tfloat skyLight = (float(uSkyLight)+0.5) / 16.0;\n     _vert_tex_light_coord = vec2(blockLight, skyLight);\n     dhMaterialId = aMaterial;\n     _vert_color = iris_color;\n     }\n
+        81: aastore
+        82: invokevirtual #86                 // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.parseAndInjectNodes:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/transform/ASTInjectionPoint;[Ljava/lang/String;)V
+        85: aload_2
+        86: aload_0
+        87: aload_1
+        88: ldc           #213                // String iris_color
+        90: getstatic     #215                // Field io/github/douira/glsl_transformer/util/Type.F32VEC4:Lio/github/douira/glsl_transformer/util/Type;
+        93: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+        96: iconst_1
+        97: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       100: aload_2
+       101: aload_0
+       102: aload_1
+       103: ldc           #231                // String aScale
+       105: getstatic     #233                // Field io/github/douira/glsl_transformer/util/Type.F32VEC3:Lio/github/douira/glsl_transformer/util/Type;
+       108: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+       111: iconst_2
+       112: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       115: aload_2
+       116: aload_0
+       117: aload_1
+       118: ldc           #236                // String aTranslateChunk
+       120: getstatic     #238                // Field io/github/douira/glsl_transformer/util/Type.I32VEC3:Lio/github/douira/glsl_transformer/util/Type;
+       123: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+       126: iconst_3
+       127: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       130: aload_2
+       131: aload_0
+       132: aload_1
+       133: ldc           #241                // String aTranslateSubChunk
+       135: getstatic     #233                // Field io/github/douira/glsl_transformer/util/Type.F32VEC3:Lio/github/douira/glsl_transformer/util/Type;
+       138: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+       141: iconst_4
+       142: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       145: aload_2
+       146: aload_0
+       147: aload_1
+       148: ldc           #243                // String aMaterial
+       150: getstatic     #245                // Field io/github/douira/glsl_transformer/util/Type.INT32:Lio/github/douira/glsl_transformer/util/Type;
+       153: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+       156: iconst_5
+       157: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       160: aload_2
+       161: aload_0
+       162: aload_1
+       163: ldc           #248                // String vPosition
+       165: getstatic     #233                // Field io/github/douira/glsl_transformer/util/Type.F32VEC3:Lio/github/douira/glsl_transformer/util/Type;
+       168: getstatic     #221                // Field io/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType.IN:Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;
+       171: iconst_0
+       172: invokestatic  #227                // Method net/irisshaders/iris/pipeline/transform/transformer/CommonTransformer.addIfNotExists:(Lio/github/douira/glsl_transformer/ast/query/Root;Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Lio/github/douira/glsl_transformer/ast/node/TranslationUnit;Ljava/lang/String;Lio/github/douira/glsl_transformer/util/Type;Lio/github/douira/glsl_transformer/ast/node/type/qualifier/StorageQualifier$StorageType;I)V
+       175: aload_1
+       176: aload_0
+       177: ldc           #250                // String _vert_init();
+       179: invokevirtual #252                // Method io/github/douira/glsl_transformer/ast/node/TranslationUnit.prependMainFunctionBody:(Lio/github/douira/glsl_transformer/ast/transform/ASTParser;Ljava/lang/String;)V
+       182: return
+}

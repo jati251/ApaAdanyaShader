@@ -5,33 +5,17 @@
 #include "/lib/atmosphere.glsl"
 #include "/lib/lighting.glsl"
 #include "/lib/water.glsl"
-#ifdef DISTANT_HORIZONS
-uniform sampler2D dhDepthTex0;
-uniform mat4 dhProjectionInverse;
-#endif
-uniform sampler2D colortex0,colortex2,depthtex0;
+#include "/lib/volumetric.glsl"
+#define AA_SMOKE_RECONSTRUCT
+#include "/lib/smoke.glsl"
+uniform sampler2D colortex0;
 in vec2 texcoord;
 /* RENDERTARGETS: 0 */
 layout(location=0) out vec4 color;
 void main(){
     vec3 c=textureScreen(colortex0,texcoord).rgb;
-    float depth=depthScreen(depthtex0,texcoord);
-    vec3 vp=viewPosition(texcoord,depth), rd=worldDirection(normalize(vp));
-    float dist=depth>=0.999999?far:min(length(vp),far);
-    bool isDH=false;
-    #ifdef DISTANT_HORIZONS
-    // Combined depth already includes current DH terrain and water.
-    float dhDepth=depthScreen(dhDepthTex0,texcoord);
-    if(depth>=0.999999 && dhDepth<1.0){
-        isDH=true;
-        vec4 clipDH=vec4(texcoord*2.0-1.0,dhDepth*2.0-1.0,1.0);
-        vec4 vpDH=dhProjectionInverse*clipDH;
-        vp=vpDH.xyz/vpDH.w;
-        rd=worldDirection(normalize(vp));
-        dist=length(vp);
-    }
-    #endif
-    bool hand=textureScreen(colortex2,texcoord).a>0.5 && depth<0.56;
+    vec3 vp,rd;float dist,depth;bool hand,isDH;
+    volumetricScene(texcoord,vp,rd,dist,depth,hand,isDH);
     if(isEyeInWater==1){
         // Absorption along the eye-to-surface path in murky natural freshwater
         vec3 trans=exp(-waterAbsorption()*dist);
@@ -66,35 +50,21 @@ void main(){
                 #if !defined(NETHER) && !defined(END)
                 float sunDot=dot(rd,sunDirection());
                 float forwardScatter=pow(sat(sunDot*0.5+0.5),8.0)*daylight()*(1.0-rainStrength);
-                fog+=lightColor()*forwardScatter*0.12;
+                fog+=solarLightColor()*forwardScatter*0.12;
                 #endif
                 c=mix(c,fog,min(amount,0.98));
             }
         }
         #endif
         #if defined(VOLUMETRIC_LIGHT) && !defined(NETHER) && !defined(END)
-        float outdoor=smoothstep(8.0,150.0,float(eyeBrightnessSmooth.y));
-        if(outdoor>0.001){
-            float rayLength=min(dist,100.0);
-            // Physically-based Henyey-Greenstein atmospheric aerosol forward scattering (g = 0.72)
-            float cosTheta=dot(rd,worldDirection(shadowLightPosition));
-            float denom=1.5184-1.44*cosTheta;
-            float hg=0.4816*inversesqrt(max(denom*denom*denom,0.00001));
-            float phase=0.030+hg*0.22;
-            float lightFactor=phase*(1.0-exp(-rayLength*0.0015*FOG_DENSITY))*outdoor;
-            if(lightFactor>0.0005){
-                float sum=0.0, weightSum=0.0;
-                float jitter=ignDither(gl_FragCoord.xy);
-                // Optimized exponential step clustering with height-dependent ground mist density
-                for(int i=0;i<VL_SAMPLES;i++){
-                    float stepFrac=pow((float(i)+jitter)/float(VL_SAMPLES),1.30);
-                    vec3 p=rd*rayLength*stepFrac;
-                    float hExtinction=exp(-max((cameraPosition.y+p.y)-64.0,0.0)*0.012);
-                    sum+=shadowVisibility(p,vec3(0.0),1.0,false)*hExtinction;
-                    weightSum+=hExtinction;
-                }
-                c+=lightColor()*(sum/max(weightSum,0.001))*lightFactor;
-            }
+        float lightFactor=volumetricFactor(rd,dist);
+        if(lightFactor>0.0005) {
+            #ifdef HALF_RES_LIGHTING
+            float visibility=reconstructVolumetric(texcoord,rd,dist,vp,depth,isDH);
+            #else
+            float visibility=volumetricVisibility(rd,dist,gl_FragCoord.xy);
+            #endif
+            c+=lightColor()*visibility*lightFactor;
         }
         #endif
         #if !defined(NETHER) && !defined(END) && defined(VOLUMETRIC_LIGHT)
@@ -126,5 +96,11 @@ void main(){
         }
         #endif
     }
+    #ifdef AA_SMOKE
+    if(isEyeInWater==0 && !hand && texelFetch(aaSmokePresence,ivec2(0),0).r!=0u) {
+        vec4 smoke=reconstructSmoke(texcoord,rd,dist,vp,depth,isDH);
+        c=c*(1.0-smoke.a)+smoke.rgb;
+    }
+    #endif
     color=vec4(max(c,vec3(0.0)),1.0);
 }

@@ -1,0 +1,23 @@
+PASS: 10 complete profiles, legal option values, both translations
+PASS: 10 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+{'check': 'volumetric_reconstruction', 'size': [1280, 720], 'quality': '0', 'dh': False, 'max_hdr_error': 0.216064453125, 'mean_hdr_error': 0.009733515094827722, 'p99_hdr_error': 0.073486328125, 'full_path_max_hdr_error': 0.000244140625}
+GPU: fog + volumetric lighting, including half pass / 1280x720: 30.2766 -> 25.6666 ms (+15.2% less time)
+{'check': 'volumetric_reconstruction', 'size': [257, 145], 'quality': '0', 'dh': True, 'max_hdr_error': 0.167724609375, 'mean_hdr_error': 0.00933482091069312, 'p99_hdr_error': 0.0716552734375, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '1', 'dh': False, 'max_hdr_error': 0.118896484375, 'mean_hdr_error': 0.008125886462983631, 'p99_hdr_error': 0.05908203125, 'full_path_max_hdr_error': 0.0}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '2', 'dh': True, 'max_hdr_error': 0.1263427734375, 'mean_hdr_error': 0.008020344974132941, 'p99_hdr_error': 0.0601806640625, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [131, 73], 'quality': '3', 'dh': True, 'max_hdr_error': 0.1199951171875, 'mean_hdr_error': 0.00795973426065502, 'p99_hdr_error': 0.0574951171875, 'full_path_max_hdr_error': 0.000244140625}
+{'check': 'volumetric_reconstruction', 'size': [3, 3], 'quality': '0', 'dh': False, 'max_hdr_error': 0.010009765625, 'mean_hdr_error': 0.00328685619212963, 'p99_hdr_error': 0.010009765625, 'full_path_max_hdr_error': 0.0}
+PASS: full/half volumetrics, silhouettes, hand/water, odd allocations, FSR and DH
+GPU: warm fixture flame pixels / 640x360: 0.0563 -> 0.0231 ms (+58.9% less time)
+PASS: torch/campfire warm/soul flame and wooden parts, every MRT attachment
+GPU: fresh two-bounce reservoir GI / 320x180: 0.7495 -> 0.6964 ms (+7.1% less time)
+PASS: reservoir state identical for sampled receivers, real history reuse, sky, hand and out-of-range receivers
+GPU: three-pass GI denoiser / 640x360: 0.0431 -> 0.0428 ms (+0.7% less time)
+GPU: water SSR depth-aware filter / 1280x720: 0.2892 -> 0.3073 ms (-6.3% less time)
+GPU: ordinary terrain, 1280x720 / voxel profile: 0.1213 -> 0.1021 ms (+15.8% less time)
+GPU: lava surface / 1280x720: 0.0586 -> 0.0586 ms (+0.0% less time)
+PASS: ordinary/fractional subsurface/metal/emissive surface parity

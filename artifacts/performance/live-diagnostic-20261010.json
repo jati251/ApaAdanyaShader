@@ -1,0 +1,266 @@
+[
+  {
+    "time": "2026-10-10T11:01:35.3195566+07:00",
+    "gpu": "3, 0, 5542, 66, 1830, P0",
+    "busiestCpu": [
+      {
+        "Name": "11",
+        "PercentProcessorTime": 41
+      },
+      {
+        "Name": "0",
+        "PercentProcessorTime": 23
+      },
+      {
+        "Name": "1",
+        "PercentProcessorTime": 23
+      },
+      {
+        "Name": "13",
+        "PercentProcessorTime": 23
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:01:39.6712723+07:00",
+    "gpu": "100, 13, 5460, 71, 1830, P0",
+    "busiestCpu": [
+      {
+        "Name": "4",
+        "PercentProcessorTime": 76
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "6",
+        "PercentProcessorTime": 64
+      },
+      {
+        "Name": "0",
+        "PercentProcessorTime": 46
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:01:44.0253924+07:00",
+    "gpu": "100, 12, 5449, 72, 1830, P0",
+    "busiestCpu": [
+      {
+        "Name": "10",
+        "PercentProcessorTime": 93
+      },
+      {
+        "Name": "4",
+        "PercentProcessorTime": 87
+      },
+      {
+        "Name": "8",
+        "PercentProcessorTime": 81
+      },
+      {
+        "Name": "0",
+        "PercentProcessorTime": 75
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:01:48.3808592+07:00",
+    "gpu": "100, 11, 5463, 73, 1830, P0",
+    "busiestCpu": [
+      {
+        "Name": "0",
+        "PercentProcessorTime": 69
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 69
+      },
+      {
+        "Name": "6",
+        "PercentProcessorTime": 69
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 63
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:01:52.7297642+07:00",
+    "gpu": "100, 13, 5475, 74, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "2",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "5",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "6",
+        "PercentProcessorTime": 64
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 52
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:01:57.0719980+07:00",
+    "gpu": "100, 12, 5471, 74, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "6",
+        "PercentProcessorTime": 100
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "5",
+        "PercentProcessorTime": 64
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 58
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:01.4144803+07:00",
+    "gpu": "99, 12, 5491, 75, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "6",
+        "PercentProcessorTime": 87
+      },
+      {
+        "Name": "0",
+        "PercentProcessorTime": 81
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 75
+      },
+      {
+        "Name": "8",
+        "PercentProcessorTime": 75
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:05.7708906+07:00",
+    "gpu": "100, 11, 5474, 75, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "8",
+        "PercentProcessorTime": 88
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 83
+      },
+      {
+        "Name": "5",
+        "PercentProcessorTime": 83
+      },
+      {
+        "Name": "6",
+        "PercentProcessorTime": 83
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:10.1173922+07:00",
+    "gpu": "100, 11, 5748, 75, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "0",
+        "PercentProcessorTime": 75
+      },
+      {
+        "Name": "8",
+        "PercentProcessorTime": 75
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 69
+      },
+      {
+        "Name": "13",
+        "PercentProcessorTime": 69
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:14.4699176+07:00",
+    "gpu": "100, 13, 5726, 76, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "6",
+        "PercentProcessorTime": 88
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "5",
+        "PercentProcessorTime": 70
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:18.8150419+07:00",
+    "gpu": "100, 12, 5738, 76, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "4",
+        "PercentProcessorTime": 87
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 81
+      },
+      {
+        "Name": "1",
+        "PercentProcessorTime": 75
+      },
+      {
+        "Name": "8",
+        "PercentProcessorTime": 75
+      }
+    ]
+  },
+  {
+    "time": "2026-10-10T11:02:23.1657844+07:00",
+    "gpu": "100, 14, 5832, 77, 1815, P0",
+    "busiestCpu": [
+      {
+        "Name": "6",
+        "PercentProcessorTime": 88
+      },
+      {
+        "Name": "8",
+        "PercentProcessorTime": 88
+      },
+      {
+        "Name": "10",
+        "PercentProcessorTime": 70
+      },
+      {
+        "Name": "2",
+        "PercentProcessorTime": 70
+      }
+    ]
+  }
+]

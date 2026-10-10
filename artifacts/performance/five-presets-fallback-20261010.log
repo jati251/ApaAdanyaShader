@@ -1,0 +1,51 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: POTATO, with/without DH
+PASS: MEDIUM, with/without DH
+PASS: HIGH, with/without DH
+PASS: REALISM_FAST, with/without DH
+PASS: ULTRA, with/without DH
+PASS: 1110 program variants compiled and linked
+PASS: GPU shadow triangles preserve projection across distance boundary at ground/80/200 blocks altitude
+PASS: GPU low-tier two-target output locations, retained material masks and full Medium/High/custom-specular attachments
+PASS: GPU Potato/Low opaque and DH preservation, eager/lazy sky parity, both MRT outputs, native/FSR and all dimensions
+PASS: GPU lens images, focus/hand preserved, background variance 0.09349 -> 0.00000, autofocus matched
+PASS: GPU particles, intersection/midpoint/free-space alpha, off switch, weather opacity
+PASS: GPU temporal HDR history, motion reprojection, depth rejection, camera cuts, hand rejection
+PASS: GPU FSR 1 mode 1, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
+PASS: GPU FSR 1 mode 2, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
+PASS: GPU FSR 1 mode 3, odd viewport 97x55, EASU/RCAS constants, black/white edges, unused-region isolation
+PASS: GPU rain ripple filtering at near/grazing camera footprints
+PASS: GPU water continuous wave phase and analytic crest gradients
+PASS: GPU screen-space tracing, coarse-step surface refinement and sky rejection
+PASS: GPU water Fresnel/TIR, wave animation/filtering, cloud slab/both sides, reflected clouds
+PASS: GPU DH camera-pan sky/clouds ignore stale pre-translucent depth
+PASS: GPU motion blur, dark silhouette isolation and translation-free sky
+PASS: GPU 120-block reflection travel and bounded intersection confidence
+PASS: GPU distant reflection fallback with separate DH projection
+PASS: GPU real water underside remains continuous across fluid lightmap tiles
+PASS: GPU shoreline reflections reject submerged geometry above water
+PASS: GPU rough water reflections filter high-contrast sky/foliage edges
+PASS: GPU water top normals match across fluid triangles; waterfall normals preserved
+PASS: GPU actual water normals stay anchored during a camera jump at fixed wave time
+PASS: GPU actual grazing water optics retain curved rays and mask hidden facets
+PASS: GPU jumping preserves water pixels while opaque camera motion blur remains active
+PASS: GPU water optics ignore incompatible TAA history while opaque history stays active
+PASS: GPU gbuffers_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU dh_water vertices remain fixed through jumps, camera bob and section crossings
+PASS: GPU POM, flat/constant/sloped heights, ray direction, atlas isolation, distance fade, grazing/head-on/zero-depth/invalid-bounds bypass
+PASS: GPU DH z/w including asymmetric projections, independent depth sizes and perspective water thickness
+PASS: GPU DH near-shading parity, held-light exclusion, finite distant lighting and smooth 64/96/128-block transitions
+PASS: GPU DH four-tap world-space reflection preserves constant energy and filters high-contrast sky
+PASS: GPU LabPBR conductors, linear F0, alpha sentinel, zero metal diffuse and ambient-only AO
+PASS: GPU solar PCSS lit/shadowed bounds and increasing blocker-distance penumbra
+PASS: GPU exposure limits, measured luminance, gradual/frame-rate-independent adaptation and reset
+PASS: GPU signal-specific GI/AO reprojection, static reuse, depth/normal rejection and camera reset
+PASS: GPU sRGB reference/roundtrip, neutral noon/warm sunset, near-clear/distance fog, disk-free fog and neutral middle gray
+PASS: GPU off-screen light-space hit, hidden receiver, backface, empty geometry/depth and range rejection
+PASS: GPU disappearing-emitter radiance clipping preserves hue and AO
+PASS: GPU sunset/sunrise source handoff, constant lunar hue, warm sun and independent lunar disc

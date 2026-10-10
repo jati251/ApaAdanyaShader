@@ -1,0 +1,894 @@
+Compiled from "DefaultChunkRenderer.java"
+public class net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer extends net.caffeinemc.mods.sodium.client.render.chunk.ShaderChunkRenderer {
+  private final net.caffeinemc.mods.sodium.client.render.chunk.SharedQuadIndexBuffer sharedIndexBuffer;
+
+  private final net.caffeinemc.mods.sodium.client.gpu.device.context.DrawContext drawContext;
+
+  public static final int PUSH_CONSTANT_RANGE;
+
+  private final boolean[] shouldDraw;
+
+  private static final int MODEL_UNASSIGNED;
+
+  private static final int MODEL_POS_X;
+
+  private static final int MODEL_POS_Y;
+
+  private static final int MODEL_POS_Z;
+
+  private static final int MODEL_NEG_X;
+
+  private static final int MODEL_NEG_Y;
+
+  private static final int MODEL_NEG_Z;
+
+  public net.caffeinemc.mods.sodium.client.render.chunk.DefaultChunkRenderer(net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #1                  // Method net/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer."<init>":(Lnet/caffeinemc/mods/sodium/client/render/chunk/vertex/format/ChunkVertexType;)V
+         5: aload_0
+         6: invokestatic  #7                  // Method net/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext.create:()Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+         9: putfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+        12: aload_0
+        13: getstatic     #19                 // Field net/caffeinemc/mods/sodium/client/render/chunk/terrain/DefaultTerrainRenderPasses.ALL:[Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;
+        16: arraylength
+        17: newarray       boolean
+        19: putfield      #25                 // Field shouldDraw:[Z
+        22: aload_0
+        23: new           #29                 // class net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer
+        26: dup
+        27: getstatic     #31                 // Field net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer$IndexFormat.INTEGER:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer$IndexFormat;
+        30: invokespecial #37                 // Method net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer."<init>":(Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer$IndexFormat;)V
+        33: putfield      #40                 // Field sharedIndexBuffer:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer;
+        36: return
+
+  protected static float getCameraTranslation(int, int, float);
+    Code:
+         0: iload_0
+         1: iload_1
+         2: isub
+         3: i2f
+         4: fload_2
+         5: fsub
+         6: freturn
+
+  public void prepare(net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderListIterable, net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform, boolean);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: iload         4
+         5: getstatic     #19                 // Field net/caffeinemc/mods/sodium/client/render/chunk/terrain/DefaultTerrainRenderPasses.ALL:[Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;
+         8: arraylength
+         9: if_icmpge     227
+        12: getstatic     #19                 // Field net/caffeinemc/mods/sodium/client/render/chunk/terrain/DefaultTerrainRenderPasses.ALL:[Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;
+        15: iload         4
+        17: aaload
+        18: astore        5
+        20: invokestatic  #44                 // Method net/caffeinemc/mods/sodium/client/SodiumClientMod.options:()Lnet/caffeinemc/mods/sodium/client/gui/SodiumOptions;
+        23: getfield      #50                 // Field net/caffeinemc/mods/sodium/client/gui/SodiumOptions.performance:Lnet/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings;
+        26: getfield      #56                 // Field net/caffeinemc/mods/sodium/client/gui/SodiumOptions$PerformanceSettings.useBlockFaceCulling:Z
+        29: istore        6
+        31: aload         5
+        33: invokevirtual #62                 // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.isTranslucent:()Z
+        36: ifeq          47
+        39: iload_3
+        40: ifeq          47
+        43: iconst_1
+        44: goto          48
+        47: iconst_0
+        48: istore        7
+        50: aload_1
+        51: aload         5
+        53: invokevirtual #62                 // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.isTranslucent:()Z
+        56: invokeinterface #68,  2           // InterfaceMethod net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderListIterable.iterator:(Z)Ljava/util/Iterator;
+        61: astore        8
+        63: iconst_0
+        64: istore        9
+        66: aload         8
+        68: invokeinterface #74,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+        73: ifeq          212
+        76: aload         8
+        78: invokeinterface #79,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        83: checkcast     #83                 // class net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList
+        86: astore        10
+        88: aload         10
+        90: invokevirtual #85                 // Method net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList.getRegion:()Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;
+        93: astore        11
+        95: aload         11
+        97: aload         5
+        99: invokevirtual #89                 // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getStorage:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataStorage;
+       102: astore        12
+       104: aload         12
+       106: ifnonnull     112
+       109: goto          66
+       112: aload         11
+       114: invokevirtual #95                 // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getResources:()Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion$DeviceResources;
+       117: astore        13
+       119: aload         13
+       121: ifnonnull     134
+       124: aload         11
+       126: aload         5
+       128: invokevirtual #99                 // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.clearCachedBatchFor:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)V
+       131: goto          66
+       134: aload         11
+       136: aload         5
+       138: invokevirtual #103                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getCachedBatch:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;
+       141: astore        14
+       143: aload         14
+       145: getfield      #107                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.isFilled:Z
+       148: ifne          169
+       151: aload         14
+       153: aload         11
+       155: aload         12
+       157: aload         10
+       159: aload_2
+       160: aload         5
+       162: iload         6
+       164: iload         7
+       166: invokestatic  #112                // Method fillCommandBuffer:(Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;Lnet/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataStorage;Lnet/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList;Lnet/caffeinemc/mods/sodium/client/render/viewport/CameraTransform;Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;ZZ)V
+       169: aload         14
+       171: invokevirtual #116                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.isEmpty:()Z
+       174: ifeq          180
+       177: goto          66
+       180: iconst_1
+       181: istore        9
+       183: iload         7
+       185: ifne          200
+       188: aload_0
+       189: getfield      #40                 // Field sharedIndexBuffer:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer;
+       192: aload         14
+       194: invokevirtual #119                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.getMaxElementCount:()I
+       197: invokevirtual #123                // Method net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer.ensureCapacity:(I)V
+       200: aload         14
+       202: aload_0
+       203: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+       206: invokevirtual #127                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.prepare:(Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;)V
+       209: goto          66
+       212: aload_0
+       213: getfield      #25                 // Field shouldDraw:[Z
+       216: iload         4
+       218: iload         9
+       220: bastore
+       221: iinc          4, 1
+       224: goto          3
+       227: return
+
+  public void render(net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices, net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderListIterable, net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass, net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform, net.caffeinemc.mods.sodium.client.util.FogParameters, boolean, com.mojang.renderpearl.api.commands.RenderPass, com.mojang.renderpearl.api.textures.GpuSampler, com.mojang.renderpearl.api.buffers.GpuBufferSlice, com.mojang.renderpearl.api.buffers.GpuBuffer, net.minecraft.client.renderer.oit.OitStage);
+    Code:
+         0: aload_0
+         1: getfield      #25                 // Field shouldDraw:[Z
+         4: aload_3
+         5: invokestatic  #131                // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/DefaultTerrainRenderPasses.getPassIndex:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)I
+         8: baload
+         9: ifne          13
+        12: return
+        13: aload_0
+        14: aload_3
+        15: aload         5
+        17: aload         8
+        19: aload         11
+        21: invokespecial #135                // Method net/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer.begin:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;Lnet/caffeinemc/mods/sodium/client/util/FogParameters;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lnet/minecraft/client/renderer/oit/OitStage;)V
+        24: aload_3
+        25: invokevirtual #62                 // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.isTranslucent:()Z
+        28: ifeq          40
+        31: iload         6
+        33: ifeq          40
+        36: iconst_1
+        37: goto          41
+        40: iconst_0
+        41: istore        12
+        43: aload_2
+        44: aload_3
+        45: invokevirtual #62                 // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.isTranslucent:()Z
+        48: invokeinterface #68,  2           // InterfaceMethod net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderListIterable.iterator:(Z)Ljava/util/Iterator;
+        53: astore        13
+        55: aload         7
+        57: aload_0
+        58: getfield      #139                // Field activeProgram:Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;
+        61: invokestatic  #143                // Method com/mojang/blaze3d/systems/RenderSystem.getCompiledPipeline:(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)Lcom/mojang/renderpearl/api/pipeline/CompiledRenderPipeline;
+        64: invokeinterface #149,  2          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setPipeline:(Lcom/mojang/renderpearl/api/pipeline/CompiledRenderPipeline;)V
+        69: aload_0
+        70: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+        73: aload         7
+        75: aload_0
+        76: getfield      #139                // Field activeProgram:Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;
+        79: invokevirtual #155                // Method net/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext.setContext:(Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)V
+        82: iload         12
+        84: ifne          114
+        87: aload_0
+        88: getfield      #40                 // Field sharedIndexBuffer:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer;
+        91: invokevirtual #159                // Method net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer.getBufferObject:()Lcom/mojang/renderpearl/api/buffers/GpuBuffer;
+        94: ifnull        114
+        97: aload         7
+        99: aload_0
+       100: getfield      #40                 // Field sharedIndexBuffer:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer;
+       103: invokevirtual #159                // Method net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer.getBufferObject:()Lcom/mojang/renderpearl/api/buffers/GpuBuffer;
+       106: getstatic     #163                // Field com/mojang/renderpearl/api/pipeline/IndexType.INT:Lcom/mojang/renderpearl/api/pipeline/IndexType;
+       109: invokeinterface #169,  3          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setIndexBuffer:(Lcom/mojang/renderpearl/api/buffers/GpuBuffer;Lcom/mojang/renderpearl/api/pipeline/IndexType;)V
+       114: aload         7
+       116: ldc           #173                // String u_Globals
+       118: aload         9
+       120: invokeinterface #175,  3          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setUniform:(Ljava/lang/String;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;)V
+       125: aload         7
+       127: ldc           #179                // String u_SectionTimeInfo
+       129: aload         10
+       131: invokeinterface #181,  3          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setUniform:(Ljava/lang/String;Lcom/mojang/renderpearl/api/buffers/GpuBuffer;)V
+       136: aload         7
+       138: ldc           #184                // String u_LightTex
+       140: invokestatic  #186                // Method net/minecraft/client/Minecraft.getInstance:()Lnet/minecraft/client/Minecraft;
+       143: getfield      #192                // Field net/minecraft/client/Minecraft.gameRenderer:Lnet/minecraft/client/renderer/GameRenderer;
+       146: invokevirtual #196                // Method net/minecraft/client/renderer/GameRenderer.lightmap:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+       149: invokestatic  #202                // Method com/mojang/blaze3d/systems/RenderSystem.getSamplerCache:()Lcom/mojang/blaze3d/systems/SamplerCache;
+       152: getstatic     #206                // Field com/mojang/renderpearl/api/textures/FilterMode.LINEAR:Lcom/mojang/renderpearl/api/textures/FilterMode;
+       155: invokevirtual #212                // Method com/mojang/blaze3d/systems/SamplerCache.getClampToEdge:(Lcom/mojang/renderpearl/api/textures/FilterMode;)Lcom/mojang/renderpearl/api/textures/GpuSampler;
+       158: invokeinterface #218,  4          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setUniform:(Ljava/lang/String;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lcom/mojang/renderpearl/api/textures/GpuSampler;)V
+       163: aload         7
+       165: ldc           #221                // String u_BlockTex
+       167: aload_3
+       168: invokevirtual #223                // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.getAtlas:()Lcom/mojang/renderpearl/api/textures/GpuTextureView;
+       171: aload         8
+       173: invokeinterface #218,  4          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setUniform:(Ljava/lang/String;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lcom/mojang/renderpearl/api/textures/GpuSampler;)V
+       178: aload         13
+       180: invokeinterface #74,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+       185: ifeq          501
+       188: aload         13
+       190: invokeinterface #79,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+       195: checkcast     #83                 // class net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList
+       198: astore        14
+       200: aload         14
+       202: invokevirtual #85                 // Method net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList.getRegion:()Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion;
+       205: astore        15
+       207: aload         15
+       209: aload_3
+       210: invokevirtual #89                 // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getStorage:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataStorage;
+       213: astore        16
+       215: aload         16
+       217: ifnonnull     223
+       220: goto          178
+       223: aload         15
+       225: invokevirtual #95                 // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getResources:()Lnet/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion$DeviceResources;
+       228: astore        17
+       230: aload         17
+       232: ifnonnull     238
+       235: goto          178
+       238: aload         15
+       240: aload_3
+       241: invokevirtual #103                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getCachedBatch:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;
+       244: astore        18
+       246: aload         18
+       248: invokevirtual #116                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.isEmpty:()Z
+       251: ifeq          257
+       254: goto          178
+       257: iload         12
+       259: ifeq          277
+       262: aload         7
+       264: aload         17
+       266: invokevirtual #226                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion$DeviceResources.getIndexBuffer:()Lcom/mojang/renderpearl/api/buffers/GpuBuffer;
+       269: getstatic     #163                // Field com/mojang/renderpearl/api/pipeline/IndexType.INT:Lcom/mojang/renderpearl/api/pipeline/IndexType;
+       272: invokeinterface #169,  3          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setIndexBuffer:(Lcom/mojang/renderpearl/api/buffers/GpuBuffer;Lcom/mojang/renderpearl/api/pipeline/IndexType;)V
+       277: aload         7
+       279: iconst_0
+       280: aload         17
+       282: invokevirtual #231                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion$DeviceResources.getGeometryBuffer:()Lcom/mojang/renderpearl/api/buffers/GpuBuffer;
+       285: invokeinterface #234,  1          // InterfaceMethod com/mojang/renderpearl/api/buffers/GpuBuffer.slice:()Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;
+       290: invokeinterface #240,  3          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.setVertexBuffer:(ILcom/mojang/renderpearl/api/buffers/GpuBufferSlice;)V
+       295: aload         15
+       297: invokevirtual #244                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getOriginX:()I
+       300: aload         4
+       302: getfield      #247                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intX:I
+       305: aload         4
+       307: getfield      #253                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.fracX:F
+       310: invokestatic  #257                // Method getCameraTranslation:(IIF)F
+       313: fstore        19
+       315: aload         15
+       317: invokevirtual #261                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getOriginY:()I
+       320: aload         4
+       322: getfield      #264                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intY:I
+       325: aload         4
+       327: getfield      #267                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.fracY:F
+       330: invokestatic  #257                // Method getCameraTranslation:(IIF)F
+       333: fstore        20
+       335: aload         15
+       337: invokevirtual #270                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getOriginZ:()I
+       340: aload         4
+       342: getfield      #273                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intZ:I
+       345: aload         4
+       347: getfield      #276                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.fracZ:F
+       350: invokestatic  #257                // Method getCameraTranslation:(IIF)F
+       353: fstore        21
+       355: invokestatic  #279                // Method org/lwjgl/system/MemoryStack.stackPush:()Lorg/lwjgl/system/MemoryStack;
+       358: astore        22
+       360: aload         22
+       362: bipush        20
+       364: invokevirtual #285                // Method org/lwjgl/system/MemoryStack.malloc:(I)Ljava/nio/ByteBuffer;
+       367: astore        23
+       369: aload         23
+       371: invokestatic  #289                // Method org/lwjgl/system/MemoryUtil.memAddress:(Ljava/nio/ByteBuffer;)J
+       374: lstore        24
+       376: lload         24
+       378: fload         19
+       380: invokestatic  #295                // Method org/lwjgl/system/MemoryUtil.memPutFloat:(JF)V
+       383: lload         24
+       385: ldc2_w        #299                // long 4l
+       388: ladd
+       389: fload         20
+       391: invokestatic  #295                // Method org/lwjgl/system/MemoryUtil.memPutFloat:(JF)V
+       394: lload         24
+       396: ldc2_w        #301                // long 8l
+       399: ladd
+       400: fload         21
+       402: invokestatic  #295                // Method org/lwjgl/system/MemoryUtil.memPutFloat:(JF)V
+       405: lload         24
+       407: ldc2_w        #303                // long 12l
+       410: ladd
+       411: invokestatic  #305                // Method java/lang/System.currentTimeMillis:()J
+       414: aload         15
+       416: invokevirtual #311                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getCreationTime:()J
+       419: lsub
+       420: invokestatic  #314                // Method java/lang/Math.toIntExact:(J)I
+       423: invokestatic  #320                // Method org/lwjgl/system/MemoryUtil.memPutInt:(JI)V
+       426: lload         24
+       428: ldc2_w        #324                // long 16l
+       431: ladd
+       432: aload         15
+       434: invokevirtual #326                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getId:()I
+       437: invokestatic  #320                // Method org/lwjgl/system/MemoryUtil.memPutInt:(JI)V
+       440: aload         7
+       442: aload         23
+       444: invokeinterface #329,  2          // InterfaceMethod com/mojang/renderpearl/api/commands/RenderPass.pushConstants:(Ljava/nio/ByteBuffer;)V
+       449: aload         22
+       451: ifnull        489
+       454: aload         22
+       456: invokevirtual #333                // Method org/lwjgl/system/MemoryStack.close:()V
+       459: goto          489
+       462: astore        23
+       464: aload         22
+       466: ifnull        486
+       469: aload         22
+       471: invokevirtual #333                // Method org/lwjgl/system/MemoryStack.close:()V
+       474: goto          486
+       477: astore        24
+       479: aload         23
+       481: aload         24
+       483: invokevirtual #339                // Method java/lang/Throwable.addSuppressed:(Ljava/lang/Throwable;)V
+       486: aload         23
+       488: athrow
+       489: aload         18
+       491: aload_0
+       492: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+       495: invokevirtual #343                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.draw:(Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;)V
+       498: goto          178
+       501: aload_0
+       502: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+       505: invokevirtual #346                // Method net/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext.endDraw:()V
+       508: aload_0
+       509: aload_3
+       510: invokespecial #349                // Method net/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer.end:(Lnet/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass;)V
+       513: return
+      Exception table:
+         from    to  target type
+           360   449   462   Class java/lang/Throwable
+           469   474   477   Class java/lang/Throwable
+
+  public void rotate();
+    Code:
+         0: aload_0
+         1: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+         4: invokevirtual #352                // Method net/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext.rotate:()V
+         7: return
+
+  private static void fillCommandBuffer(net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch, net.caffeinemc.mods.sodium.client.render.chunk.region.RenderRegion, net.caffeinemc.mods.sodium.client.render.chunk.data.SectionRenderDataStorage, net.caffeinemc.mods.sodium.client.render.chunk.lists.ChunkRenderList, net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform, net.caffeinemc.mods.sodium.client.render.chunk.terrain.TerrainRenderPass, boolean, boolean);
+    Code:
+         0: aload_0
+         1: iconst_1
+         2: putfield      #107                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.isFilled:Z
+         5: aload_3
+         6: aload         5
+         8: invokevirtual #62                 // Method net/caffeinemc/mods/sodium/client/render/chunk/terrain/TerrainRenderPass.isTranslucent:()Z
+        11: invokevirtual #355                // Method net/caffeinemc/mods/sodium/client/render/chunk/lists/ChunkRenderList.sectionsWithGeometryIterator:(Z)Lnet/caffeinemc/mods/sodium/client/util/iterator/ByteIterator;
+        14: astore        8
+        16: aload         8
+        18: ifnonnull     22
+        21: return
+        22: aload_1
+        23: invokevirtual #359                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getChunkX:()I
+        26: istore        9
+        28: aload_1
+        29: invokevirtual #362                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getChunkY:()I
+        32: istore        10
+        34: aload_1
+        35: invokevirtual #365                // Method net/caffeinemc/mods/sodium/client/render/chunk/region/RenderRegion.getChunkZ:()I
+        38: istore        11
+        40: aload         8
+        42: invokeinterface #368,  1          // InterfaceMethod net/caffeinemc/mods/sodium/client/util/iterator/ByteIterator.hasNext:()Z
+        47: ifeq          189
+        50: aload         8
+        52: invokeinterface #371,  1          // InterfaceMethod net/caffeinemc/mods/sodium/client/util/iterator/ByteIterator.nextByteAsInt:()I
+        57: istore        12
+        59: aload_2
+        60: iload         12
+        62: invokevirtual #374                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataStorage.getDataPointer:(I)J
+        65: lstore        13
+        67: iload         9
+        69: iload         12
+        71: invokestatic  #380                // Method net/caffeinemc/mods/sodium/client/render/chunk/LocalSectionIndex.unpackX:(I)I
+        74: iadd
+        75: istore        15
+        77: iload         10
+        79: iload         12
+        81: invokestatic  #386                // Method net/caffeinemc/mods/sodium/client/render/chunk/LocalSectionIndex.unpackY:(I)I
+        84: iadd
+        85: istore        16
+        87: iload         11
+        89: iload         12
+        91: invokestatic  #389                // Method net/caffeinemc/mods/sodium/client/render/chunk/LocalSectionIndex.unpackZ:(I)I
+        94: iadd
+        95: istore        17
+        97: iload         6
+        99: ifeq          131
+       102: aload         4
+       104: getfield      #247                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intX:I
+       107: aload         4
+       109: getfield      #264                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intY:I
+       112: aload         4
+       114: getfield      #273                // Field net/caffeinemc/mods/sodium/client/render/viewport/CameraTransform.intZ:I
+       117: iload         15
+       119: iload         16
+       121: iload         17
+       123: invokestatic  #392                // Method getVisibleFaces:(IIIIII)I
+       126: istore        18
+       128: goto          136
+       131: getstatic     #396                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ALL:I
+       134: istore        18
+       136: iload         18
+       138: lload         13
+       140: invokestatic  #400                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getSliceMask:(J)I
+       143: iand
+       144: istore        18
+       146: iload         18
+       148: ifne          154
+       151: goto          40
+       154: iload         7
+       156: ifeq          178
+       159: lload         13
+       161: invokestatic  #405                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.isLocalIndex:(J)Z
+       164: ifeq          178
+       167: aload_0
+       168: lload         13
+       170: iload         18
+       172: invokestatic  #409                // Method addLocalIndexedDrawCommands:(Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;JI)V
+       175: goto          186
+       178: aload_0
+       179: lload         13
+       181: iload         18
+       183: invokestatic  #413                // Method addSharedIndexedDrawCommands:(Lnet/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch;JI)V
+       186: goto          40
+       189: return
+
+  private static void addLocalIndexedDrawCommands(net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch, long, int);
+    Code:
+         0: aload_0
+         1: getfield      #416                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.size:I
+         4: istore        4
+         6: lload_1
+         7: invokestatic  #419                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getBaseElement:(J)J
+        10: lstore        5
+        12: lload_1
+        13: invokestatic  #423                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getBaseVertex:(J)J
+        16: lstore        7
+        18: iconst_0
+        19: istore        9
+        21: iload         9
+        23: getstatic     #426                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.COUNT:I
+        26: if_icmpge     96
+        29: lload_1
+        30: iload         9
+        32: invokestatic  #429                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getVertexCount:(JI)J
+        35: lstore        10
+        37: lload         10
+        39: iconst_2
+        40: lshr
+        41: ldc2_w        #433                // long 6l
+        44: lmul
+        45: lstore        12
+        47: aload_0
+        48: iload         4
+        50: lload         12
+        52: invokestatic  #435                // Method net/caffeinemc/mods/sodium/client/util/UInt32.uncheckedDowncast:(J)I
+        55: lload         7
+        57: invokestatic  #435                // Method net/caffeinemc/mods/sodium/client/util/UInt32.uncheckedDowncast:(J)I
+        60: lload         5
+        62: invokevirtual #440                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.put:(IIIJ)V
+        65: lload         7
+        67: lload         10
+        69: ladd
+        70: lstore        7
+        72: lload         5
+        74: lload         12
+        76: ladd
+        77: lstore        5
+        79: iload         4
+        81: iload_3
+        82: iload         9
+        84: ishr
+        85: iconst_1
+        86: iand
+        87: iadd
+        88: istore        4
+        90: iinc          9, 1
+        93: goto          21
+        96: aload_0
+        97: iload         4
+        99: putfield      #416                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.size:I
+       102: return
+
+  private static void addSharedIndexedDrawCommands(net.caffeinemc.mods.sodium.client.gpu.device.batch.MultiDrawBatch, long, int);
+    Code:
+         0: lload_1
+         1: invokestatic  #419                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getBaseElement:(J)J
+         4: lstore        4
+         6: lload_1
+         7: invokestatic  #444                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getFacingList:(J)J
+        10: lstore        6
+        12: aload_0
+        13: getfield      #416                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.size:I
+        16: istore        8
+        18: lconst_0
+        19: lstore        9
+        21: lload_1
+        22: invokestatic  #423                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getBaseVertex:(J)J
+        25: lstore        11
+        27: iconst_0
+        28: istore        13
+        30: iconst_0
+        31: istore        14
+        33: iload         14
+        35: getstatic     #426                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.COUNT:I
+        38: if_icmpgt     186
+        41: iconst_0
+        42: istore        15
+        44: lconst_0
+        45: lstore        16
+        47: iload         14
+        49: getstatic     #426                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.COUNT:I
+        52: if_icmpge     93
+        55: lload_1
+        56: iload         14
+        58: invokestatic  #429                // Method net/caffeinemc/mods/sodium/client/render/chunk/data/SectionRenderDataUnsafe.getVertexCount:(JI)J
+        61: lstore        16
+        63: lload         16
+        65: lconst_0
+        66: lcmp
+        67: ifeq          93
+        70: lload         6
+        72: iload         14
+        74: bipush        8
+        76: imul
+        77: lushr
+        78: ldc2_w        #447                // long 255l
+        81: land
+        82: lstore        18
+        84: iload_3
+        85: lload         18
+        87: l2i
+        88: iushr
+        89: iconst_1
+        90: iand
+        91: istore        15
+        93: iload         15
+        95: ifne          169
+        98: iload         13
+       100: iconst_1
+       101: if_icmpne     159
+       104: iload         14
+       106: getstatic     #426                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.COUNT:I
+       109: if_icmpge     122
+       112: lload         16
+       114: lconst_0
+       115: lcmp
+       116: ifne          122
+       119: goto          180
+       122: aload_0
+       123: iload         8
+       125: lload         9
+       127: iconst_2
+       128: lshr
+       129: ldc2_w        #433                // long 6l
+       132: lmul
+       133: invokestatic  #435                // Method net/caffeinemc/mods/sodium/client/util/UInt32.uncheckedDowncast:(J)I
+       136: lload         11
+       138: invokestatic  #435                // Method net/caffeinemc/mods/sodium/client/util/UInt32.uncheckedDowncast:(J)I
+       141: lload         4
+       143: invokevirtual #440                // Method net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.put:(IIIJ)V
+       146: iinc          8, 1
+       149: lload         11
+       151: lload         9
+       153: ladd
+       154: lstore        11
+       156: lconst_0
+       157: lstore        9
+       159: lload         11
+       161: lload         16
+       163: ladd
+       164: lstore        11
+       166: goto          176
+       169: lload         9
+       171: lload         16
+       173: ladd
+       174: lstore        9
+       176: iload         15
+       178: istore        13
+       180: iinc          14, 1
+       183: goto          33
+       186: aload_0
+       187: iload         8
+       189: putfield      #416                // Field net/caffeinemc/mods/sodium/client/gpu/device/batch/MultiDrawBatch.size:I
+       192: return
+
+  public static int getVisibleFaces(int, int, int, int, int, int);
+    Code:
+         0: iload_3
+         1: iconst_4
+         2: ishl
+         3: istore        6
+         5: iload         6
+         7: bipush        16
+         9: iadd
+        10: istore        7
+        12: iload         4
+        14: iconst_4
+        15: ishl
+        16: istore        8
+        18: iload         8
+        20: bipush        16
+        22: iadd
+        23: istore        9
+        25: iload         5
+        27: iconst_4
+        28: ishl
+        29: istore        10
+        31: iload         10
+        33: bipush        16
+        35: iadd
+        36: istore        11
+        38: iconst_1
+        39: getstatic     #449                // Field MODEL_UNASSIGNED:I
+        42: ishl
+        43: istore        12
+        45: iload         12
+        47: iload_0
+        48: iload         6
+        50: iconst_3
+        51: isub
+        52: invokestatic  #452                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.greaterThan:(II)I
+        55: getstatic     #458                // Field MODEL_POS_X:I
+        58: ishl
+        59: ior
+        60: istore        12
+        62: iload         12
+        64: iload_1
+        65: iload         8
+        67: iconst_3
+        68: isub
+        69: invokestatic  #452                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.greaterThan:(II)I
+        72: getstatic     #461                // Field MODEL_POS_Y:I
+        75: ishl
+        76: ior
+        77: istore        12
+        79: iload         12
+        81: iload_2
+        82: iload         10
+        84: iconst_3
+        85: isub
+        86: invokestatic  #452                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.greaterThan:(II)I
+        89: getstatic     #464                // Field MODEL_POS_Z:I
+        92: ishl
+        93: ior
+        94: istore        12
+        96: iload         12
+        98: iload_0
+        99: iload         7
+       101: iconst_3
+       102: iadd
+       103: invokestatic  #467                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.lessThan:(II)I
+       106: getstatic     #470                // Field MODEL_NEG_X:I
+       109: ishl
+       110: ior
+       111: istore        12
+       113: iload         12
+       115: iload_1
+       116: iload         9
+       118: iconst_3
+       119: iadd
+       120: invokestatic  #467                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.lessThan:(II)I
+       123: getstatic     #473                // Field MODEL_NEG_Y:I
+       126: ishl
+       127: ior
+       128: istore        12
+       130: iload         12
+       132: iload_2
+       133: iload         11
+       135: iconst_3
+       136: iadd
+       137: invokestatic  #467                // Method net/caffeinemc/mods/sodium/client/util/BitwiseMath.lessThan:(II)I
+       140: getstatic     #476                // Field MODEL_NEG_Z:I
+       143: ishl
+       144: ior
+       145: istore        12
+       147: iload         12
+       149: ireturn
+
+  public void delete();
+    Code:
+         0: aload_0
+         1: invokespecial #479                // Method net/caffeinemc/mods/sodium/client/render/chunk/ShaderChunkRenderer.delete:()V
+         4: aload_0
+         5: getfield      #40                 // Field sharedIndexBuffer:Lnet/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer;
+         8: invokevirtual #482                // Method net/caffeinemc/mods/sodium/client/render/chunk/SharedQuadIndexBuffer.delete:()V
+        11: aload_0
+        12: getfield      #13                 // Field drawContext:Lnet/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext;
+        15: invokevirtual #483                // Method net/caffeinemc/mods/sodium/client/gpu/device/context/DrawContext.delete:()V
+        18: return
+
+  static {};
+    Code:
+         0: getstatic     #484                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.UNASSIGNED:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+         3: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+         6: putstatic     #449                // Field MODEL_UNASSIGNED:I
+         9: getstatic     #491                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.POS_X:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        12: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        15: putstatic     #458                // Field MODEL_POS_X:I
+        18: getstatic     #494                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.POS_Y:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        21: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        24: putstatic     #461                // Field MODEL_POS_Y:I
+        27: getstatic     #497                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.POS_Z:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        30: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        33: putstatic     #464                // Field MODEL_POS_Z:I
+        36: getstatic     #500                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.NEG_X:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        39: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        42: putstatic     #470                // Field MODEL_NEG_X:I
+        45: getstatic     #503                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.NEG_Y:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        48: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        51: putstatic     #473                // Field MODEL_NEG_Y:I
+        54: getstatic     #506                // Field net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.NEG_Z:Lnet/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing;
+        57: invokevirtual #488                // Method net/caffeinemc/mods/sodium/client/model/quad/properties/ModelQuadFacing.ordinal:()I
+        60: putstatic     #476                // Field MODEL_NEG_Z:I
+        63: return
+}
+Compiled from "CameraTransform.java"
+public class net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform {
+  private static final float PRECISION_MODIFIER;
+
+  public final int intX;
+
+  public final int intY;
+
+  public final int intZ;
+
+  public final float fracX;
+
+  public final float fracY;
+
+  public final float fracZ;
+
+  public final double x;
+
+  public final double y;
+
+  public final double z;
+
+  public net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform(double, double, double);
+    Code:
+         0: aload_0
+         1: invokespecial #3                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: dload_1
+         6: invokestatic  #9                  // Method integral:(D)I
+         9: putfield      #15                 // Field intX:I
+        12: aload_0
+        13: dload_3
+        14: invokestatic  #9                  // Method integral:(D)I
+        17: putfield      #19                 // Field intY:I
+        20: aload_0
+        21: dload         5
+        23: invokestatic  #9                  // Method integral:(D)I
+        26: putfield      #22                 // Field intZ:I
+        29: aload_0
+        30: dload_1
+        31: invokestatic  #25                 // Method fractional:(D)F
+        34: putfield      #29                 // Field fracX:F
+        37: aload_0
+        38: dload_3
+        39: invokestatic  #25                 // Method fractional:(D)F
+        42: putfield      #33                 // Field fracY:F
+        45: aload_0
+        46: dload         5
+        48: invokestatic  #25                 // Method fractional:(D)F
+        51: putfield      #36                 // Field fracZ:F
+        54: aload_0
+        55: dload_1
+        56: putfield      #39                 // Field x:D
+        59: aload_0
+        60: dload_3
+        61: putfield      #43                 // Field y:D
+        64: aload_0
+        65: dload         5
+        67: putfield      #46                 // Field z:D
+        70: return
+
+  private static int integral(double);
+    Code:
+         0: dload_0
+         1: d2i
+         2: ireturn
+
+  private static float fractional(double);
+    Code:
+         0: dload_0
+         1: dload_0
+         2: invokestatic  #9                  // Method integral:(D)I
+         5: i2d
+         6: dsub
+         7: d2f
+         8: fstore_2
+         9: ldc           #49                 // float 128.0f
+        11: fload_2
+        12: invokestatic  #50                 // Method java/lang/Math.copySign:(FF)F
+        15: fstore_3
+        16: fload_2
+        17: fload_3
+        18: fadd
+        19: fload_3
+        20: fsub
+        21: freturn
+}
+Compiled from "ChunkRenderMatrices.java"
+public final class net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices extends java.lang.Record {
+  private final org.joml.Matrix4fc projection;
+
+  private final org.joml.Matrix4fc modelView;
+
+  public net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices(org.joml.Matrix4fc, org.joml.Matrix4fc);
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Record."<init>":()V
+         4: aload_0
+         5: aload_1
+         6: putfield      #7                  // Field projection:Lorg/joml/Matrix4fc;
+         9: aload_0
+        10: aload_2
+        11: putfield      #13                 // Field modelView:Lorg/joml/Matrix4fc;
+        14: return
+
+  public final java.lang.String toString();
+    Code:
+         0: aload_0
+         1: invokedynamic #16,  0             // InvokeDynamic #0:toString:(Lnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;)Ljava/lang/String;
+         6: areturn
+
+  public final int hashCode();
+    Code:
+         0: aload_0
+         1: invokedynamic #20,  0             // InvokeDynamic #0:hashCode:(Lnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;)I
+         6: ireturn
+
+  public final boolean equals(java.lang.Object);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokedynamic #24,  0             // InvokeDynamic #0:equals:(Lnet/caffeinemc/mods/sodium/client/render/chunk/ChunkRenderMatrices;Ljava/lang/Object;)Z
+         7: ireturn
+
+  public org.joml.Matrix4fc projection();
+    Code:
+         0: aload_0
+         1: getfield      #7                  // Field projection:Lorg/joml/Matrix4fc;
+         4: areturn
+
+  public org.joml.Matrix4fc modelView();
+    Code:
+         0: aload_0
+         1: getfield      #13                 // Field modelView:Lorg/joml/Matrix4fc;
+         4: areturn
+}

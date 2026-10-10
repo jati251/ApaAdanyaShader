@@ -1,0 +1,358 @@
+Compiled from "RenderTarget.java"
+public class net.irisshaders.iris.targets.RenderTarget {
+  private static final java.nio.ByteBuffer NULL_BUFFER;
+
+  private final net.irisshaders.iris.gl.texture.InternalTextureFormat internalFormat;
+
+  private final net.irisshaders.iris.gl.texture.PixelFormat format;
+
+  private final net.irisshaders.iris.gl.texture.PixelType type;
+
+  private final int mainTexture;
+
+  private final int altTexture;
+
+  private int width;
+
+  private int height;
+
+  private boolean isValid;
+
+  private java.lang.String name;
+
+  private boolean allowsLinear;
+
+  private boolean mipmapsOnAlt;
+
+  private boolean mipmapsOnMain;
+
+  public net.irisshaders.iris.targets.RenderTarget(net.irisshaders.iris.targets.RenderTarget$Builder);
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iconst_1
+         6: putfield      #7                  // Field isValid:Z
+         9: aload_0
+        10: aload_1
+        11: getfield      #13                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.name:Ljava/lang/String;
+        14: putfield      #19                 // Field name:Ljava/lang/String;
+        17: aload_0
+        18: aload_1
+        19: getfield      #20                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.internalFormat:Lnet/irisshaders/iris/gl/texture/InternalTextureFormat;
+        22: putfield      #24                 // Field internalFormat:Lnet/irisshaders/iris/gl/texture/InternalTextureFormat;
+        25: aload_0
+        26: aload_1
+        27: getfield      #25                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.format:Lnet/irisshaders/iris/gl/texture/PixelFormat;
+        30: putfield      #29                 // Field format:Lnet/irisshaders/iris/gl/texture/PixelFormat;
+        33: aload_0
+        34: aload_1
+        35: getfield      #30                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.type:Lnet/irisshaders/iris/gl/texture/PixelType;
+        38: putfield      #34                 // Field type:Lnet/irisshaders/iris/gl/texture/PixelType;
+        41: aload_0
+        42: aload_1
+        43: getfield      #35                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.width:I
+        46: putfield      #39                 // Field width:I
+        49: aload_0
+        50: aload_1
+        51: getfield      #40                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.height:I
+        54: putfield      #43                 // Field height:I
+        57: aload_0
+        58: invokestatic  #44                 // Method com/mojang/renderpearl/backend/opengl/GlStateManager._genTexture:()I
+        61: putfield      #50                 // Field mainTexture:I
+        64: aload_0
+        65: invokestatic  #44                 // Method com/mojang/renderpearl/backend/opengl/GlStateManager._genTexture:()I
+        68: putfield      #53                 // Field altTexture:I
+        71: aload_1
+        72: getfield      #20                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.internalFormat:Lnet/irisshaders/iris/gl/texture/InternalTextureFormat;
+        75: invokevirtual #56                 // Method net/irisshaders/iris/gl/texture/InternalTextureFormat.getPixelFormat:()Lnet/irisshaders/iris/gl/texture/PixelFormat;
+        78: invokevirtual #62                 // Method net/irisshaders/iris/gl/texture/PixelFormat.isInteger:()Z
+        81: istore_2
+        82: aload_0
+        83: iload_2
+        84: ifne          91
+        87: iconst_1
+        88: goto          92
+        91: iconst_0
+        92: putfield      #68                 // Field allowsLinear:Z
+        95: aload_0
+        96: aload_0
+        97: getfield      #50                 // Field mainTexture:I
+       100: aload_1
+       101: getfield      #35                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.width:I
+       104: aload_1
+       105: getfield      #40                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.height:I
+       108: iload_2
+       109: ifne          116
+       112: iconst_1
+       113: goto          117
+       116: iconst_0
+       117: iconst_0
+       118: invokevirtual #71                 // Method setupTexture:(IIIZZ)V
+       121: aload_0
+       122: aload_0
+       123: getfield      #53                 // Field altTexture:I
+       126: aload_1
+       127: getfield      #35                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.width:I
+       130: aload_1
+       131: getfield      #40                 // Field net/irisshaders/iris/targets/RenderTarget$Builder.height:I
+       134: iload_2
+       135: ifne          142
+       138: iconst_1
+       139: goto          143
+       142: iconst_0
+       143: iconst_1
+       144: invokevirtual #71                 // Method setupTexture:(IIIZZ)V
+       147: iconst_0
+       148: invokestatic  #75                 // Method com/mojang/renderpearl/backend/opengl/GlStateManager._bindTexture:(I)V
+       151: return
+
+  public static net.irisshaders.iris.targets.RenderTarget$Builder builder();
+    Code:
+         0: new           #14                 // class net/irisshaders/iris/targets/RenderTarget$Builder
+         3: dup
+         4: invokespecial #79                 // Method net/irisshaders/iris/targets/RenderTarget$Builder."<init>":()V
+         7: areturn
+
+  private void setupTexture(int, int, int, boolean, boolean);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: iload_2
+         3: iload_3
+         4: iload         5
+         6: invokevirtual #80                 // Method resizeTexture:(IIIZ)V
+         9: iload_1
+        10: sipush        3553
+        13: sipush        10241
+        16: iload         4
+        18: ifeq          27
+        21: sipush        9729
+        24: goto          30
+        27: sipush        9728
+        30: invokestatic  #86                 // Method net/irisshaders/iris/gl/IrisRenderSystem.texParameteri:(IIII)V
+        33: iload_1
+        34: sipush        3553
+        37: sipush        10240
+        40: iload         4
+        42: ifeq          51
+        45: sipush        9729
+        48: goto          54
+        51: sipush        9728
+        54: invokestatic  #86                 // Method net/irisshaders/iris/gl/IrisRenderSystem.texParameteri:(IIII)V
+        57: iload_1
+        58: sipush        3553
+        61: sipush        10242
+        64: ldc           #94                 // int 33071
+        66: invokestatic  #86                 // Method net/irisshaders/iris/gl/IrisRenderSystem.texParameteri:(IIII)V
+        69: iload_1
+        70: sipush        3553
+        73: sipush        10243
+        76: ldc           #94                 // int 33071
+        78: invokestatic  #86                 // Method net/irisshaders/iris/gl/IrisRenderSystem.texParameteri:(IIII)V
+        81: return
+
+  private void resizeTexture(int, int, int, boolean);
+    Code:
+         0: iload_1
+         1: sipush        3553
+         4: iconst_0
+         5: aload_0
+         6: getfield      #24                 // Field internalFormat:Lnet/irisshaders/iris/gl/texture/InternalTextureFormat;
+         9: invokevirtual #95                 // Method net/irisshaders/iris/gl/texture/InternalTextureFormat.getGlFormat:()I
+        12: iload_2
+        13: iload_3
+        14: iconst_0
+        15: aload_0
+        16: getfield      #29                 // Field format:Lnet/irisshaders/iris/gl/texture/PixelFormat;
+        19: invokevirtual #98                 // Method net/irisshaders/iris/gl/texture/PixelFormat.getGlFormat:()I
+        22: aload_0
+        23: getfield      #34                 // Field type:Lnet/irisshaders/iris/gl/texture/PixelType;
+        26: invokevirtual #99                 // Method net/irisshaders/iris/gl/texture/PixelType.getGlFormat:()I
+        29: getstatic     #102                // Field NULL_BUFFER:Ljava/nio/ByteBuffer;
+        32: invokestatic  #106                // Method net/irisshaders/iris/gl/IrisRenderSystem.texImage2D:(IIIIIIIIILjava/nio/ByteBuffer;)V
+        35: aload_0
+        36: getfield      #19                 // Field name:Ljava/lang/String;
+        39: ifnull        70
+        42: sipush        5890
+        45: iload_1
+        46: aload_0
+        47: getfield      #19                 // Field name:Ljava/lang/String;
+        50: iload         4
+        52: ifeq          60
+        55: ldc           #112                // String alt
+        57: goto          62
+        60: ldc           #114                // String main
+        62: invokedynamic #116,  0            // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+        67: invokestatic  #120                // Method net/irisshaders/iris/gl/GLDebug.nameObject:(IILjava/lang/String;)V
+        70: return
+
+  void resize(org.joml.Vector2i);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: getfield      #126                // Field org/joml/Vector2i.x:I
+         5: aload_1
+         6: getfield      #131                // Field org/joml/Vector2i.y:I
+         9: invokevirtual #134                // Method resize:(II)V
+        12: return
+
+  void resize(int, int);
+    Code:
+         0: aload_0
+         1: invokevirtual #138                // Method requireValid:()V
+         4: aload_0
+         5: iload_1
+         6: putfield      #39                 // Field width:I
+         9: aload_0
+        10: iload_2
+        11: putfield      #43                 // Field height:I
+        14: aload_0
+        15: aload_0
+        16: getfield      #50                 // Field mainTexture:I
+        19: iload_1
+        20: iload_2
+        21: iconst_0
+        22: invokevirtual #80                 // Method resizeTexture:(IIIZ)V
+        25: aload_0
+        26: aload_0
+        27: getfield      #53                 // Field altTexture:I
+        30: iload_1
+        31: iload_2
+        32: iconst_1
+        33: invokevirtual #80                 // Method resizeTexture:(IIIZ)V
+        36: return
+
+  public net.irisshaders.iris.gl.texture.InternalTextureFormat getInternalFormat();
+    Code:
+         0: aload_0
+         1: getfield      #24                 // Field internalFormat:Lnet/irisshaders/iris/gl/texture/InternalTextureFormat;
+         4: areturn
+
+  public int getMainTexture();
+    Code:
+         0: aload_0
+         1: invokevirtual #138                // Method requireValid:()V
+         4: aload_0
+         5: getfield      #50                 // Field mainTexture:I
+         8: ireturn
+
+  public int getAltTexture();
+    Code:
+         0: aload_0
+         1: invokevirtual #138                // Method requireValid:()V
+         4: aload_0
+         5: getfield      #53                 // Field altTexture:I
+         8: ireturn
+
+  public int getWidth();
+    Code:
+         0: aload_0
+         1: getfield      #39                 // Field width:I
+         4: ireturn
+
+  public int getHeight();
+    Code:
+         0: aload_0
+         1: getfield      #43                 // Field height:I
+         4: ireturn
+
+  public void destroy();
+    Code:
+         0: aload_0
+         1: invokevirtual #138                // Method requireValid:()V
+         4: aload_0
+         5: iconst_0
+         6: putfield      #7                  // Field isValid:Z
+         9: aload_0
+        10: getfield      #50                 // Field mainTexture:I
+        13: invokestatic  #141                // Method com/mojang/renderpearl/backend/opengl/GlStateManager._deleteTexture:(I)V
+        16: aload_0
+        17: getfield      #53                 // Field altTexture:I
+        20: invokestatic  #141                // Method com/mojang/renderpearl/backend/opengl/GlStateManager._deleteTexture:(I)V
+        23: return
+
+  private void requireValid();
+    Code:
+         0: aload_0
+         1: getfield      #7                  // Field isValid:Z
+         4: ifne          17
+         7: new           #144                // class java/lang/IllegalStateException
+        10: dup
+        11: ldc           #146                // String Attempted to use a deleted composite render target
+        13: invokespecial #148                // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+        16: athrow
+        17: return
+
+  public net.irisshaders.iris.gl.sampler.GlSampler getAltSampler();
+    Code:
+         0: aload_0
+         1: getfield      #151                // Field mipmapsOnAlt:Z
+         4: ifeq          24
+         7: aload_0
+         8: getfield      #68                 // Field allowsLinear:Z
+        11: ifeq          20
+        14: getstatic     #154                // Field net/irisshaders/iris/gl/sampler/GlSampler.MIPPED_LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        17: goto          23
+        20: getstatic     #160                // Field net/irisshaders/iris/gl/sampler/GlSampler.MIPPED_NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        23: areturn
+        24: aload_0
+        25: getfield      #68                 // Field allowsLinear:Z
+        28: ifeq          37
+        31: getstatic     #163                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        34: goto          40
+        37: getstatic     #166                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        40: areturn
+
+  public net.irisshaders.iris.gl.sampler.GlSampler getMainSampler();
+    Code:
+         0: aload_0
+         1: getfield      #169                // Field mipmapsOnMain:Z
+         4: ifeq          24
+         7: aload_0
+         8: getfield      #68                 // Field allowsLinear:Z
+        11: ifeq          20
+        14: getstatic     #154                // Field net/irisshaders/iris/gl/sampler/GlSampler.MIPPED_LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        17: goto          23
+        20: getstatic     #160                // Field net/irisshaders/iris/gl/sampler/GlSampler.MIPPED_NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        23: areturn
+        24: aload_0
+        25: getfield      #68                 // Field allowsLinear:Z
+        28: ifeq          37
+        31: getstatic     #163                // Field net/irisshaders/iris/gl/sampler/GlSampler.LINEAR:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        34: goto          40
+        37: getstatic     #166                // Field net/irisshaders/iris/gl/sampler/GlSampler.NEAREST:Lnet/irisshaders/iris/gl/sampler/GlSampler;
+        40: areturn
+
+  public void turnOnMips(boolean);
+    Code:
+         0: iload_1
+         1: ifeq          12
+         4: aload_0
+         5: iconst_1
+         6: putfield      #151                // Field mipmapsOnAlt:Z
+         9: goto          17
+        12: aload_0
+        13: iconst_1
+        14: putfield      #169                // Field mipmapsOnMain:Z
+        17: return
+
+  public void turnOffMips(boolean);
+    Code:
+         0: iload_1
+         1: ifeq          12
+         4: aload_0
+         5: iconst_0
+         6: putfield      #151                // Field mipmapsOnAlt:Z
+         9: goto          17
+        12: aload_0
+        13: iconst_0
+        14: putfield      #169                // Field mipmapsOnMain:Z
+        17: return
+
+  static {};
+    Code:
+         0: aconst_null
+         1: putstatic     #102                // Field NULL_BUFFER:Ljava/nio/ByteBuffer;
+         4: return
+}

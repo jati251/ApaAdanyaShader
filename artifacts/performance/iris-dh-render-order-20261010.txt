@@ -1,0 +1,787 @@
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$1 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiAfterDhInitEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$1();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiAfterDhInitEvent."<init>":()V
+         4: return
+
+  public void afterDistantHorizonsInit(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<java.lang.Void>);
+    Code:
+         0: getstatic     #7                  // Field net/irisshaders/iris/Iris.logger:Lnet/irisshaders/iris/IrisLogging;
+         3: ldc           #13                 // String DH Ready, binding Iris event handlers...
+         5: invokevirtual #15                 // Method net/irisshaders/iris/IrisLogging.info:(Ljava/lang/String;)V
+         8: invokestatic  #21                 // Method net/irisshaders/iris/Iris.loadShaderpackWhenPossible:()V
+        11: invokestatic  #24                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupSetDeferredBeforeRenderingEvent:()V
+        14: invokestatic  #29                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupReconnectDepthTextureEvent:()V
+        17: invokestatic  #32                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupGenericEvent:()V
+        20: invokestatic  #35                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupCreateDepthTextureEvent:()V
+        23: invokestatic  #38                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupTransparentRendererEventCancling:()V
+        26: invokestatic  #41                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupBeforeBufferClearEvent:()V
+        29: invokestatic  #44                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupBeforeRenderCleanupEvent:()V
+        32: invokestatic  #47                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.beforeBufferRenderEvent:()V
+        35: invokestatic  #50                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupBeforeRenderFrameBufferBinding:()V
+        38: invokestatic  #53                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupBeforeRenderPassEvent:()V
+        41: invokestatic  #56                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.setupBeforeApplyShaderEvent:()V
+        44: getstatic     #59                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+        47: invokeinterface #65,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+        52: invokeinterface #71,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.renderingEnabled:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+        57: invokeinterface #77,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.getValue:()Ljava/lang/Object;
+        62: checkcast     #83                 // class java/lang/Boolean
+        65: invokevirtual #85                 // Method java/lang/Boolean.booleanValue:()Z
+        68: putstatic     #89                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.dhEnabled:Z
+        71: getstatic     #7                  // Field net/irisshaders/iris/Iris.logger:Lnet/irisshaders/iris/IrisLogging;
+        74: ldc           #95                 // String DH Iris events bound.
+        76: invokevirtual #15                 // Method net/irisshaders/iris/IrisLogging.info:(Ljava/lang/String;)V
+        79: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$10 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeTextureClearEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$10();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeTextureClearEvent."<init>":()V
+         4: return
+
+  public void beforeClear(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: aload_1
+         1: getfield      #7                  // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.value:Ljava/lang/Object;
+         4: checkcast     #13                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+         7: getfield      #15                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.renderPass:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+        10: getstatic     #19                 // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass.OPAQUE:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+        13: if_acmpne     48
+        16: invokestatic  #24                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+        19: ifeq          29
+        22: aload_1
+        23: invokevirtual #30                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        26: goto          48
+        29: invokestatic  #33                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        32: getfield      #39                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+        35: ifeq          48
+        38: sipush        256
+        41: invokestatic  #47                 // Method com/mojang/renderpearl/backend/opengl/GlStateManager._clear:(I)V
+        44: aload_1
+        45: invokevirtual #30                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        48: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$11 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$11();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeBufferRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeBufferRenderEvent$EventParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         3: astore_2
+         4: aload_2
+         5: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+         8: ifeq          85
+        11: aload_1
+        12: getfield      #19                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+        15: checkcast     #25                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeBufferRenderEvent$EventParam
+        18: getfield      #27                 // Field com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeBufferRenderEvent$EventParam.modelPos:Lcom/seibel/distanthorizons/api/objects/math/DhApiVec3f;
+        21: astore_3
+        22: invokestatic  #31                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+        25: ifeq          46
+        28: aload_2
+        29: invokevirtual #37                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        32: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+        35: aload_2
+        36: invokevirtual #37                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        39: aload_3
+        40: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.setModelPos:(Lcom/seibel/distanthorizons/api/objects/math/DhApiVec3f;)V
+        43: goto          85
+        46: getstatic     #50                 // Field net/irisshaders/iris/compat/dh/LodRendererEvents.atTranslucent:Z
+        49: ifeq          70
+        52: aload_2
+        53: invokevirtual #53                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        56: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+        59: aload_2
+        60: invokevirtual #53                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        63: aload_3
+        64: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.setModelPos:(Lcom/seibel/distanthorizons/api/objects/math/DhApiVec3f;)V
+        67: goto          85
+        70: aload_2
+        71: invokevirtual #56                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        74: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+        77: aload_2
+        78: invokevirtual #56                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        81: aload_3
+        82: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.setModelPos:(Lcom/seibel/distanthorizons/api/objects/math/DhApiVec3f;)V
+        85: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$12 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderSetupEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$12();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderSetupEvent."<init>":()V
+         4: return
+
+  public void beforeSetup(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         3: astore_2
+         4: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+         7: ldc           #19                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiShadowCullingFrustum
+         9: getstatic     #21                 // Field net/irisshaders/iris/shadows/ShadowRenderer.FRUSTUM:Lnet/minecraft/client/renderer/culling/Frustum;
+        12: checkcast     #27                 // class com/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable
+        15: invokevirtual #29                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        18: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        21: ldc           #33                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+        23: aload_2
+        24: invokevirtual #35                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+        27: invokevirtual #29                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        30: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        33: ldc           #33                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+        35: aload_2
+        36: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+        39: invokevirtual #29                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        42: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        45: ldc           #44                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiGenericObjectShaderProgram
+        47: aload_2
+        48: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getGenericShader:()Lcom/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiGenericObjectShaderProgram;
+        51: invokevirtual #29                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        54: aload_2
+        55: getfield      #50                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+        58: ifeq          134
+        61: aload_2
+        62: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getGenericShader:()Lcom/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiGenericObjectShaderProgram;
+        65: ifnull        80
+        68: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        71: ldc           #44                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiGenericObjectShaderProgram
+        73: aload_2
+        74: invokevirtual #46                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getGenericShader:()Lcom/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiGenericObjectShaderProgram;
+        77: invokevirtual #54                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        80: invokestatic  #57                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+        83: ifeq          122
+        86: aload_2
+        87: getfield      #63                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverrideShadow:Z
+        90: ifeq          122
+        93: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        96: ldc           #33                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+        98: aload_2
+        99: invokevirtual #35                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+       102: invokevirtual #54                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+       105: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+       108: ldc           #19                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiShadowCullingFrustum
+       110: getstatic     #21                 // Field net/irisshaders/iris/shadows/ShadowRenderer.FRUSTUM:Lnet/minecraft/client/renderer/culling/Frustum;
+       113: checkcast     #27                 // class com/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable
+       116: invokevirtual #54                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+       119: goto          134
+       122: getstatic     #13                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+       125: ldc           #33                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+       127: aload_2
+       128: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+       131: invokevirtual #54                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+       134: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$13 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderPassEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$13();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderPassEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         3: astore_2
+         4: aload_2
+         5: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+         8: ifeq          93
+        11: getstatic     #19                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+        14: invokeinterface #25,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+        19: invokeinterface #31,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.ambientOcclusion:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiAmbientOcclusionConfig;
+        24: invokeinterface #37,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiAmbientOcclusionConfig.enabled:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+        29: iconst_0
+        30: invokestatic  #43                 // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        33: invokeinterface #49,  2           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.setValue:(Ljava/lang/Object;)Z
+        38: pop
+        39: getstatic     #19                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+        42: invokeinterface #25,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+        47: invokeinterface #55,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.fog:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig;
+        52: invokeinterface #59,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig.drawMode:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+        57: getstatic     #64                 // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode.FOG_DISABLED:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode;
+        60: invokeinterface #49,  2           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.setValue:(Ljava/lang/Object;)Z
+        65: pop
+        66: aload_1
+        67: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+        70: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+        73: getfield      #78                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.renderPass:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+        76: getstatic     #82                 // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass.OPAQUE_AND_TRANSPARENT:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+        79: if_acmpne     141
+        82: getstatic     #87                 // Field net/irisshaders/iris/Iris.logger:Lnet/irisshaders/iris/IrisLogging;
+        85: ldc           #93                 // String Unexpected; somehow the Opaque + Translucent pass ran with shaders on.
+        87: invokevirtual #95                 // Method net/irisshaders/iris/IrisLogging.error:(Ljava/lang/String;)V
+        90: goto          141
+        93: getstatic     #19                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+        96: invokeinterface #25,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+       101: invokeinterface #31,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.ambientOcclusion:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiAmbientOcclusionConfig;
+       106: invokeinterface #37,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiAmbientOcclusionConfig.enabled:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+       111: invokeinterface #101,  1          // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.clearValue:()Z
+       116: pop
+       117: getstatic     #19                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+       120: invokeinterface #25,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+       125: invokeinterface #55,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.fog:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig;
+       130: invokeinterface #59,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig.drawMode:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+       135: invokeinterface #101,  1          // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.clearValue:()Z
+       140: pop
+       141: aload_1
+       142: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       145: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       148: getfield      #78                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.renderPass:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       151: getstatic     #105                // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass.OPAQUE:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       154: if_acmpne     191
+       157: aload_2
+       158: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+       161: ifeq          191
+       164: invokestatic  #108                // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+       167: ifeq          180
+       170: aload_2
+       171: invokevirtual #113                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       174: invokevirtual #117                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+       177: goto          187
+       180: aload_2
+       181: invokevirtual #122                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       184: invokevirtual #117                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+       187: iconst_0
+       188: putstatic     #125                // Field net/irisshaders/iris/compat/dh/LodRendererEvents.atTranslucent:Z
+       191: aload_1
+       192: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       195: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       198: getfield      #78                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.renderPass:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       201: getstatic     #105                // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass.OPAQUE:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       204: if_acmpne     294
+       207: aload_1
+       208: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       211: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       214: getfield      #128                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.partialTicks:F
+       217: fstore_3
+       218: aload_2
+       219: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+       222: ifeq          294
+       225: invokestatic  #108                // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+       228: ifeq          254
+       231: aload_2
+       232: invokevirtual #113                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       235: getstatic     #132                // Field net/irisshaders/iris/shadows/ShadowRenderer.PROJECTION:Lorg/joml/Matrix4f;
+       238: invokestatic  #138                // Method net/irisshaders/iris/helpers/MatrixUtils.toMinusOneToOne:(Lorg/joml/Matrix4f;)Lorg/joml/Matrix4f;
+       241: getstatic     #144                // Field net/irisshaders/iris/shadows/ShadowRenderer.MODELVIEW:Lorg/joml/Matrix4f;
+       244: sipush        -1000
+       247: fload_3
+       248: invokevirtual #147                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.fillUniformData:(Lorg/joml/Matrix4fc;Lorg/joml/Matrix4fc;IF)V
+       251: goto          294
+       254: aload_2
+       255: invokevirtual #122                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       258: aload_1
+       259: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       262: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       265: getfield      #151                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.nearClipPlane:F
+       268: aload_1
+       269: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       272: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       275: getfield      #154                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.farClipPlane:F
+       278: invokestatic  #157                // Method net/irisshaders/iris/compat/dh/DHCompat.getProjection:(FF)Lorg/joml/Matrix4f;
+       281: getstatic     #163                // Field net/irisshaders/iris/uniforms/CapturedRenderingState.INSTANCE:Lnet/irisshaders/iris/uniforms/CapturedRenderingState;
+       284: invokevirtual #169                // Method net/irisshaders/iris/uniforms/CapturedRenderingState.getGbufferModelView:()Lorg/joml/Matrix4fc;
+       287: sipush        -1000
+       290: fload_3
+       291: invokevirtual #147                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.fillUniformData:(Lorg/joml/Matrix4fc;Lorg/joml/Matrix4fc;IF)V
+       294: aload_1
+       295: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       298: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       301: getfield      #78                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.renderPass:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       304: getstatic     #173                // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass.TRANSPARENT:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiRenderPass;
+       307: if_acmpne     460
+       310: aload_1
+       311: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       314: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       317: getfield      #128                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.partialTicks:F
+       320: fstore_3
+       321: getstatic     #176                // Field com/seibel/distanthorizons/api/DhApi$Delayed.renderProxy:Lcom/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy;
+       324: invokeinterface #180,  1          // InterfaceMethod com/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy.getDhDepthTextureId:()Lcom/seibel/distanthorizons/api/objects/DhApiResult;
+       329: getfield      #186                // Field com/seibel/distanthorizons/api/objects/DhApiResult.payload:Ljava/lang/Object;
+       332: checkcast     #191                // class java/lang/Integer
+       335: invokevirtual #193                // Method java/lang/Integer.intValue:()I
+       338: istore        4
+       340: aload_2
+       341: getfield      #197                // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverrideShadow:Z
+       344: ifeq          372
+       347: invokestatic  #108                // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+       350: ifeq          372
+       353: aload_2
+       354: invokevirtual #113                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       357: invokevirtual #117                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+       360: aload_2
+       361: invokevirtual #200                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowFB:()Lnet/irisshaders/iris/gl/framebuffer/GlFramebuffer;
+       364: invokevirtual #204                // Method net/irisshaders/iris/gl/framebuffer/GlFramebuffer.bind:()V
+       367: iconst_1
+       368: putstatic     #125                // Field net/irisshaders/iris/compat/dh/LodRendererEvents.atTranslucent:Z
+       371: return
+       372: aload_2
+       373: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+       376: ifeq          456
+       379: aload_2
+       380: invokevirtual #207                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentFB:()Lnet/irisshaders/iris/gl/framebuffer/GlFramebuffer;
+       383: ifnull        456
+       386: aload_2
+       387: getstatic     #210                // Field net/irisshaders/iris/compat/dh/LodRendererEvents.textureWidth:I
+       390: getstatic     #214                // Field net/irisshaders/iris/compat/dh/LodRendererEvents.textureHeight:I
+       393: invokevirtual #217                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.copyTranslucents:(II)V
+       396: aload_2
+       397: invokevirtual #221                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       400: invokevirtual #117                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.bind:()V
+       403: sipush        2884
+       406: invokestatic  #226                // Method org/lwjgl/opengl/GL46C.glDisable:(I)V
+       409: aload_2
+       410: invokevirtual #221                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+       413: aload_1
+       414: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       417: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       420: getfield      #151                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.nearClipPlane:F
+       423: aload_1
+       424: getfield      #70                 // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+       427: checkcast     #76                 // class com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam
+       430: getfield      #154                // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiRenderParam.farClipPlane:F
+       433: invokestatic  #157                // Method net/irisshaders/iris/compat/dh/DHCompat.getProjection:(FF)Lorg/joml/Matrix4f;
+       436: getstatic     #163                // Field net/irisshaders/iris/uniforms/CapturedRenderingState.INSTANCE:Lnet/irisshaders/iris/uniforms/CapturedRenderingState;
+       439: invokevirtual #169                // Method net/irisshaders/iris/uniforms/CapturedRenderingState.getGbufferModelView:()Lorg/joml/Matrix4fc;
+       442: sipush        -1000
+       445: fload_3
+       446: invokevirtual #147                // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.fillUniformData:(Lorg/joml/Matrix4fc;Lorg/joml/Matrix4fc;IF)V
+       449: aload_2
+       450: invokevirtual #207                // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getTranslucentFB:()Lnet/irisshaders/iris/gl/framebuffer/GlFramebuffer;
+       453: invokevirtual #204                // Method net/irisshaders/iris/gl/framebuffer/GlFramebuffer.bind:()V
+       456: iconst_1
+       457: putstatic     #125                // Field net/irisshaders/iris/compat/dh/LodRendererEvents.atTranslucent:Z
+       460: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$14 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeApplyShaderRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$14();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeApplyShaderRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/Iris.isPackInUseQuick:()Z
+         3: ifeq          52
+         6: invokestatic  #13                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         9: astore_2
+        10: getstatic     #19                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        13: ldc           #25                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiShadowCullingFrustum
+        15: getstatic     #27                 // Field net/irisshaders/iris/shadows/ShadowRenderer.FRUSTUM:Lnet/minecraft/client/renderer/culling/Frustum;
+        18: checkcast     #33                 // class com/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable
+        21: invokevirtual #35                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        24: getstatic     #19                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        27: ldc           #39                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+        29: aload_2
+        30: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+        33: invokevirtual #35                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        36: getstatic     #19                 // Field com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.INSTANCE:Lcom/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector;
+        39: ldc           #39                 // class com/seibel/distanthorizons/api/interfaces/override/rendering/IDhApiFramebuffer
+        41: aload_2
+        42: invokevirtual #47                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidFBWrapper:()Lnet/irisshaders/iris/compat/dh/DhFrameBufferWrapper;
+        45: invokevirtual #35                 // Method com/seibel/distanthorizons/coreapi/DependencyInjection/OverrideInjector.unbind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/api/interfaces/override/IDhApiOverrideable;)V
+        48: aload_1
+        49: invokevirtual #50                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        52: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$2 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$2();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: getstatic     #7                  // Field com/seibel/distanthorizons/api/DhApi$Delayed.renderProxy:Lcom/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy;
+         3: invokestatic  #13                 // Method net/irisshaders/iris/Iris.isPackInUseQuick:()Z
+         6: ifeq          22
+         9: invokestatic  #19                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        12: getfield      #25                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+        15: ifeq          22
+        18: iconst_1
+        19: goto          23
+        22: iconst_0
+        23: invokeinterface #31,  2           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy.setDeferTransparentRendering:(Z)V
+        28: getstatic     #37                 // Field com/seibel/distanthorizons/api/DhApi$Delayed.configs:Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfig;
+        31: invokeinterface #41,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfig.graphics:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig;
+        36: invokeinterface #47,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiGraphicsConfig.fog:()Lcom/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig;
+        41: invokeinterface #53,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/client/IDhApiFogConfig.drawMode:()Lcom/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue;
+        46: invokestatic  #19                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        49: getfield      #25                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+        52: ifeq          61
+        55: getstatic     #59                 // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode.FOG_DISABLED:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode;
+        58: goto          64
+        61: getstatic     #65                 // Field com/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode.FOG_ENABLED:Lcom/seibel/distanthorizons/api/enums/rendering/EDhApiFogDrawMode;
+        64: invokeinterface #68,  2           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/config/IDhApiConfigValue.setValue:(Ljava/lang/Object;)Z
+        69: pop
+        70: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$3 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeTextureClearEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$3();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeTextureClearEvent."<init>":()V
+         4: return
+
+  public void beforeClear(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: getstatic     #7                  // Field com/seibel/distanthorizons/api/DhApi$Delayed.renderProxy:Lcom/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy;
+         3: invokeinterface #13,  1           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/render/IDhApiRenderProxy.getDhDepthTextureId:()Lcom/seibel/distanthorizons/api/objects/DhApiResult;
+         8: astore_2
+         9: aload_2
+        10: getfield      #19                 // Field com/seibel/distanthorizons/api/objects/DhApiResult.success:Z
+        13: ifeq          34
+        16: aload_2
+        17: getfield      #25                 // Field com/seibel/distanthorizons/api/objects/DhApiResult.payload:Ljava/lang/Object;
+        20: checkcast     #29                 // class java/lang/Integer
+        23: invokevirtual #31                 // Method java/lang/Integer.intValue:()I
+        26: istore_3
+        27: invokestatic  #35                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        30: iload_3
+        31: invokevirtual #41                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.reconnectDHTextures:(I)V
+        34: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$4 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderSetupEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$4();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericRenderSetupEvent."<init>":()V
+         4: return
+
+  public void beforeSetup(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         3: invokevirtual #13                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getGenericFB:()Lnet/irisshaders/iris/gl/framebuffer/GlFramebuffer;
+         6: ifnull        18
+         9: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        12: invokevirtual #13                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getGenericFB:()Lnet/irisshaders/iris/gl/framebuffer/GlFramebuffer;
+        15: invokevirtual #19                 // Method net/irisshaders/iris/gl/framebuffer/GlFramebuffer.bind:()V
+        18: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$5 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$5();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericObjectRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent$EventParam>);
+    Code:
+         0: aload_1
+         1: getfield      #7                  // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.value:Ljava/lang/Object;
+         4: checkcast     #13                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericObjectRenderEvent$EventParam
+         7: getfield      #15                 // Field com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericObjectRenderEvent$EventParam.resourceLocationPath:Ljava/lang/String;
+        10: ldc           #19                 // String Clouds
+        12: invokevirtual #21                 // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+        15: ifeq          31
+        18: invokestatic  #27                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        21: invokevirtual #33                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.avoidRenderingClouds:()Z
+        24: ifeq          31
+        27: aload_1
+        28: invokevirtual #39                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        31: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$6 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiColorDepthTextureCreatedEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$6();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent."<init>":()V
+         4: return
+
+  public void onResize(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiColorDepthTextureCreatedEvent$EventParam>);
+    Code:
+         0: aload_1
+         1: getfield      #7                  // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+         4: checkcast     #13                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent$EventParam
+         7: getfield      #15                 // Field com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent$EventParam.newWidth:I
+        10: putstatic     #19                 // Field net/irisshaders/iris/compat/dh/LodRendererEvents.textureWidth:I
+        13: aload_1
+        14: getfield      #7                  // Field com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiEventParam.value:Ljava/lang/Object;
+        17: checkcast     #13                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent$EventParam
+        20: getfield      #24                 // Field com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent$EventParam.newHeight:I
+        23: putstatic     #27                 // Field net/irisshaders/iris/compat/dh/LodRendererEvents.textureHeight:I
+        26: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$7 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$7();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+         3: ifeq          19
+         6: invokestatic  #13                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         9: getfield      #19                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverrideShadow:Z
+        12: ifne          19
+        15: aload_1
+        16: invokevirtual #25                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        19: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$8 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeDeferredRenderEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$8();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeDeferredRenderEvent."<init>":()V
+         4: return
+
+  public void beforeRender(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+         3: ifeq          19
+         6: invokestatic  #13                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         9: getfield      #19                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverrideShadow:Z
+        12: ifne          19
+        15: aload_1
+        16: invokevirtual #25                 // Method com/seibel/distanthorizons/api/methods/events/sharedParameterObjects/DhApiCancelableEventParam.cancelEvent:()V
+        19: return
+}
+Compiled from "LodRendererEvents.java"
+class net.irisshaders.iris.compat.dh.LodRendererEvents$9 extends com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderCleanupEvent {
+  net.irisshaders.iris.compat.dh.LodRendererEvents$9();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderCleanupEvent."<init>":()V
+         4: return
+
+  public void beforeCleanup(com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam<com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam>);
+    Code:
+         0: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+         3: getfield      #13                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.shouldOverride:Z
+         6: ifeq          36
+         9: invokestatic  #19                 // Method net/irisshaders/iris/shadows/ShadowRenderingState.areShadowsCurrentlyBeingRendered:()Z
+        12: ifeq          27
+        15: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        18: invokevirtual #25                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getShadowShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        21: invokevirtual #29                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.unbind:()V
+        24: goto          36
+        27: invokestatic  #7                  // Method net/irisshaders/iris/compat/dh/LodRendererEvents.getInstance:()Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        30: invokevirtual #34                 // Method net/irisshaders/iris/compat/dh/DHCompatInternal.getSolidShader:()Lnet/irisshaders/iris/compat/dh/IrisLodRenderProgram;
+        33: invokevirtual #29                 // Method net/irisshaders/iris/compat/dh/IrisLodRenderProgram.unbind:()V
+        36: return
+}
+Compiled from "LodRendererEvents.java"
+public class net.irisshaders.iris.compat.dh.LodRendererEvents {
+  private static boolean eventHandlersBound;
+
+  private static boolean atTranslucent;
+
+  private static int textureWidth;
+
+  private static int textureHeight;
+
+  public net.irisshaders.iris.compat.dh.LodRendererEvents();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  public static void setupEventHandlers();
+    Code:
+         0: getstatic     #7                  // Field eventHandlersBound:Z
+         3: ifne          37
+         6: iconst_1
+         7: putstatic     #7                  // Field eventHandlersBound:Z
+        10: getstatic     #13                 // Field net/irisshaders/iris/Iris.logger:Lnet/irisshaders/iris/IrisLogging;
+        13: ldc           #19                 // String Queuing DH event binding...
+        15: invokevirtual #21                 // Method net/irisshaders/iris/IrisLogging.info:(Ljava/lang/String;)V
+        18: new           #27                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$1
+        21: dup
+        22: invokespecial #29                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$1."<init>":()V
+        25: astore_0
+        26: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        29: ldc           #36                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiAfterDhInitEvent
+        31: aload_0
+        32: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        37: return
+
+  private static void setupSetDeferredBeforeRenderingEvent();
+    Code:
+         0: new           #44                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$2
+         3: dup
+         4: invokespecial #46                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$2."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #47                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupReconnectDepthTextureEvent();
+    Code:
+         0: new           #49                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$3
+         3: dup
+         4: invokespecial #51                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$3."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #52                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeTextureClearEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupGenericEvent();
+    Code:
+         0: new           #54                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$4
+         3: dup
+         4: invokespecial #56                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$4."<init>":()V
+         7: astore_0
+         8: new           #57                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$5
+        11: dup
+        12: invokespecial #59                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$5."<init>":()V
+        15: astore_1
+        16: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        19: ldc           #60                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericRenderSetupEvent
+        21: aload_0
+        22: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        27: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        30: ldc           #62                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeGenericObjectRenderEvent
+        32: aload_1
+        33: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        38: return
+
+  private static net.irisshaders.iris.compat.dh.DHCompatInternal getInstance();
+    Code:
+         0: invokestatic  #64                 // Method net/irisshaders/iris/Iris.getPipelineManager:()Lnet/irisshaders/iris/pipeline/PipelineManager;
+         3: invokevirtual #68                 // Method net/irisshaders/iris/pipeline/PipelineManager.getPipeline:()Ljava/util/Optional;
+         6: invokedynamic #74,  0             // InvokeDynamic #0:apply:()Ljava/util/function/Function;
+        11: invokevirtual #78                 // Method java/util/Optional.map:(Ljava/util/function/Function;)Ljava/util/Optional;
+        14: invokedynamic #84,  0             // InvokeDynamic #1:apply:()Ljava/util/function/Function;
+        19: invokevirtual #78                 // Method java/util/Optional.map:(Ljava/util/function/Function;)Ljava/util/Optional;
+        22: getstatic     #85                 // Field net/irisshaders/iris/compat/dh/DHCompatInternal.SHADERLESS:Lnet/irisshaders/iris/compat/dh/DHCompatInternal;
+        25: invokevirtual #91                 // Method java/util/Optional.orElse:(Ljava/lang/Object;)Ljava/lang/Object;
+        28: checkcast     #86                 // class net/irisshaders/iris/compat/dh/DHCompatInternal
+        31: areturn
+
+  private static void setupCreateDepthTextureEvent();
+    Code:
+         0: new           #95                 // class net/irisshaders/iris/compat/dh/LodRendererEvents$6
+         3: dup
+         4: invokespecial #97                 // Method net/irisshaders/iris/compat/dh/LodRendererEvents$6."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #98                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiColorDepthTextureCreatedEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupTransparentRendererEventCancling();
+    Code:
+         0: new           #100                // class net/irisshaders/iris/compat/dh/LodRendererEvents$7
+         3: dup
+         4: invokespecial #102                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$7."<init>":()V
+         7: astore_0
+         8: new           #103                // class net/irisshaders/iris/compat/dh/LodRendererEvents$8
+        11: dup
+        12: invokespecial #105                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$8."<init>":()V
+        15: astore_1
+        16: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        19: ldc           #47                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderEvent
+        21: aload_0
+        22: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        27: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        30: ldc           #106                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeDeferredRenderEvent
+        32: aload_1
+        33: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        38: return
+
+  private static void setupBeforeRenderCleanupEvent();
+    Code:
+         0: new           #108                // class net/irisshaders/iris/compat/dh/LodRendererEvents$9
+         3: dup
+         4: invokespecial #110                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$9."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #111                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderCleanupEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupBeforeBufferClearEvent();
+    Code:
+         0: new           #113                // class net/irisshaders/iris/compat/dh/LodRendererEvents$10
+         3: dup
+         4: invokespecial #115                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$10."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #52                 // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeTextureClearEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void beforeBufferRenderEvent();
+    Code:
+         0: new           #116                // class net/irisshaders/iris/compat/dh/LodRendererEvents$11
+         3: dup
+         4: invokespecial #118                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$11."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #119                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeBufferRenderEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupBeforeRenderFrameBufferBinding();
+    Code:
+         0: new           #121                // class net/irisshaders/iris/compat/dh/LodRendererEvents$12
+         3: dup
+         4: invokespecial #123                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$12."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #124                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderSetupEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupBeforeRenderPassEvent();
+    Code:
+         0: new           #126                // class net/irisshaders/iris/compat/dh/LodRendererEvents$13
+         3: dup
+         4: invokespecial #128                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$13."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #129                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeRenderPassEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  private static void setupBeforeApplyShaderEvent();
+    Code:
+         0: new           #131                // class net/irisshaders/iris/compat/dh/LodRendererEvents$14
+         3: dup
+         4: invokespecial #133                // Method net/irisshaders/iris/compat/dh/LodRendererEvents$14."<init>":()V
+         7: astore_0
+         8: getstatic     #30                 // Field com/seibel/distanthorizons/api/DhApi.events:Lcom/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector;
+        11: ldc           #134                // class com/seibel/distanthorizons/api/methods/events/abstractEvents/DhApiBeforeApplyShaderRenderEvent
+        13: aload_0
+        14: invokeinterface #38,  3           // InterfaceMethod com/seibel/distanthorizons/api/interfaces/events/IDhApiEventInjector.bind:(Ljava/lang/Class;Lcom/seibel/distanthorizons/coreapi/interfaces/dependencyInjection/IBindable;)V
+        19: return
+
+  static {};
+    Code:
+         0: iconst_0
+         1: putstatic     #7                  // Field eventHandlersBound:Z
+         4: iconst_0
+         5: putstatic     #136                // Field atTranslucent:Z
+         8: return
+}

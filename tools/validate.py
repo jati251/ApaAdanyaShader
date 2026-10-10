@@ -5,6 +5,7 @@ Compatibility builtins are bridged to core inputs, as Iris does at runtime.
 This catches GLSL errors, not Iris framebuffer/texture binding errors.
 """
 import ctypes as c
+import json
 import pathlib
 import re
 import sys
@@ -24,8 +25,13 @@ for line in SETTINGS.splitlines():
     if m:
         options[m[1]] = (m[2], m[3].split())
 profiles = dict(re.findall(r'^profile\.(\w+)=(.*)$', PROPS, re.M))
+historical_profiles = json.loads((ROOT.parent/'tools/fixtures/historical_profiles.json').read_text())
 
 def resolve(name, stack=()):
+    # Historical stress fixtures are not Iris profiles or preset exports.
+    if name not in profiles:
+        assert name in historical_profiles, f'Unknown test configuration: {name}'
+        return dict(historical_profiles[name])
     assert name not in stack, f'Profile cycle: {name}'
     result = {}
     for token in profiles[name].split():
@@ -76,7 +82,12 @@ for preset in sorted((ROOT.parent/'presets').glob('*.txt')):
     assert values==resolve(name), f'{preset.name}: saved values differ from Iris profile {name}'
 assert exported==set(profiles), 'Missing saved profile exports'
 print(f'PASS: {len(exported)} saved presets exactly match Iris profiles; every profile has both descriptions',flush=True)
+assert not re.search(r'^uniform\.bool\.\w+\s*=\s*(?:true|false)\s*$', PROPS, re.M), 'Iris custom bool uniforms require comparison expressions'
 all_source = '\n'.join(p.read_text() for p in ROOT.rglob('*') if p.suffix in ('.glsl','.fsh','.vsh'))
+# Iris interprets format names in comments, not GLSL enum declarations. The
+# synthetic compiler bridge defines these names, so check the actual pack too.
+uncommented_source=re.sub(r'/\*.*?\*/|//[^\n]*','',all_source,flags=re.S)
+assert not re.search(r'const\s+int\s+\w+Format\s*=\s*(?:RGBA\w*|R\d+F)\s*;',uncommented_source), 'Iris buffer format directives must be inside comments'
 # Iris parses buffer clear colors independently of GLSL compilation. Its vec4
 # directive parser requires four literal components, even for a scalar splat.
 for name,constructor in re.findall(r'const\s+vec4\s+((?:colortex\d+|shadowcolor\d+)ClearColor)\s*=\s*vec4\(([^)]*)\)',all_source):
@@ -96,6 +107,70 @@ for key,(value,_) in options.items():
 for directory in ('world-1','world1'):
     for entry in ROOT.glob('*sh'):
         assert (ROOT/directory/entry.name).exists(), f'{directory}: missing {entry.name}'
+
+def enabled_properties(values, features):
+    """Evaluate the pack's allocation/pass gates, including optional features."""
+    defines = dict(values, **{name: True for name in features})
+    def condition(expression):
+        expression = re.sub(r'defined\((\w+)\)', lambda m: str(bool(defines.get(m[1], False))), expression)
+        expression = re.sub(r'\b[A-Z][A-Z_0-9]*\b', lambda m: str(defines.get(m[0], 0)), expression)
+        expression = expression.replace('&&', ' and ').replace('||', ' or ')
+        expression = re.sub(r'!(?!=)', ' not ', expression)
+        return bool(eval(expression, {'__builtins__': {}}, {}))
+    output = {}; stack = []; active = True
+    for line in PROPS.splitlines():
+        if line.startswith(('#ifdef ', '#ifndef ', '#if ')):
+            if line.startswith('#ifdef '): branch = bool(defines.get(line[7:], False))
+            elif line.startswith('#ifndef '): branch = not bool(defines.get(line[8:], False))
+            else: branch = condition(line[4:])
+            stack.append((active, branch)); active = active and branch
+        elif line == '#else':
+            parent, branch = stack[-1]; active = parent and not branch
+        elif line == '#endif':
+            active = stack.pop()[0]
+        elif active and not line.startswith('#') and '=' in line:
+            key, value = line.split('=', 1); output[key] = value
+    assert not stack, 'Unbalanced shader properties conditions'
+    return output
+
+advanced_features = ['IRIS_FEATURE_CUSTOM_IMAGES', 'IRIS_FEATURE_COMPUTE_SHADERS']
+for profile in profiles:
+    values = resolve(profile)
+    for features in ([], advanced_features[:1], advanced_features[1:], advanced_features):
+        props = enabled_properties(values, features)
+        volumetric = all(values[k] for k in ('VOLUMETRIC_LIGHT','HALF_RES_LIGHTING','SHADOWS'))
+        smoke = len(features)==2 and values['SMOKE_MODE']=='1' and values['SHADOWS']
+        assert props.get('program.composite.enabled') == str(volumetric or smoke).lower(), f'{profile}: volumetric gate mismatch'
+        assert ('image.aaSmokeEmitterImage' in props)==smoke
+        assert ('image.aaSmokePresenceImage' in props)==smoke
+        assert ('image.aaSmokeObstacleImage' in props)==(smoke and not values['VOXEL_TRACING'])
+        assert ('image.aaSmokePathImage' in props)==smoke
+        assert props['program.shadowcomp1.enabled']==str(smoke).lower()
+        assert props['program.world-1/shadowcomp1.enabled']=='false'
+        assert props['program.world1/shadowcomp1.enabled']=='false'
+        assert props['size.buffer.colortex21']==('0.5 0.5' if smoke else '1 1')
+        assert props.get('uniform.bool.aaVLReady') == ('1 == 1' if volumetric else '1 == 0')
+        for dimension in ('world-1/', 'world1/'):
+            assert props.get('program.'+dimension+'composite.enabled') == 'false'
+        supported = len(features) == 2
+        hiz = supported and values['HIZ_TRACING']
+        voxel = supported and values['VOXEL_TRACING'] and values['SHADOWS']
+        denoise = supported and all(values[k] for k in ('SVGF_DENOISER','SSGI','HALF_RES_LIGHTING','TEMPORAL_INDIRECT'))
+        assert ('image.aaHiZImage' in props) == hiz
+        assert ('image.aaVoxelImage' in props) == voxel
+        assert ('image.aaDenoiseImageA' in props) == denoise
+        for directory in ('', 'world-1/', 'world1/'):
+            for pass_name, enabled in [('deferred', hiz)] + [('deferred'+suffix, False) for suffix in ('_a','_b','_c')] + [('deferred4'+suffix, denoise) for suffix in ('','_a','_b')] + [('shadowcomp', voxel)]:
+                assert props.get('program.'+directory+pass_name+'.enabled') == str(enabled).lower(), f'{profile}: compute gate mismatch {pass_name}'
+        if not supported:
+            assert not any(key.startswith('image.') for key in props), f'{profile}: unsupported custom images allocated'
+print('PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles', flush=True)
+for changes in [dict(SMOKE_MODE='0'),dict(SHADOWS=False)]:
+    props=enabled_properties(dict(resolve('HIGH'),**changes),advanced_features)
+    assert not any(key.startswith('image.aaSmoke') for key in props)
+    assert props['program.shadowcomp1.enabled']=='false'
+    assert props['size.buffer.colortex21']=='1 1'
+print('PASS: Minecraft smoke mode and shadows-off remove all smoke images, cache dispatch and half-size smoke target',flush=True)
 
 if '--static' in sys.argv:
     sys.exit(0)
@@ -133,7 +208,8 @@ def source(path, values, dh):
         else:
             code = re.sub(r'^(#define ' + re.escape(key) + r' )[^\n]*', lambda m: m[1] + value, code, flags=re.M)
             code = re.sub(r'(const (?:float|int) ' + re.escape(key) + r'\s*=\s*)[^;]+', lambda m: m[1] + value, code)
-    code = code.replace('#version 330 compatibility', '#version '+CORE_VERSION+' core')
+    version='430' if path.suffix=='.csh' else CORE_VERSION
+    code=re.sub(r'^#version \d+ compatibility', '#version '+version+' core',code,flags=re.M)
     builtins = '''
 #define RGBA8 32856
 #define RGBA16F 34842
@@ -142,6 +218,18 @@ def source(path, values, dh):
 uniform mat4 aa_ModelView, aa_Projection, aa_TextureMatrix[8];
 uniform mat3 aa_NormalMatrix;
 '''
+    if values.get('__native_compile'):
+        builtins += '#define IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS\n'
+    if '--advanced' in sys.argv and (values.get('__native_compile') or values.get('__advanced_fixture')):
+        builtins='''
+#extension GL_ARB_shader_image_load_store : enable
+#define MC_GL_ARB_shader_image_load_store
+#define IRIS_FEATURE_CUSTOM_IMAGES
+#define IRIS_FEATURE_COMPUTE_SHADERS
+#define IRIS_FEATURE_BLOCK_EMISSION_ATTRIBUTE
+'''+builtins
+        # Keep extension directives in the prelude, ahead of synthetic uniforms.
+        code=re.sub(r'^#extension GL_ARB_shader_image_load_store.*$','',code,flags=re.M)
     if path.suffix == '.vsh':
         builtins += '''
 in vec4 aa_Vertex, aa_Color, aa_MultiTexCoord0, aa_MultiTexCoord1;
@@ -152,13 +240,17 @@ vec4 aa_ftransform() { return aa_Projection*aa_ModelView*aa_Vertex; }
         builtins += '#define DISTANT_HORIZONS\n'
         if path.name.startswith('dh_') and path.suffix == '.fsh':
             builtins += 'bool dh_hasTexture(){return false;}\nvec4 dh_sampleTexture(){return vec4(1.0);}\n'
+    # Legacy behavioral fixtures intentionally hold the old procedural cloud
+    # field fixed. performance_checks separately binds and tests the actual LUT.
+    if not values.get('__native_compile'):
+        builtins += '#define AA_PROCEDURAL_CLOUDS\n'
     for old, new in {'gl_ModelViewMatrix':'aa_ModelView','gl_ProjectionMatrix':'aa_Projection','gl_TextureMatrix':'aa_TextureMatrix','gl_NormalMatrix':'aa_NormalMatrix','gl_Vertex':'aa_Vertex','gl_Color':'aa_Color','gl_MultiTexCoord0':'aa_MultiTexCoord0','gl_MultiTexCoord1':'aa_MultiTexCoord1','gl_Normal':'aa_Normal','ftransform':'aa_ftransform'}.items():
         code = re.sub(r'\b' + old + r'\b', new, code)
-    return code.replace('#version '+CORE_VERSION+' core', '#version '+CORE_VERSION+' core\n' + builtins, 1)
+    return code.replace('#version '+version+' core', '#version '+version+' core\n' + builtins, 1)
 
 def compile_one(path, values, dh):
-    shader = create_shader(0x8B31 if path.suffix == '.vsh' else 0x8B30)
-    text = c.c_char_p(source(path, values, dh).encode())
+    shader = create_shader(0x91B9 if path.suffix=='.csh' else (0x8B31 if path.suffix == '.vsh' else 0x8B30))
+    text = c.c_char_p(source(path, dict(values,__native_compile=True), dh).encode())
     shader_source(shader, 1, c.byref(text), None)
     compile_shader(shader)
     status = c.c_int()
@@ -197,13 +289,23 @@ try:
     variants += [('FSR1_EXTREME',dict(resolve('EXTREME'),UPSCALE_QUALITY='1')),
                  ('FSR1_POTATO',dict(resolve('POTATO'),UPSCALE_QUALITY='3')),
                  ('FSR1_NO_SHARPEN',dict(resolve('HIGH'),UPSCALE_QUALITY='2',UPSCALE_SHARPNESS='0.0'))]
+    requested_profiles={arg.split('=',1)[1] for arg in sys.argv if arg.startswith('--profile=')}
+    if requested_profiles:
+        assert requested_profiles <= set(profiles), 'Unknown requested shader profile'
+        variants = [(name, resolve(name)) for name in profiles if name in requested_profiles]
     if '--images-only' in sys.argv:
         variants = []
     requested_programs={arg.split('=',1)[1] for arg in sys.argv if arg.startswith('--program=')}
     if '--shadow-only' in sys.argv:
         requested_programs = {'shadow'}
     if '--water-only' in sys.argv:
-        requested_programs = {'gbuffers_water','dh_water','composite','composite3','composite6'}
+        requested_programs = {'gbuffers_water','dh_water','composite1','composite4','composite7'}
+    if '--water-lod-only' in sys.argv:
+        requested_programs = {'dh_water'}
+    if '--smoke-only' in sys.argv:
+        requested_programs = {'shadow','shadow_solid','shadow_cutout','composite','composite1','gbuffers_terrain','gbuffers_particles','gbuffers_particles_translucent'}
+    if '--aquatic-only' in sys.argv:
+        requested_programs = {'shadow','shadow_solid','shadow_cutout','gbuffers_terrain'}
     if requested_programs:
         assert requested_programs <= {p.stem for p in ROOT.glob('*.vsh')}, 'Unknown requested shader program'
     for name, values in variants:
@@ -232,11 +334,35 @@ try:
                 delete_shader(fs)
                 total += 1
         print(f'PASS: {name}, with/without DH', flush=True)
+        if '--advanced' in sys.argv:
+            for compute in sorted(ROOT.rglob('*.csh')):
+                if compute.parent.name in ('lib','program'): continue
+                for dh in (False,True):
+                    cs=compile_one(compute,values,dh)
+                    program=create_program();attach(program,cs);link(program)
+                    status=c.c_int();program_status(program,0x8B82,c.byref(status))
+                    if not status.value:
+                        log=c.create_string_buffer(32768);program_log(program,len(log),None,log)
+                        raise RuntimeError(f'{compute}\n{log.value.decode()}')
+                    delete_program(program);delete_shader(cs);total+=1
     if total:
         print(f'PASS: {total} program variants compiled and linked', flush=True)
+    if '--smoke-only' in sys.argv:
+        if '--advanced' in sys.argv:
+            import smoke_checks
+            smoke_checks.run(globals())
+        sys.exit(0)
     import shadow_checks
     shadow_checks.run(globals())
     if '--shadow-only' in sys.argv:
+        sys.exit(0)
+    if '--aquatic-only' in sys.argv:
+        import aquatic_geometry_checks
+        aquatic_geometry_checks.run(globals())
+        sys.exit(0)
+    if '--water-lod-only' in sys.argv:
+        import water_lod_overlap_checks
+        water_lod_overlap_checks.run(globals())
         sys.exit(0)
     if '--water-only' in sys.argv:
         import weather_checks
@@ -247,6 +373,12 @@ try:
         water_vertex_checks.run(globals())
         import water_motion_checks
         water_motion_checks.run(globals())
+        import water_optics_checks
+        water_optics_checks.run(globals())
+        import water_lod_overlap_checks
+        water_lod_overlap_checks.run(globals())
+        import aquatic_geometry_checks
+        aquatic_geometry_checks.run(globals())
         sys.exit(0)
     import low_tier_checks
     low_tier_checks.run(globals())
@@ -262,6 +394,12 @@ try:
     water_surface_checks.run(globals())
     import water_vertex_checks
     water_vertex_checks.run(globals())
+    import water_optics_checks
+    water_optics_checks.run(globals())
+    import water_lod_overlap_checks
+    water_lod_overlap_checks.run(globals())
+    import aquatic_geometry_checks
+    aquatic_geometry_checks.run(globals())
     import pom_checks
     pom_checks.run(globals())
     import dh_checks
@@ -270,5 +408,14 @@ try:
         dh_checks.benchmark(globals())
     import photoreal_checks
     photoreal_checks.run(globals())
+    import ray_tracing_checks
+    ray_tracing_checks.run(globals())
+    import celestial_checks
+    celestial_checks.run(globals())
+    if '--advanced' in sys.argv:
+        import advanced_checks
+        advanced_checks.run(globals())
+        import smoke_checks
+        smoke_checks.run(globals())
 finally:
     driver.close()

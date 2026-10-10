@@ -1,0 +1,13 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+PASS: Minecraft smoke mode and shadows-off remove all smoke images, cache dispatch and half-size smoke target
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: POTATO, with/without DH
+PASS: MEDIUM, with/without DH
+PASS: HIGH, with/without DH
+PASS: REALISM_FAST, with/without DH
+PASS: ULTRA, with/without DH
+PASS: 240 program variants compiled and linked

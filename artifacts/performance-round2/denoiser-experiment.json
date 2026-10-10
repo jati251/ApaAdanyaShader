@@ -1,0 +1,23 @@
+{
+  "reference": "C:\\Users\\jatis\\AppData\\Roaming\\.minecraft\\instances\\experiment\\.codex-backups\\performance-round2-20261008\\shaders",
+  "results": [
+    {
+      "check": "denoiser_non_unit_normal_parity",
+      "max_hdr_error": 0.0
+    },
+    {
+      "workload": "three-pass GI denoiser / 640x360",
+      "before_ms": 0.042816,
+      "after_ms": 0.050432,
+      "reduction_percent": -17.78774289985052,
+      "before_range_ms": [
+        0.042624,
+        0.075328
+      ],
+      "after_range_ms": [
+        0.041856,
+        0.534688
+      ]
+    }
+  ]
+}

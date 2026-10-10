@@ -1,3 +1,2 @@
 #version 330 compatibility
-
-#include "/program/composite.fsh"
+#include "/program/volumetric_half.fsh"

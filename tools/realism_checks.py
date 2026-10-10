@@ -14,7 +14,7 @@ def run(api):
     inverse=[1,0,0,0,0,1,0,0,0,0,0,1/b,0,0,-1,a/b]
     depth=lambda z:(-a+b/z)*0.5+0.5
     values=dict(api['resolve']('EXTREME'),UPSCALE_QUALITY='0')
-    prefix=api['source'](api['ROOT']/'composite6.fsh',values,False).split('in vec2 texcoord;')[0]
+    prefix=api['source'](api['ROOT']/'composite7.fsh',values,False).split('in vec2 texcoord;')[0]
     fragment=prefix+'''in vec2 texcoord;
 layout(location=0) out vec4 color;
 void main(){color=vec4(applyMotionBlur(texcoord,textureScreen(colortex0,texcoord).rgb),1.0);}
@@ -110,13 +110,13 @@ def check_dh_frame_order(api):
         dhProjectionInverse=inverse,gbufferModelViewInverse=identity,
         cameraPosition=(0.,80.,0.),sunPosition=(0.,-1.,0.),frameTimeCounter=3.,
         colortex0=0,depthtex0=1,dhDepthTex0=2,dhDepthTex1=3)
-    for entry,profile in [('deferred3.fsh','POTATO'),('deferred.fsh','REALISM')]:
+    for entry,profile in [('deferred5.fsh','POTATO'),('deferred1.fsh','REALISM')]:
         values=api['resolve'](profile)
         fragment=api['source'](api['ROOT']/entry,values,True)
         program=f.program(entry,values,fragment=fragment)
         f.texture([1,0,0,1]*pixels,2)
         f.texture([1,0,0,1]*pixels,3)
-        targets=[target,opaque] if entry=='deferred3.fsh' else [target]
+        targets=[target,opaque] if entry=='deferred5.fsh' else [target]
         baseline=f.render(program,targets,uniforms)
         # The opaque copy still carries a coastline from the previous camera orientation.
         stale=[]
@@ -138,7 +138,7 @@ def check_dh_frame_order(api):
         f.texture([1,0,0,1]*pixels,3)
         actual=f.render(program,targets,uniforms)
         left=((f.h//2)*f.w+f.w//4)*4
-        if entry=='deferred3.fsh':
+        if entry=='deferred5.fsh':
             assert abs(actual[left]-0.8)<0.0001, 'Current DH terrain was replaced by sky'
         else:
             assert actual[left+3]<0, 'Clouds rendered through current DH terrain'

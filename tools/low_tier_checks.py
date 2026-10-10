@@ -13,12 +13,12 @@ def run(api):
                 f = Fixture(api, 48, 24)
                 try:
                     values = dict(api['resolve'](profile), UPSCALE_QUALITY=quality)
-                    entry = dimension + 'deferred3.fsh'
+                    entry = dimension + 'deferred5.fsh'
                     fragment = api['source'](api['ROOT']/entry, values, True)
                     # Eager reconstruction is the prior behavior; compare both MRT outputs.
                     eager = fragment.replace('bool needsView=depth>=0.999999 && !isDH;',
                                              'bool needsView=true;')
-                    programs = [f.program('deferred3.fsh', values, fragment=s)
+                    programs = [f.program('deferred5.fsh', values, fragment=s)
                                 for s in (eager, fragment)]
                     targets = [f.texture(None, 0), f.texture(None, 1)]
                     f.texture([0.3,0.4,0.7,1.0]*(f.w*f.h), 2)

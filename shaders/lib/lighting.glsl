@@ -1,7 +1,15 @@
 #ifndef AA_LIGHTING
 #define AA_LIGHTING
 #include "/lib/material.glsl"
+#include "/lib/voxel_trace.glsl"
 uniform sampler2D shadowtex0,colortex8;
+#ifdef HARDWARE_PCF
+#if defined(IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS) && SHADOW_SAMPLES >= 8
+#define AA_HARDWARE_PCF
+uniform sampler2DShadow shadowtex0HW;
+const bool shadowHardwareFiltering=true;
+#endif
+#endif
 float cloudShadow(vec3 world){
     #ifdef CLOUD_SHADOWS
     #if CLOUDS == 2
@@ -81,12 +89,22 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     vec2 sy=(distortShadow(p+vec3(0.0,shadowProjection[1][1]*penumbra,0.0))-dp).xy*0.5;
     radius=clamp(vec2(length(sx),length(sy)),vec2(0.75*texelSize),vec2(searchRadius));
     #endif
+    #ifdef AA_HARDWARE_PCF
+    // Hardware bilinear comparisons replace pairs of manual filter taps.
+    // Correct for their added footprint; keep the PCSS blocker search intact.
+    radius=sqrt(max(radius*radius-vec2(texelSize*texelSize/3.0),vec2(0.5*texelSize)*vec2(0.5*texelSize)));
+    float sum=0.0;
+    for(int i=0;i<4;i++)
+        sum+=texture(shadowtex0HW,vec3(clamp(sc.xy+poissonDisk8[i]*radius,vec2(0.002),vec2(0.998)),sc.z-bias));
+    return mix(sum*0.25,1.0,fade);
+    #else
     float sum = 0.0;
     int samples = min(SHADOW_SAMPLES, 8);
     for(int i = 0; i < samples; i++) {
         sum += step(sc.z - bias, texture(shadowtex0, clamp(sc.xy + poissonDisk8[i] * radius,vec2(0.002),vec2(0.998))).r);
     }
     return mix(sum / float(samples), 1.0, fade);
+    #endif
     #endif
 }
 vec3 fresnelSchlick(float cosine,vec3 f0) {
@@ -134,6 +152,16 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     #if !defined(NETHER) && !defined(END)
     if((nl>0.0001 || foliage>0.5) && lm.y>0.05) {
         vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
+        #ifdef AA_VOXELS
+        if(vis>0.01 && nl>0.01 && dot(vp,vp)<1296.0) {
+            vec3 blocker,blockerNormal;uint blockerMaterial;
+            vec3 receiver=rel+cameraPosition;
+            if(traceVoxelWorldRange(receiver+nw*0.08,worldDirection(L),8,2.59,blocker,blockerNormal,blockerMaterial)) {
+                float localOcclusion=1.0-smoothstep(0.0,2.5,length(blocker-receiver));
+                vis*=1.0-localOcclusion*0.85;
+            }
+        }
+        #endif
     }
     #endif
     // Hemispherical irradiance: blue skylight above, subdued ground bounce below.
@@ -147,7 +175,7 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     ambient=vec3(0.06,0.035,0.09);
     #endif
     ambient+=stormFlash()*(lm.y*lm.y*lm.y)*(0.35+0.65*max(nw.y,0.0));
-    vec3 torch=vec3(1.8,0.72,0.23)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
+    vec3 torch=vec3(1.65,0.62,0.13)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
     #if !defined(HAND) && !defined(AA_DH_TERRAIN)
     int maxHeldLight=max(heldBlockLightValue,heldBlockLightValue2);
     if(maxHeldLight>0){
@@ -159,7 +187,7 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
             float atten2=atten*atten;
             float handNdl=sat(dot(N,-normalize(lightOffset)));
             bool isSoul=(heldItemId==1007 || heldItemId2==1007);
-            vec3 handColor=isSoul?vec3(0.35,1.15,1.8):vec3(1.85,0.85,0.32);
+            vec3 handColor=isSoul?vec3(0.16,0.85,1.4):vec3(1.65,0.62,0.13);
             torch+=handColor*(atten2*(handNdl*0.70+0.30)*(heldStrength*heldStrength)*1.5*TORCH_BRIGHTNESS);
         }
     }

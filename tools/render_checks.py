@@ -61,8 +61,8 @@ def run(api):
         return obj
     vs=shader(0x8B31, '#version 410 core\nout vec2 texcoord;\nvoid main(){ vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);texcoord=p;gl_Position=vec4(p*2.0-1.0,0.0,1.0);}')
     def render(dof, autofocus=False):
-        values=dict(resolve('HIGH'),DOF=dof,HALF_RES_DOF=False,DOF_AUTOFOCUS=autofocus,BLOOM=False,VIGNETTE=False,DOF_FOCUS_DISTANCE='2.0',DOF_FOCAL_LENGTH='85.0',DOF_FSTOP='1.4')
-        fs=shader(0x8B30,source(root/'composite5.fsh',values,False))
+        values=dict(resolve('HIGH'),UPSCALE_QUALITY='0',DOF=dof,HALF_RES_DOF=False,DOF_AUTOFOCUS=autofocus,BLOOM=False,VIGNETTE=False,DOF_FOCUS_DISTANCE='2.0',DOF_FOCAL_LENGTH='85.0',DOF_FSTOP='1.4')
+        fs=shader(0x8B30,source(root/'composite6.fsh',values,False))
         program=api['create_program']()
         api['attach'](program,vs)
         api['attach'](program,fs)

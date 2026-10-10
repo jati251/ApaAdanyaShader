@@ -49,7 +49,7 @@ void main(){
     vec3 T=validTangent?normalize(tangentVector):normalize(cross(abs(N.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0),N));
     mat3 tbn=mat3(T,cross(N,T)*(tangent.w<0.0?-1.0:1.0),N);
     #ifdef AA_POM
-    bool plant=materialId>1000.5 && materialId<1002.5;
+    bool plant=(materialId>1000.5 && materialId<1002.5) || abs(materialId-1011.0)<0.5;
     if(validTangent && !plant && gl_FrontFacing) {
         vec3 viewTS=transpose(tbn)*normalize(-viewPos);
         materialUV=parallaxUV(normals,texcoord,uvDx,uvDy,atlasBounds,viewTS,length(viewPos));
@@ -133,43 +133,63 @@ void main(){
     }
     #endif
     roughness=filteredRoughness(N,roughness);
-    float ambientFraction;
-    vec3 shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO,ambientFraction);
+    bool lava=abs(materialId-1008.0)<0.5;
     bool flame=materialId>1005.5 && materialId<1007.5;
     #ifdef ENTITY
     flame=flame || entityId==1101;
     #endif
+    bool warmFixture=abs(materialId-1009.0)<0.5 || abs(materialId-1012.0)<0.5;
+    bool soulFixture=abs(materialId-1010.0)<0.5 || abs(materialId-1013.0)<0.5;
+    bool isLuminousBlock=(materialId>1003.5 && materialId<1004.5) || warmFixture || soulFixture;
+    #ifdef HAND
+    isLuminousBlock=isLuminousBlock || (heldBlockLightValue>0 || heldBlockLightValue2>0);
+    warmFixture=warmFixture || heldItemId==1009 || heldItemId2==1009;
+    soulFixture=soulFixture || heldItemId==1007 || heldItemId2==1007;
+    #endif
+    // Match the existing soul-over-warm priority, including mixed held items.
+    bool fixtureRadiance=soulFixture?(tex.g>0.50 && tex.b>0.55)
+                         :(warmFixture && tex.r>0.70 && tex.g>0.45 && tex.r>tex.b*1.3);
+    float ambientFraction=0.0;
+    vec3 shaded=vec3(0.0);
+    // Pure radiance overrides do not need PCSS, contact traces or a BRDF.
+    if(!lava && !flame && !fixtureRadiance)
+        shaded=shadeMaterial(albedo,N,viewPos,lmcoord,roughness,emission,foliage,f0,metal,materialAO,ambientFraction);
+    if(lava){
+        shaded=lavaRadiance(tex.rgb);
+        emission=1.0;
+        roughness=0.85;
+        ambientFraction=0.0;
+    }
     if(flame){
         shaded=flameRadiance(tex.rgb,worldPos,materialId>1006.5);
         emission=1.0;
         ambientFraction=0.0;
     }
-    bool isLuminousBlock=(materialId>1003.5 && materialId<1004.5) || (materialId>1006.5 && materialId<1007.5);
-    #ifdef HAND
-    isLuminousBlock=isLuminousBlock || (heldBlockLightValue>0 || heldBlockLightValue2>0);
-    #endif
-    if(isLuminousBlock && !flame){
+    if(isLuminousBlock && !flame && !lava){
         float maxVal=max(albedo.r,max(albedo.g,albedo.b));
         float minVal=min(albedo.r,min(albedo.g,albedo.b));
-        bool isSoul=(materialId>1006.5) || (heldItemId==1007 || heldItemId2==1007);
+        bool isSoul=soulFixture;
         bool isRedstone=(albedo.r>0.45 && albedo.r>albedo.g*2.2);
         bool isFlamePixel=(albedo.r>0.38 && albedo.g>0.18 && albedo.r>albedo.b*1.3)
                          || (isSoul && albedo.b>0.30 && albedo.g>0.25)
                          || isRedstone
                          || (maxVal>0.70);
+        if(warmFixture) isFlamePixel=tex.r>0.70 && tex.g>0.45 && tex.r>tex.b*1.3;
+        if(soulFixture) isFlamePixel=tex.g>0.50 && tex.b>0.55;
         if(isFlamePixel){
             // Saturated chromatic glow: rich golden amber fire, cyan soul fire, ruby redstone (never pale white!)
             vec3 chroma=albedo/max(maxVal,0.001);
             chroma=pow(chroma,vec3(1.7));
             vec3 flameColor=isSoul?vec3(0.06,1.35,2.2):(isRedstone?vec3(2.4,0.06,0.02):vec3(2.5,0.90,0.05));
             shaded=mix(shaded,chroma*flameColor*1.65,0.95);
+            if(warmFixture || soulFixture) shaded=flameRadiance(tex.rgb,worldPos,isSoul);
             emission=0.80;
             ambientFraction=0.0;
         }else{
             #ifdef HAND
             // The wooden handle and player hand: illuminated with warm firelight spill from the flame
-            vec3 spillColor=isSoul?vec3(0.18,0.65,1.1):vec3(1.4,0.80,0.25);
-            shaded+=diffuseResponse(albedo,f0,metal)*spillColor*0.75;
+            vec3 spillColor=isSoul?vec3(0.16,0.85,1.4):vec3(1.65,0.62,0.13);
+            shaded+=diffuseResponse(albedo,f0,metal)*spillColor*0.35;
             #endif
             emission=0.0;
         }

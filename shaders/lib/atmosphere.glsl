@@ -131,6 +131,7 @@ vec3 skyRadiance(vec3 rd) {
     #endif
 }
 
+#include "/lib/cloud_noise.glsl"
 // Rotated fractal noise: breaks grid alignment, producing organic fluid cloud shapes
 const mat2 rotCloud = mat2(0.80, -0.60, 0.60, 0.80);
 
@@ -165,7 +166,7 @@ float sampleCloudDensity(vec3 p, bool detail) {
     if(macro+0.09<threshold-0.05) return 0.0;
     vec3 q=vec3((p.xz+wind)*0.011,h*2.8);
     q.xy+=vec2(h*0.7,-h*0.2);
-    float billow=noise3D(q);
+    float billow=cloudNoise3D(q);
     float body=macro+(billow-0.5)*0.18;
     float density=smoothstep(threshold-0.05,threshold+0.16,body);
     float edgeFade=1.0;
@@ -174,7 +175,7 @@ float sampleCloudDensity(vec3 p, bool detail) {
     density*=edgeFade;
     #ifdef CLOUD_DETAIL
     if(detail && density>0.005){
-        float erosion=noise3D(q*3.1+vec3(1.3,2.1,0.7));
+        float erosion=cloudNoise3D(q*3.1+vec3(1.3,2.1,0.7));
         density=max(density-(1.0-erosion)*0.22*(1.0-density),0.0);
     }
     #endif
@@ -206,7 +207,7 @@ vec4 cloudLayerSteps(vec3 rd, vec2 pixel, int steps, float dither) {
 
     vec3 sd = sunDirection();
     float day = daylight();
-    vec3 sunCol = lightColor();
+    vec3 sunCol = solarLightColor();
 
     // Dual-lobe phase function for forward scattering and the backlit cloud body.
     float sunTheta = dot(rd, sd);
@@ -314,7 +315,7 @@ vec3 renderFastClouds(vec3 rd, vec3 background) {
     if (density > 0.005) {
         vec3 sd = sunDirection();
         float day = daylight();
-        vec3 sunCol = lightColor();
+        vec3 sunCol = solarLightColor();
 
         // Pseudo-volumetric self-shadowing: sample slightly towards the sun
         float fbmSun = noise2D(pos + sd.xz * 0.012);

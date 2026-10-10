@@ -1,0 +1,97 @@
+{
+  "reference": "C:\\Users\\jatis\\AppData\\Roaming\\.minecraft\\instances\\experiment\\.codex-backups\\performance-round2-20261008\\shaders",
+  "results": [
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        1280,
+        720
+      ],
+      "quality": "0",
+      "dh": false,
+      "max_hdr_error": 0.216064453125,
+      "mean_hdr_error": 0.009733515094827722,
+      "p99_hdr_error": 0.073486328125,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "workload": "fog + volumetric lighting, including half pass / 1280x720",
+      "before_ms": 0.642464,
+      "after_ms": 0.585968,
+      "reduction_percent": 8.793644468795137,
+      "before_range_ms": [
+        0.629904,
+        0.903568
+      ],
+      "after_range_ms": [
+        0.578048,
+        0.858608
+      ]
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        257,
+        145
+      ],
+      "quality": "0",
+      "dh": true,
+      "max_hdr_error": 0.167724609375,
+      "mean_hdr_error": 0.00933482091069312,
+      "p99_hdr_error": 0.0716552734375,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "1",
+      "dh": false,
+      "max_hdr_error": 0.118896484375,
+      "mean_hdr_error": 0.008125886462983631,
+      "p99_hdr_error": 0.05908203125,
+      "full_path_max_hdr_error": 0.0
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "2",
+      "dh": true,
+      "max_hdr_error": 0.1263427734375,
+      "mean_hdr_error": 0.008020344974132941,
+      "p99_hdr_error": 0.0601806640625,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        131,
+        73
+      ],
+      "quality": "3",
+      "dh": true,
+      "max_hdr_error": 0.1199951171875,
+      "mean_hdr_error": 0.00795973426065502,
+      "p99_hdr_error": 0.0574951171875,
+      "full_path_max_hdr_error": 0.000244140625
+    },
+    {
+      "check": "volumetric_reconstruction",
+      "size": [
+        3,
+        3
+      ],
+      "quality": "0",
+      "dh": false,
+      "max_hdr_error": 0.010009765625,
+      "mean_hdr_error": 0.00328685619212963,
+      "p99_hdr_error": 0.010009765625,
+      "full_path_max_hdr_error": 0.0
+    }
+  ]
+}

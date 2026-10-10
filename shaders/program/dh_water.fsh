@@ -5,7 +5,6 @@
 #include "/lib/water_reflection.glsl"
 
 uniform sampler2D depthtex0;
-uniform sampler2D depthtex1;
 uniform sampler2D dhDepthTex1,colortex6;
 uniform mat4 dhProjectionInverse;
 
@@ -29,18 +28,21 @@ void main(){
     if(any(greaterThanEqual(gl_FragCoord.xy,vec2(viewWidth,viewHeight)))) discard;
     #endif
     vec2 uv=gl_FragCoord.xy/vec2(viewWidth,viewHeight);
-    if (dot(viewPos,viewPos) < 576.0) discard;
-
-    // Vanilla water draws afterwards; only opaque vanilla terrain exists here.
-    float vanillaSolidDepth = depthScreen(depthtex1,uv);
-    if (vanillaSolidDepth < 0.999999 &&
-        viewDepth(uv,vanillaSolidDepth)>viewPos.z+0.02) discard;
+    // Use DH's rasterized surface with DH's own projection, including camera motion.
+    vec4 surfaceClip=dhProjectionInverse*vec4(uv*2.0-1.0,gl_FragCoord.z*2.0-1.0,1.0);
+    vec3 surfacePos=surfaceClip.xyz/surfaceClip.w;
+    // Vanilla coverage owns the entire pixel, including its water column.
+    // Testing only whether opaque terrain is IN FRONT permits coarse LOD water
+    // to cover a vanilla riverbed and compete with the real fluid surface.
+    // Use current vanilla depth (also covers translucents when available), not
+    // a camera-centred 24-block sphere that slides through LOD quads on jumps.
+    if (depthScreen(depthtex0,uv) < 1.0) discard;
 
     // Capture derivatives before discard; shade only surviving fragments.
     float crest;
     vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,crest);
 
-    vec3 V = normalize(-viewPos);
+    vec3 V = normalize(-surfacePos);
 
     vec3 base=worldDirection(normalize(viewNormal));
     vec3 nw=waterSurfaceNormal(base,slope);
@@ -87,7 +89,7 @@ void main(){
                 // DH surface and bottom share a perspective ray. Depth separation
                 // times ray length reconstructs thickness without bottom xyz.
                 float bottomZ=projectedViewDepth(dhProjectionInverse,uv,bottom);
-                thickness=clamp(max(viewPos.z-bottomZ,0.0)*length(viewPos)/max(-viewPos.z,0.01),0.0,80.0);
+                thickness=clamp(max(surfacePos.z-bottomZ,0.0)*length(surfacePos)/max(-surfacePos.z,0.01),0.0,80.0);
             }
             vec3 transmittance=exp(-waterAbsorption()*thickness);
             body=background*transmittance+waterBodyColor(thickness,skyLight)*(1.0-transmittance);
