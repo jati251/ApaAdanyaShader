@@ -9,6 +9,28 @@ const float CLOUD_HIGH_ALT = CLOUD_ALTITUDE + 720.0;
 const float CLOUD_SHADOW_SPAN = 4096.0;
 const mat2 rotCloud = mat2(0.80, -0.60, 0.60, 0.80);
 
+// Fast clouds share coverage, scale and wind with their small shadow atlas.
+const float FAST_CLOUD_SCALE = 0.0036;
+vec2 fastCloudCoordinates(vec2 world) {
+    return (world+vec2(1.15,0.48)*frameTimeCounter)*FAST_CLOUD_SCALE;
+}
+float cloudFractal(vec2 p,float footprint) {
+    float n=mix(noise2D(p),0.5,smoothstep(0.35,0.85,footprint));
+    p=rotCloud*p*2.02; footprint*=2.02;
+    n+=mix(noise2D(p),0.5,smoothstep(0.35,0.85,footprint))*0.50;
+    p=rotCloud*p*2.03; footprint*=2.03;
+    n+=mix(noise2D(p),0.5,smoothstep(0.35,0.85,footprint))*0.25;
+    p=rotCloud*p*2.01; footprint*=2.01;
+    n+=mix(noise2D(p),0.5,smoothstep(0.35,0.85,footprint))*0.125;
+    return n/1.875;
+}
+float fastCloudDensity(vec2 world,float footprint) {
+    float coverage=clamp(CLOUD_COVERAGE+rainStrength*0.18,0.10,0.95);
+    // A higher threshold separates smaller formations instead of joining sheets.
+    float threshold=mix(0.64,0.44,coverage);
+    return smoothstep(threshold,threshold+0.14,cloudFractal(fastCloudCoordinates(world),footprint));
+}
+
 float sheetCloudDensity(vec2 world, bool high) {
     vec2 wind=vec2(1.15,0.48)*frameTimeCounter;
     // Common advection permits stable history; altitude changes the morphology.

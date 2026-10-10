@@ -134,18 +134,6 @@ vec3 skyRadiance(vec3 rd) {
 #include "/lib/cloud_noise.glsl"
 #include "/lib/cloud_weather.glsl"
 
-float cloudFractal(vec2 p) {
-    vec2 pos = p;
-    float n = noise2D(pos);
-    pos = rotCloud * pos * 2.02;
-    n += noise2D(pos) * 0.50;
-    pos = rotCloud * pos * 2.03;
-    n += noise2D(pos) * 0.25;
-    pos = rotCloud * pos * 2.01;
-    n += noise2D(pos) * 0.125;
-    return n / 1.875;
-}
-
 // Density and ray bounds share the same layer; lighting uses the same cloud body.
 float sampleCloudDensity(vec3 p, bool detail, float footprint) {
     float h=(p.y-CLOUD_ALT_BASE)*(1.0/CLOUD_ALT_THICK);
@@ -387,27 +375,27 @@ vec3 renderFastClouds(vec3 rd, vec3 background) {
     if (rd.y < 0.02) return background;
     float planeDist = (CLOUD_ALTITUDE - cameraPosition.y) / max(rd.y, 0.02);
     if (planeDist < 0.0) return background;
-    vec2 wind = vec2(frameTimeCounter * 1.2, frameTimeCounter * 0.5);
-    vec2 pos = (cameraPosition.xz + rd.xz * planeDist + wind) * 0.00030;
-    float fbm = cloudFractal(pos);
-    float threshold = 0.54 - CLOUD_COVERAGE * 0.22;
-    float density = smoothstep(threshold, threshold + 0.16, fbm);
+    vec2 world = cameraPosition.xz + rd.xz * planeDist;
+    vec2 pos = fastCloudCoordinates(world);
+    // Projected footprint includes the oblique cloud plane and FSR render size.
+    float footprint = 2.0*planeDist*FAST_CLOUD_SCALE /
+        max(viewHeight*abs(gbufferProjection[1][1])*max(rd.y,0.05),1.0);
+    float density = fastCloudDensity(world,footprint);
     if (density > 0.005) {
         vec3 sd = sunDirection();
         float day = daylight();
-        vec3 sunCol = solarLightColor();
+        vec3 ld = worldDirection(shadowLightPosition);
+        vec3 sunCol = lightColor();
 
-        // Pseudo-volumetric self-shadowing: sample slightly towards the sun
-        float fbmSun = noise2D(pos + sd.xz * 0.012);
-        float shade = clamp(1.0 - (fbmSun - threshold) * 2.4, 0.42, 1.0);
+        // Two coarse samples give the sun-facing edge a shape without 3D marching.
+        float slope = noise2D(pos+ld.xz*0.12)-noise2D(pos-ld.xz*0.12);
+        float shade = exp(-density*1.1)*clamp(0.80+slope*1.6,0.45,1.0);
+        float edge = 4.0*density*(1.0-density);
+        float silver = pow(sat(dot(rd,ld)*0.5+0.5),24.0)*edge*0.65;
 
-        // Forward Mie scattering (silver lining highlight facing sun)
-        float sunTheta = dot(rd, sd);
-        float silver = pow(sat(sunTheta * 0.5 + 0.5), 10.0) * 1.6 * day;
-
-        // Realistic ambient: soft blue from sky + warm sunlight bounce
-        vec3 ambientCloud = mix(vec3(0.012, 0.018, 0.035) * NIGHT_BRIGHTNESS, vec3(0.70, 0.78, 0.90), day);
-        vec3 directCloud = (sunCol * 0.40 + silver * sunCol) * shade;
+        vec3 ambientCloud = mix(vec3(0.012,0.018,0.035)*NIGHT_BRIGHTNESS,
+            vec3(0.36,0.42,0.52),day)*(1.0-rainStrength*0.22);
+        vec3 directCloud = sunCol*(0.30*shade+silver);
         vec3 cloudCol = ambientCloud + directCloud;
 
         // Sunset horizon golden glow

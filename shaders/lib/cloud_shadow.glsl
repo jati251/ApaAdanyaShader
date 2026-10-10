@@ -3,7 +3,7 @@
 #include "/lib/cloud_weather.glsl"
 uniform sampler2D colortex8;
 float cloudShadow(vec3 world) {
-    #if defined(CLOUD_SHADOWS) && CLOUDS == 2 && !defined(NETHER) && !defined(END)
+    #if defined(CLOUD_SHADOWS) && CLOUDS > 0 && !defined(NETHER) && !defined(END)
     vec3 ld=worldDirection(shadowLightPosition);
     if(ld.y<=0.04 || world.y>=CLOUD_ALT_BASE) return 1.0;
     vec2 uv=cloudShadowUV(world,ld);

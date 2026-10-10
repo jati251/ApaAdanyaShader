@@ -47,12 +47,17 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float s1 = step(sc.z - bias, texture(shadowtex0, sc.xy - vec2(r, r)).r);
     return mix((s0 + s1) * 0.5, 1.0, fade);
 #elif SHADOW_SAMPLES <= 4
-    float r = 1.35 * texelSize;
-    float s0 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2(-r, -r)).r);
-    float s1 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2( r, -r)).r);
-    float s2 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2(-r,  r)).r);
-    float s3 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2( r,  r)).r);
-    return mix((s0 + s1 + s2 + s3) * 0.25, 1.0, fade);
+    // Bilinear comparisons: four adjacent texels give continuous, crisp edges.
+    // Filtering the depth itself would invent blockers at a silhouette.
+    ivec2 size=textureSize(shadowtex0,0);
+    vec2 grid=sc.xy*vec2(size)-0.5;
+    ivec2 base=clamp(ivec2(floor(grid)),ivec2(0),size-2);
+    vec2 f=fract(grid);
+    float s0=step(sc.z-bias,texelFetch(shadowtex0,base,0).r);
+    float s1=step(sc.z-bias,texelFetch(shadowtex0,base+ivec2(1,0),0).r);
+    float s2=step(sc.z-bias,texelFetch(shadowtex0,base+ivec2(0,1),0).r);
+    float s3=step(sc.z-bias,texelFetch(shadowtex0,base+ivec2(1,1),0).r);
+    return mix(mix(mix(s0,s1,f.x),mix(s2,s3,f.x),f.y),1.0,fade);
 #else
     vec2 radius=vec2(1.65*texelSize);
     #ifdef CONTACT_HARDENING_SHADOWS

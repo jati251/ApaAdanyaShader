@@ -6,16 +6,18 @@ Shaderpack untuk Minecraft Java 26.3, Iris 1.11.7 dan Sodium 0.9.2. Mendukung Di
 
 Empat preset menu dan ekspor memiliki pengaturan yang sama:
 
-| Preset | Shadow map / jarak | Awan / sampel cahaya | GI / refleksi | Air / material |
-|---|---|---|---|---|
-| Lightweight | 512 / 64 blok | 2D | GI dan SSR mati | 3 oktaf, filter 2× |
-| Balanced | 1024 / 96 blok | 12 langkah, 2 lapis / 2 | AO temporal, SSR 16 | 4 oktaf, filter 4× |
-| Detailed | 2048 / 144 blok | 20 langkah, 3 lapis / 4 | GI 2 ray × 24 langkah, SSR 24 | 6 oktaf, filter 4×, LabPBR |
-| Extreme | 4096 / 224 blok | 32 langkah, 3 lapis / 6, resolusi penuh | GI 8 ray × 48 langkah, SSR 64 | 7 oktaf, filter 8×, LabPBR, POM 48 |
+| Preset | Shadow map / jarak | Awan / sampel cahaya | GI / refleksi | Air / material | FSR default |
+|---|---|---|---|---|---|
+| Lightweight (Potato) | 1024 / 48 blok, 4 tap | 2D dengan shading + atlas bayangan 128² | GI, AO dan SSR mati | 3 oktaf, filter 2× | Balanced (59%) |
+| Balanced | 1024 / 96 blok | 12 langkah, 2 lapis / 2 | AO temporal, SSR 16 | 4 oktaf, filter 4× | Quality (67%) |
+| Detailed | 2048 / 144 blok | 20 langkah, 3 lapis / 4 | GI 2 ray × 24 langkah, SSR 24 | 6 oktaf, filter 4×, LabPBR | Ultra Quality (77%) |
+| Extreme | 4096 / 224 blok | 32 langkah, 3 lapis / 6, resolusi penuh | GI 8 ray × 48 langkah, SSR 64 | 7 oktaf, filter 8×, LabPBR, POM 48 | Ultra Quality (77%) |
+
+**Lightweight/Potato** mengutamakan bayangan dekat: 1024 texel pada jarak 48 blok, empat perbandingan depth tetangga dengan bobot bilinear untuk tepi yang tajam dan kontinu. Awan 2D memakai formasi kecil dengan celah lebih lebar, empat oktaf terfilter, dua sampel arah cahaya dan silver lining. Pola, coverage dan anginnya sama dengan atlas cloud shadow 128×128, sehingga terrain menerima bayangan awan tanpa raymarch per pixel. Pencahayaan atmosfer aktif; GI, AO, SSR, bloom dan volumetric light tetap mati. Tidak memakai history TAA; FXAA menjaga tepi layar dengan biaya rendah. FPS belum diukur.
 
 **Extreme** memaksimalkan budget kualitas yang tersedia: SSAO 12 sampel, volumetric light 16 sampel, radius GI 16 blok hingga jarak kamera 96 blok, POM hingga 64 blok, dan awan resolusi penuh dengan history temporal. GI tetap memakai rekonstruksi dan denoiser untuk menjaga stabilitas. Intensitas GI tetap 0.65, warna natural dan kekuatan gelombang 0.65; kualitas maksimal tidak berarti semua intensitas dibuat paling besar. Beban GPU dan memori bertambah; FPS belum diukur.
 
-**FSR 1 tetap tersedia** pada **Performa & FSR**. Semua preset default **Native (100%)**. Ultra Quality, Quality dan Balanced merender sekitar 77%, 67% dan 59% dari lebar/tinggi layar, lalu memakai EASU/RCAS. Ketajaman FSR dapat diubah manual. FSR tidak membuat frame tambahan. Atribusi AMD ada di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+**FSR 1 aktif secara default di semua preset**, dengan RCAS 0.20. Lightweight memakai Balanced, Balanced memakai Quality, Detailed/Extreme memakai Ultra Quality. Mode ini merender sekitar 59%, 67% dan 77% dari lebar/tinggi layar, lalu memakai EASU/RCAS. Mode Native dan ketajaman manual tetap tersedia pada **Performa & FSR**. FSR tidak membuat frame tambahan. Atribusi AMD ada di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Pilih ulang preset di menu setelah perubahan susunan ini, lalu reload dengan **R**. Memilih preset menerapkan seluruh opsi preset dan mereset tuning custom. Iris yang sedang berjalan dapat menyimpan opsi di memori; ubah FSR atau tuning lain lewat menu untuk sesi aktif. File opsi aktif berada di sebelah folder shaderpack: `../ApaAdanyaShader.txt`. File `presets/*.txt` merupakan ekspor lengkap pilihan yang sama.
 
