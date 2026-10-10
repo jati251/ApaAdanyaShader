@@ -1,6 +1,5 @@
 #include "/lib/common.glsl"
 uniform sampler2D colortex0,colortex16;
-uniform vec3 previousCameraPosition;
 in vec2 texcoord;
 /* RENDERTARGETS: 16 */
 /*
@@ -21,13 +20,14 @@ void main() {
     float average=exp2(sum/total);
     float target=clamp(0.18/max(average,0.001),0.35,3.0);
     vec4 old=texelFetch(colortex16,ivec2(0),0);
-    vec3 travel=cameraPosition-previousCameraPosition;
-    bool valid=frameCounter>1 && old.r>=0.35 && old.r<=3.0 && !any(isnan(old)) && !any(isinf(old))
-        && frameTime>0.0 && frameTime<0.2 && dot(travel,travel)<64.0;
+    // A slow frame or camera movement does not invalidate metering history.
+    // Resetting to the target on a hitch caused sudden full-screen flashes.
+    bool valid=frameCounter>1 && old.a>0.5 && old.r>=0.35 && old.r<=3.0
+        && !any(isnan(old)) && !any(isinf(old));
     float previous=valid?old.r:target;
     // Bright adaptation is faster than the return to darkness. Blend in exposure stops.
     float rate=target<previous?3.0:1.2;
-    float blend=1.0-exp(-max(frameTime,0.0)*rate);
+    float blend=1.0-exp(-clamp(frameTime,0.0,0.1)*rate);
     float exposure=exp2(mix(log2(previous),log2(target),blend));
     metering=vec4(exposure,average,0.0,1.0);
 }

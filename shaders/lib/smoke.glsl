@@ -9,6 +9,13 @@ uniform usampler2D aaSmokeSources,aaSmokePresence;
 uniform usampler3D aaSmokeObstacles;
 #endif
 uniform sampler2D aaSmokePaths;
+uvec4 smokePresenceMasks() {
+    return uvec4(texelFetch(aaSmokePresence,ivec2(0,0),0).r,
+        texelFetch(aaSmokePresence,ivec2(1,0),0).r,
+        texelFetch(aaSmokePresence,ivec2(2,0),0).r,
+        texelFetch(aaSmokePresence,ivec2(3,0),0).r);
+}
+bool smokePresent() { return any(notEqual(smokePresenceMasks(),uvec4(0))); }
 
 vec3 smokeFlowShape(float height,int slot,vec4 roof) {
     float node=clamp(height*2.0,0.0,14.9999);
@@ -99,10 +106,7 @@ vec3 smokeIllumination(float height,float density,vec3 ambient,vec3 sun,vec3 fir
 }
 
 vec4 renderSmoke(vec3 ray,float sceneDistance) {
-    uvec4 masks=uvec4(texelFetch(aaSmokePresence,ivec2(0,0),0).r,
-        texelFetch(aaSmokePresence,ivec2(1,0),0).r,
-        texelFetch(aaSmokePresence,ivec2(2,0),0).r,
-        texelFetch(aaSmokePresence,ivec2(3,0),0).r);
+    uvec4 masks=smokePresenceMasks();
     if(all(equal(masks,uvec4(0)))) return vec4(0.0);
     // Select eight nearby ray contributors plus a ninth for a smooth cutoff.
     // Rank by distance to the plume body, not a rectangular box entry plane.
@@ -151,6 +155,11 @@ vec4 renderSmoke(vec3 ray,float sceneDistance) {
         int slot=slots[k];uint type=texelFetch(aaSmokeSources,ivec2(slot,0),0).r;
         vec3 source=smokeSourcePosition(type);vec2 range=ranges[k];
         if(range.x>=sceneDistance) continue;
+        float fade=smokeSourceFade(source);
+        float age=texelFetch(aaSmokePaths,ivec2(21,slot),0).r;
+        fade*=smoothstep(0.0,1.5,age);
+        // New sources are transparent: skip all density/noise integration.
+        if(fade<=.00001) continue;
         float ceiling=texelFetch(aaSmokePaths,ivec2(16,slot),0).w;
         vec4 roof=texelFetch(aaSmokePaths,ivec2(20,slot),0);
         vec2 cap=vec2(range.x);
@@ -168,7 +177,6 @@ vec4 renderSmoke(vec3 ray,float sceneDistance) {
         // Continuously warp the bins toward contact layers. Integer left/cap/
         // right sample allocations caused planar jumps as the camera moved.
         float weightedLength=range.y-range.x+(cap.y-cap.x)*3.0;
-        float fade=smokeSourceFade(source);
         vec3 fire=smokeSoulSource(type)?vec3(0.08,0.55,0.85):vec3(1.0,0.24,0.035);
         vec3 scattering=vec3(0.0);float transmission=1.0;
         for(int j=0;j<SMOKE_STEPS;j++) {

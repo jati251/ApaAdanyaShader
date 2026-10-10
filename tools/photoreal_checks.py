@@ -77,7 +77,11 @@ def check_exposure(api):
     dark=draw(0.001,1.,frameCounter=20)
     assert 0.35<bright<1.<dark<3., 'Exposure adapted instantly or in the wrong direction'
     assert abs(draw(1.,float('nan'),frameCounter=20)-0.35)<0.001
-    assert abs(draw(1.,1.,frameCounter=20,cameraPosition=(100.,0.,0.))-0.35)<0.001
+    assert abs(draw(1.,1.,frameCounter=20,cameraPosition=(100.,0.,0.))-bright)<0.001
+    for hitch in (0.2,0.5,2.0):
+        result=draw(0.001,1.,frameCounter=20,frameTime=hitch)
+        assert 1.0<result<1.15, ('Exposure flashes after a slow frame',hitch,result)
+    assert abs(draw(0.001,1.,frameCounter=20,frameTime=0.0)-1.0)<0.001
     # Adaptation integrates elapsed time, rather than one fixed blend per frame.
     once=draw(0.001,1.,frameCounter=20,frameTime=1/30)
     twice=draw(0.001,dark,frameCounter=20,frameTime=1/60)

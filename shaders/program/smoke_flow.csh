@@ -39,7 +39,7 @@ void main() {
     int slot=int(gl_GlobalInvocationID.x);
     uint emitter=imageLoad(aaSmokeEmitterImage,ivec2(slot,0)).r;
     if(emitter==0u) {
-        for(int i=0;i<21;i++) imageStore(aaSmokePathImage,ivec2(i,slot),vec4(0));
+        for(int i=0;i<22;i++) imageStore(aaSmokePathImage,ivec2(i,slot),vec4(0));
         return;
     }
     vec3 source=smokeSourcePosition(emitter)-smokeGridOrigin();
@@ -51,6 +51,11 @@ void main() {
     vec4 oldSource=imageLoad(aaSmokePathImage,ivec2(19,slot));
     vec4 oldRoof=imageLoad(aaSmokePathImage,ivec2(20,slot));
     float dt=frameTimeCounter-oldOrigin.w;
+    bool sameSource=oldSource.w==12347.0 && dt>=0.0
+        && all(lessThan(abs(oldSource.xyz+oldOrigin.xyz-worldSource),vec3(.01)));
+    // Keep source age across camera-grid shifts and hitches, independently of
+    // the short-lived flow history. Empty/replaced slots start transparent.
+    float age=sameSource?min(1.5,imageLoad(aaSmokePathImage,ivec2(21,slot)).r+clamp(dt,0.0,.1)):0.0;
     // New schema tag prevents interpreting an older capsule cache as a fan.
     bool history=oldSource.w==12347.0 && dt>0.0 && dt<=.25
         && all(lessThan(abs(oldSource.xyz+oldOrigin.xyz-worldSource),vec3(.01)))
@@ -155,6 +160,7 @@ void main() {
     imageStore(aaSmokePathImage,ivec2(18,slot),vec4(smokeGridOrigin(),frameTimeCounter));
     imageStore(aaSmokePathImage,ivec2(19,slot),vec4(source,12347.0));
     imageStore(aaSmokePathImage,ivec2(20,slot),roof);
+    imageStore(aaSmokePathImage,ivec2(21,slot),vec4(age,0,0,0));
 }
 #else
 void main() {}

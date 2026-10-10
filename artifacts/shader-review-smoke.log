@@ -1,0 +1,31 @@
+PASS: 5 complete profiles, legal option values, both translations
+PASS: 5 saved presets exactly match Iris profiles; every profile has both descriptions
+PASS: Iris clear-color directives use four explicit literal components
+PASS: static sky-cache dimensions match Iris buffer allocation
+PASS: optional GPU feature gates disable every compute stage and image allocation on fallback profiles
+PASS: Minecraft smoke mode and shadows-off remove all smoke images, cache dispatch and half-size smoke target
+GPU: NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2
+PASS: MEDIUM, with/without DH
+PASS: 102 program variants compiled and linked
+PASS: actual final composite accepts all four emitter banks; spawn fade is smooth at 30/60 FPS and survives grid shifts
+PASS: real campfire shadow vertex atomics; warm/soul, negative coordinates, jumps, non-emitter exclusion, nearest-source collision order
+PASS: GPU smoke history advects smoothly; jumping camera origins preserve world flow; pauses/hash replacements/removed sources reset history
+PASS: compact smoke on eight roof sides; centred flow; 8-step camera-motion stability; stacked/sealed roofs; long X/Z beams do not inflate or form oversized rings
+PASS: stable warm/soul smoke hue across density; gradual block placement/removal at 30/60 FPS; solid clipping during transition; continuous expansion tangents
+PASS: dense fires increase smoke; 128-slot overflow capture; foreground-depth sweep and ray-angle continuity; above-view overlap fixture
+PASS: reconstruction smoothly crosses the former half-resolution fallback threshold and rejects mismatched geometry
+PASS: native 3D noise integration, occlusion, depth truncation, camera inside, empty scene, smooth camera/time motion
+PASS: half-resolution smoke reconstruction preserves foreground silhouettes and valid smoke
+Traceback (most recent call last):
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\validate.py", line 353, in <module>
+    smoke_checks.run(globals())
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\smoke_checks.py", line 115, in run
+    check_integration(api,values)
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\smoke_checks.py", line 628, in check_integration
+    check_roof(api,f,values,u,p,target,table,obstacles,paths,rebuild,output)
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\smoke_checks.py", line 676, in check_roof
+    check_shared_voxels(api,values,camera,source,data)
+  File "C:\Users\jatis\AppData\Roaming\.minecraft\instances\experiment\shaderpacks\ApaAdanyaShader\tools\smoke_checks.py", line 721, in check_shared_voxels
+    assert max(abs(a-b) for a,b in zip(actual,expected))<.0001, 'Shared voxel obstacle cache differs from standalone smoke grid'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Shared voxel obstacle cache differs from standalone smoke grid

@@ -5,65 +5,65 @@
     {
       "steps": 8,
       "sources": "empty",
-      "median_ms": 0.025088,
-      "min_ms": 0.02304,
-      "max_ms": 0.025344
+      "median_ms": 0.025344,
+      "min_ms": 0.024576,
+      "max_ms": 0.03584
     },
     {
       "steps": 8,
       "sources": "one",
-      "median_ms": 3.356416,
-      "min_ms": 3.206144,
-      "max_ms": 3.585024
+      "median_ms": 0.185856,
+      "min_ms": 0.180992,
+      "max_ms": 6.9376
     },
     {
       "steps": 8,
       "sources": "many",
-      "median_ms": 7.356672,
-      "min_ms": 6.019328,
-      "max_ms": 12.783616
+      "median_ms": 4.699392,
+      "min_ms": 4.165632,
+      "max_ms": 10.808576
     },
     {
       "steps": 12,
       "sources": "empty",
-      "median_ms": 0.02432,
-      "min_ms": 0.022272,
-      "max_ms": 0.025344
+      "median_ms": 0.037632,
+      "min_ms": 0.024576,
+      "max_ms": 0.09088
     },
     {
       "steps": 12,
       "sources": "one",
-      "median_ms": 2.893568,
-      "min_ms": 2.762752,
-      "max_ms": 7.889664
+      "median_ms": 0.227584,
+      "min_ms": 0.21888,
+      "max_ms": 0.291072
     },
     {
       "steps": 12,
       "sources": "many",
-      "median_ms": 7.085568,
-      "min_ms": 4.261376,
-      "max_ms": 9.609728
+      "median_ms": 0.905728,
+      "min_ms": 0.893952,
+      "max_ms": 1.026048
     },
     {
       "steps": 16,
       "sources": "empty",
       "median_ms": 0.024832,
-      "min_ms": 0.022528,
-      "max_ms": 0.025344
+      "min_ms": 0.02432,
+      "max_ms": 0.032256
     },
     {
       "steps": 16,
       "sources": "one",
-      "median_ms": 3.3472,
-      "min_ms": 2.855936,
-      "max_ms": 5.906944
+      "median_ms": 3.19744,
+      "min_ms": 2.962432,
+      "max_ms": 6.210304
     },
     {
       "steps": 16,
       "sources": "many",
-      "median_ms": 7.424768,
-      "min_ms": 7.209984,
-      "max_ms": 13.407232
+      "median_ms": 7.4752,
+      "min_ms": 7.2832,
+      "max_ms": 13.48608
     }
   ]
 }

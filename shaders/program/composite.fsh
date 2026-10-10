@@ -84,7 +84,7 @@ void main(){
                 vec3 f = fract((pWorld + drift) * 1.8) - 0.5;
                 float h = hash13(cell);
                 if(h > 0.94) {
-                    float spark = smoothstep(0.18, 0.02, length(f));
+                    float spark = 1.0-smoothstep(0.02, 0.18, length(f));
                     spark *= smoothstep(1.0, 2.5, dSample) * (1.0 - smoothstep(10.0, 14.0, dSample));
                     motes += spark * (h - 0.94) * 16.0;
                 }
@@ -97,7 +97,7 @@ void main(){
         #endif
     }
     #ifdef AA_SMOKE
-    if(isEyeInWater==0 && !hand && texelFetch(aaSmokePresence,ivec2(0),0).r!=0u) {
+    if(isEyeInWater==0 && !hand && smokePresent()) {
         vec4 smoke=reconstructSmoke(texcoord,rd,dist,vp,depth,isDH);
         c=c*(1.0-smoke.a)+smoke.rgb;
     }

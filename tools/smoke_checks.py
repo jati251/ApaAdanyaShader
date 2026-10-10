@@ -31,12 +31,22 @@ def update_obstacles(f,tex,unit,camera,blocks):
            0x806F,0,0,0,0,32,32,32,0x8D94,0x1405,(c.c_uint*len(data))(*data))
 
 
-def flow_cache(f,values,table,obstacles):
-    paths=f.texture_format(None,10,internal=0x8814,w=21,h=128)
+def flow_cache(f,values,table,obstacles,mature=True):
+    paths=f.texture_format(None,10,internal=0x8814,w=22,h=128)
     program=f.compute('shadowcomp1.csh',values)
     def rebuild(camera,time=5.):
         f.dispatch(program,(2,1,1),dict(cameraPosition=camera,frameTimeCounter=time),
             [('aaSmokeEmitterImage',table,0x8236,False),('aaSmokeObstacleImage',obstacles,0x8236,True),('aaSmokePathImage',paths,0x8814,False)])
+        if mature:
+            # Geometry fixtures exercise an established plume; spawn tests use mature=False.
+            f.call('glActiveTexture',None,[c.c_uint],0x84C0+10)
+            f.call('glBindTexture',None,[c.c_uint,c.c_uint],0x0DE1,paths)
+            emitters=f.read_texture(table,7,128,1,integer=True)
+            ages=[v for emitter in emitters for v in ((1.5 if emitter else 0),0,0,0)]
+            f.call('glActiveTexture',None,[c.c_uint],0x84C0+10)
+            f.call('glBindTexture',None,[c.c_uint,c.c_uint],0x0DE1,paths)
+            f.call('glTexSubImage2D',None,[c.c_uint,c.c_int,c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p],
+                   0x0DE1,0,21,0,1,128,0x1908,0x1406,(c.c_float*len(ages))(*ages))
     return paths,rebuild
 
 
@@ -95,6 +105,7 @@ def run(api):
     assert blocks.count('minecraft:campfire')==1 and blocks.count('minecraft:soul_campfire')==1
     values=dict(api['resolve']('MEDIUM'),__advanced_fixture=True,__native_compile=True,
                 VOXEL_TRACING=False,HARDWARE_PCF=False,VOLUMETRIC_LIGHT=False)
+    check_spawn_and_final_pass(api,values)
     check_capture(api,values)
     check_flow_history(api,values)
     check_roof_fan(api,values)
@@ -103,6 +114,56 @@ def run(api):
     check_reconstruction_edges(api,values)
     check_integration(api,values)
     check_particle_switch(api,values)
+
+
+def check_spawn_and_final_pass(api,values):
+    f=AdvancedFixture(api,8,8);count=f.w*f.h
+    camera=(.5,2.7,6.);source=(.5,.5,.5)
+    registered=source_table(camera,[(source,False)])
+    slot=next(i for i,v in enumerate(registered) if v)
+    table=uint_texture(f,7,registered);presence=uint_texture(f,8,source_masks(registered))
+    obstacles=uint_volume(f,11)
+    paths,rebuild=flow_cache(f,values,table,obstacles,mature=False)
+    def age(): return f.read_texture(paths,10,22,128)[(slot*22+21)*4]
+    curves=[]
+    for fps in (30,60):
+        update_uint(f,table,7,[0]*128);rebuild(camera,0.)
+        update_uint(f,table,7,registered);rebuild(camera,5.)
+        assert age()==0, 'A newly placed source starts fully opaque'
+        samples=[]
+        for frame in range(1,int(1.5*fps)+1):
+            rebuild(camera,5.+frame/fps);a=age()
+            t=min(a/1.5,1);samples.append(t*t*(3-2*t))
+        assert samples[-1]>.999 and max(b-a for a,b in zip([0]+samples,samples))<.04
+        curves.append(samples)
+    assert max(abs(a-b) for a,b in zip(curves[0],curves[1][1::2]))<.0001
+    update_uint(f,table,7,source_table((1.1,2.7,6.),[(source,False)]))
+    rebuild((1.1,2.7,6.),6.6)
+    assert age()>1.49, 'Camera grid shift restarts spawn fade'
+    update_uint(f,table,7,[0]*128);rebuild(camera,6.7)
+    assert age()==0, 'Source removal retains age'
+
+    # Run the unmodified final composite, rather than only the smoke library.
+    f.texture([.2,.2,.2,1]*count,0);f.texture([1,0,0,1]*count,1)
+    f.texture([0,0,0,0]*count,2);cloud_volume(f,9)
+    f.texture([.1,.15,.2,.5]*count,14)
+    f.texture([1,128,0,128]*count,15)
+    target=f.texture(None,16)
+    p=f.program('composite1.fsh',dict(values,FOG_ENABLED=False))
+    proj,inv,_=projection()
+    u=dict(colortex0=0,depthtex0=1,colortex2=2,colortex21=14,colortex12=15,
+           aaSmokeSources=7,aaSmokePresence=8,aaSmokePaths=10,aaSmokeObstacles=11,aaCloudNoise=9,
+           cameraPosition=camera,gbufferProjectionInverse=inv,gbufferModelViewInverse=IDENTITY,
+           viewWidth=8.,viewHeight=8.,far=128.,isEyeInWater=0)
+    update_uint(f,presence,8,[0]*4)
+    empty=f.render(p,[target],u)
+    for bank in range(4):
+        masks=[0]*4;masks[bank]=1
+        update_uint(f,presence,8,masks)
+        result=f.render(p,[target],u)
+        assert max(abs(a-b) for a,b in zip(empty,result))>.03, ('Final composite ignores emitter bank',bank)
+    print('PASS: actual final composite accepts all four emitter banks; spawn fade is smooth at 30/60 FPS and survives grid shifts',flush=True)
+    f.close()
 
 
 def check_capture(api,values):
@@ -187,20 +248,20 @@ def check_flow_history(api,values):
     f=AdvancedFixture(api,8,8);camera=(.99,2.7,6.);source=(.5,.5,.5)
     table=uint_texture(f,7,source_table(camera,[(source,False)]))
     obstacles=uint_volume(f,11);paths,rebuild=flow_cache(f,values,table,obstacles)
-    rebuild(camera,5.);baseline=f.read_texture(paths,10,21,128)
+    rebuild(camera,5.);baseline=f.read_texture(paths,10,22,128)
     slot=next(i for i,v in enumerate(source_table(camera,[(source,False)])) if v)
     def restore(data):
         f.call('glActiveTexture',None,[c.c_uint],0x84C0+10)
         f.call('glBindTexture',None,[c.c_uint,c.c_uint],0x0DE1,paths)
         f.call('glTexSubImage2D',None,[c.c_uint,c.c_int,c.c_int,c.c_int,c.c_int,c.c_int,c.c_uint,c.c_uint,c.c_void_p],
-               0x0DE1,0,0,0,21,128,0x1908,0x1406,(c.c_float*len(data))(*data))
-    rebuild(camera,5.+1/60);advanced=f.read_texture(paths,10,21,128)
-    start=slot*21*4
+               0x0DE1,0,0,0,22,128,0x1908,0x1406,(c.c_float*len(data))(*data))
+    rebuild(camera,5.+1/60);advanced=f.read_texture(paths,10,22,128)
+    start=slot*22*4
     delta=max(abs(a-b) for a,b in zip(baseline[start:start+64],advanced[start:start+64]))
     assert 1e-5<delta<.04, ('History does not move smoothly',delta)
     restore(baseline);moved=(1.01,3.01,6.)
     update_uint(f,table,7,source_table(moved,[(source,False)]));rebuild(moved,5.+1/60)
-    shifted=f.read_texture(paths,10,21,128)
+    shifted=f.read_texture(paths,10,22,128)
     for i in range(16):
         for component in range(4):
             index=start+i*4+component
@@ -211,32 +272,32 @@ def check_flow_history(api,values):
     for fps in (30,60):
         restore(baseline)
         for frame in range(1,fps+1):rebuild(camera,5.+frame/fps)
-        trajectories.append(f.read_texture(paths,10,21,128)[start:start+64])
+        trajectories.append(f.read_texture(paths,10,22,128)[start:start+64])
     assert max(abs(a-b) for a,b in zip(*trajectories))<.08, 'Flow speed depends strongly on frame rate'
     # Add a roof after smoke is already moving, then run the persistent path.
     restore(baseline);update_obstacles(f,obstacles,11,camera,[(.5,1.5,.5)])
     previous_spread=0.
     for frame in range(1,61):
         rebuild(camera,5.+frame/60)
-        data=f.read_texture(paths,10,21,128)
+        data=f.read_texture(paths,10,22,128)
         spread=data[start+71]
         assert previous_spread<=spread+.00001 and spread-previous_spread<.1, 'Roof widening snaps instead of relaxing'
         previous_spread=spread
     update_obstacles(f,obstacles,11,camera,[])
     # Compare long-pause reset against a genuinely empty cache, at the same clock.
     update_uint(f,table,7,source_table(camera,[(source,False)]))
-    restore(baseline);rebuild(camera,8.);paused=f.read_texture(paths,10,21,128)
-    restore([0.]*len(baseline));rebuild(camera,8.);fresh=f.read_texture(paths,10,21,128)
+    restore(baseline);rebuild(camera,8.);paused=f.read_texture(paths,10,22,128)
+    restore([0.]*len(baseline));rebuild(camera,8.);fresh=f.read_texture(paths,10,22,128)
     assert max(abs(a-b) for a,b in zip(paused,fresh))<1e-5, 'Stale history survives long pause'
     # A different world cell in the same hash must not inherit the old plume.
     other=next((x+.5,.5,z+.5) for x in range(-6,7) for z in range(-2,8)
                if (x+.5,.5,z+.5)!=source and source_table(camera,[((x+.5,.5,z+.5),False)])[slot])
     update_uint(f,table,7,source_table(camera,[(other,False)]))
-    restore(baseline);rebuild(camera,5.+1/60);changed=f.read_texture(paths,10,21,128)
-    restore([0.]*len(baseline));rebuild(camera,5.+1/60);fresh=f.read_texture(paths,10,21,128)
+    restore(baseline);rebuild(camera,5.+1/60);changed=f.read_texture(paths,10,22,128)
+    restore([0.]*len(baseline));rebuild(camera,5.+1/60);fresh=f.read_texture(paths,10,22,128)
     assert max(abs(a-b) for a,b in zip(changed,fresh))<1e-5, 'Hash replacement inherits unrelated smoke'
     update_uint(f,table,7,[0]*128);rebuild(camera,5.+2/60)
-    assert max(abs(v) for v in f.read_texture(paths,10,21,128))==0, 'Removed source retains stale flow'
+    assert max(abs(v) for v in f.read_texture(paths,10,22,128))==0, 'Removed source retains stale flow'
     print('PASS: GPU smoke history advects smoothly; jumping camera origins preserve world flow; pauses/hash replacements/removed sources reset history',flush=True)
     f.close()
 
@@ -255,10 +316,10 @@ color=vec4(smokeDensity(testPoint,vec3(.5),slot,ceiling,vec2(frameTimeCounter)))
     u=dict(aaSmokeSources=7,aaSmokePresence=8,aaSmokePaths=10,aaSmokeObstacles=11,aaCloudNoise=9,shadowtex0=4,
            cameraPosition=camera,gbufferModelViewInverse=IDENTITY,shadowModelView=IDENTITY,shadowProjection=IDENTITY,
            sunPosition=(.2,1.,.1),shadowLightPosition=(.2,1.,.1),frameTimeCounter=5.)
-    slot=next(i for i,v in enumerate(source_table(camera,[(source,False)])) if v);start=slot*21*4
+    slot=next(i for i,v in enumerate(source_table(camera,[(source,False)])) if v);start=slot*22*4
     for height in (1,2,3):
         block=(.5,height+.5,.5);update_obstacles(f,obstacles,11,camera,[block]);rebuild(camera)
-        data=f.read_texture(paths,10,21,128);roof=data[start+80:start+84]
+        data=f.read_texture(paths,10,22,128);roof=data[start+80:start+84]
         assert roof[3]==8, ('Single block did not open all eight sides',height,roof)
         assert max(f.render(density,[target],dict(u,testPoint=block)))==0, 'Roof volume leaks into solid block'
         for d in range(8):
@@ -269,7 +330,7 @@ color=vec4(smokeDensity(testPoint,vec3(.5),slot,ceiling,vec2(frameTimeCounter)))
             assert best>.015, ('Missing side of spreading smoke',height,d,best)
         # All in-roof sections remain centred on the source over multiple frames.
         for frame in range(1,61):
-            rebuild(camera,5.+frame/60);moving=f.read_texture(paths,10,21,128)
+            rebuild(camera,5.+frame/60);moving=f.read_texture(paths,10,22,128)
             assert moving[start+80:start+84]==roof, 'Roof route switches as billows move'
             for i in range(16):
                 h=i*.5
@@ -303,7 +364,7 @@ void main(){color=renderSmoke(testRay,20);}
     for blocks,sealed in [([(.5,2.5,.5),(.5,3.5,.5)],False),
                            ([(x+.5,2.5,z+.5) for x in range(-7,8) for z in range(-7,8)],True)]:
         update_obstacles(f,obstacles,11,camera,blocks);rebuild(camera)
-        data=f.read_texture(paths,10,21,128);roof=data[start+80:start+84]
+        data=f.read_texture(paths,10,22,128);roof=data[start+80:start+84]
         assert (roof[3]==0)==sealed, ('Incorrect sealed/stacked roof state',roof)
         assert max(f.render(density,[target],dict(u,testPoint=(.5,1.5,.5))))>.01, 'Smoke below ceiling disappears'
     # Extending a horizontal beam keeps its nearby edge and local spread,
@@ -316,7 +377,7 @@ void main(){color=renderSmoke(testRay,20);}
             for n in range(-half_length,half_length+1):
                 block=[.5,2.5,.5];block[axis]+=n;blocks.append(tuple(block))
             update_obstacles(f,obstacles,11,camera,blocks);rebuild(camera)
-            data=f.read_texture(paths,10,21,128);roof=data[start+80:start+84]
+            data=f.read_texture(paths,10,22,128);roof=data[start+80:start+84]
             spreads.append(roof[2])
             assert data[start+67]>7, 'Narrow beam prevents smoke escaping its nearby sides'
             for d in range(8):
@@ -327,7 +388,7 @@ void main(){color=renderSmoke(testRay,20);}
         assert max(spreads[1:])-min(spreads[1:])<1e-5, ('Beam length inflates smoke',axis,spreads)
     blocks=[(x+.5,2.5,z+.5) for x in range(-2,3) for z in range(-2,3)]
     update_obstacles(f,obstacles,11,camera,blocks);rebuild(camera)
-    data=f.read_texture(paths,10,21,128)
+    data=f.read_texture(paths,10,22,128)
     assert data[start+67]<1.5, 'Smoke resumes above a broad roof without a reachable exit'
     assert max(f.render(density,[target],dict(u,testPoint=(.5,3.5,.5))))==0
     print('PASS: compact smoke on eight roof sides; centred flow; 8-step camera-motion stability; stacked/sealed roofs; long X/Z beams do not inflate or form oversized rings',flush=True)
@@ -364,7 +425,7 @@ else color=vec4(smokeDensity(vec3(.5,2.5,.5),vec3(.5),slot,7.5,vec2(5)));}
         update_obstacles(f,obstacles,11,camera,[(.5,2.5,.5)])
         spreads=[]
         for frame in range(1,2*fps+1):
-            rebuild(camera,5.+frame/fps);data=f.read_texture(paths,10,21,128)
+            rebuild(camera,5.+frame/fps);data=f.read_texture(paths,10,22,128)
             spreads.append(data[start+71])
             assert max(f.render(p,[target],dict(u,testMode=2)))==0, 'Temporal relaxation leaks into solid roof'
         assert 0<spreads[0]<.15 and spreads[-1]>.7, 'Roof response is immediate or fails to expand'
@@ -373,7 +434,7 @@ else color=vec4(smokeDensity(vec3(.5,2.5,.5),vec3(.5),slot,7.5,vec2(5)));}
         update_obstacles(f,obstacles,11,camera,[])
         decaying=[]
         for frame in range(1,2*fps+1):
-            rebuild(camera,7.+frame/fps);data=f.read_texture(paths,10,21,128)
+            rebuild(camera,7.+frame/fps);data=f.read_texture(paths,10,22,128)
             decaying.append(data[start+71])
         assert decaying[0]>spreads[-1]*.85 and decaying[-1]<.001, 'Removing roof snaps the shape or leaves stale spread'
         assert all(0<=a-b<.15 for a,b in zip(decaying,decaying[1:])), 'Roof removal has temporal jumps'
@@ -462,7 +523,7 @@ vec4 smoke=renderSmoke(ray,min(distance,25.0));color=vec4(smoke.rgb+bg*(1-smoke.
 def check_reconstruction_edges(api,values):
     f=AdvancedFixture(api,8,8);count=f.w*f.h
     uint_texture(f,7,[0]*128);uint_texture(f,8,[0]*4);uint_volume(f,11)
-    f.texture_format(None,10,w=21,h=128);cloud_volume(f,9)
+    f.texture_format(None,10,w=22,h=128);cloud_volume(f,9)
     f.texture([.4,.3,.2,.8]*count,14)
     metadata=f.texture([1,20,1,3.015]*count,15);target=f.texture(None,0)
     prefix=api['source'](api['ROOT']/'composite1.fsh',values,False).split('in vec2 texcoord;')[0]
@@ -593,12 +654,12 @@ def check_roof(api,f,values,u,probe,target,table,obstacles,paths,rebuild,output)
     update_obstacles(f,obstacles,11,camera,[(.5,1.5,.5)])
     rebuild(camera)
     slot=next(i for i,v in enumerate(source_table(camera,[(source,False)])) if v)
-    data=f.read_texture(paths,10,21,128)
-    row=data[(slot*21+1)*4:(slot*21+1)*4+4]
+    data=f.read_texture(paths,10,22,128)
+    row=data[(slot*22+1)*4:(slot*22+1)*4+4]
     origin=[math.floor(x)-16 for x in camera]
     side=(row[0]+origin[0],row[1]+origin[2])
     assert abs(row[2]-row[0])*.5>.25, ('Roof did not create gradual lateral spread',row)
-    assert data[(slot*21+16)*4+3]>7, 'Single overhead block extinguished plume'
+    assert data[(slot*22+16)*4+3]>7, 'Single overhead block extinguished plume'
     prefix=api['source'](api['ROOT']/'composite1.fsh',values,False).split('in vec2 texcoord;')[0]
     fragment=prefix+'''in vec2 texcoord;layout(location=0) out vec4 color;uniform vec3 testPoint;
 void main(){float d=smokeDensity(testPoint,vec3(.5,.5,.5),int(smokeSourceSlot(ivec3(0))),7.5,vec2(5,5));color=vec4(d);}
@@ -608,7 +669,7 @@ void main(){float d=smokeDensity(testPoint,vec3(.5,.5,.5),int(smokeSourceSlot(iv
     # Find the thickest point above the side of the roof, on the cached path.
     best=0.
     for i in range(2,9):
-        node=data[(slot*21+i)*4:(slot*21+i)*4+4]
+        node=data[(slot*22+i)*4:(slot*22+i)*4+4]
         point=(node[0]+origin[0],.5+i*.5,node[1]+origin[2])
         best=max(best,max(f.render(p,[target],dict(u,testPoint=point))))
     assert best>.02, 'No smoke resumes rising beside the obstruction'
@@ -636,9 +697,9 @@ vec4 smoke=renderSmoke(ray,hit?max(entry,0):20);color=vec4(smoke.rgb+background*
     original=data
     moved=(1.001,2.7,6.)
     update_uint(f,table,7,source_table(moved,[(source,False)]));update_obstacles(f,obstacles,11,moved,[(.5,1.5,.5)]);rebuild(moved)
-    shifted=f.read_texture(paths,10,21,128);new_origin=[math.floor(x)-16 for x in moved]
+    shifted=f.read_texture(paths,10,22,128);new_origin=[math.floor(x)-16 for x in moved]
     for i in range(16):
-        index=(slot*21+i)*4
+        index=(slot*22+i)*4
         for component,axis in [(0,0),(1,2),(2,0),(3,2)]:
             assert abs(original[index+component]+origin[axis]-shifted[index+component]-new_origin[axis])<.0001, 'Obstacle detour moves with camera grid'
     print('PASS: overhead block creates local spread and upward continuation; solid-cell rejection and camera-grid-stable world flow',flush=True)
@@ -652,14 +713,14 @@ def check_shared_voxels(api,values,camera,source,expected):
     for point in [source,(.5,1.5,.5)]:
         x,y,z=[math.floor(v)-origin[i] for i,v in enumerate(point)]
         cells[(z*64+y)*64+x]=0x800000ff
-    voxel=f.volume(cells,11,integer=True);path=f.texture_format(None,10,internal=0x8814,w=21,h=128)
+    voxel=f.volume(cells,11,integer=True);path=f.texture_format(None,10,internal=0x8814,w=22,h=128)
     program=f.compute('shadowcomp1.csh',values)
     f.dispatch(program,(2,1,1),dict(cameraPosition=camera,frameTimeCounter=5.),
         [('aaSmokeEmitterImage',table,0x8236,False),('aaVoxelImage',voxel,0x8236,True),('aaSmokePathImage',path,0x8814,False)])
-    actual=f.read_texture(path,10,21,128)
-    assert max(abs(a-b) for a,b in zip(actual,expected))<.0001, 'Shared voxel obstacle cache differs from standalone smoke grid'
+    actual=f.read_texture(path,10,22,128)
+    assert max(abs(a-b) for i,(a,b) in enumerate(zip(actual,expected)) if i%88<84)<.0001, 'Shared voxel obstacle cache differs from standalone smoke grid'
     slot=next(i for i,v in enumerate(source_table(camera,[(source,False)])) if v)
-    start=slot*21*4;grid=[math.floor(x)-16 for x in camera]
+    start=slot*22*4;grid=[math.floor(x)-16 for x in camera]
     # A second registered flame occupies the first escape-side voxel. It must
     # remain an emitter rather than turn into a solid cube blocking its neighbour.
     second=(-.5,1.5,.5)
@@ -669,7 +730,7 @@ def check_shared_voxels(api,values,camera,source,expected):
     voxel=f.volume(cells,11,integer=True)
     f.dispatch(program,(2,1,1),dict(cameraPosition=camera,frameTimeCounter=5.),
         [('aaSmokeEmitterImage',table,0x8236,False),('aaVoxelImage',voxel,0x8236,True),('aaSmokePathImage',path,0x8814,False)])
-    adjacent=f.read_texture(path,10,21,128)
+    adjacent=f.read_texture(path,10,22,128)
     assert max(abs(a-b) for a,b in zip(adjacent[start:start+84],actual[start:start+84]))<.0001, 'Adjacent registered fire blocks plume escape'
     print('PASS: tracing presets reuse voxel occupancy with identical local roof spread and self-emitter exclusion',flush=True)
     f.close()
