@@ -20,7 +20,7 @@ vec4 reconstructClouds(vec2 uv,vec3 rd) {
         sum+=tap*weight;
         total+=weight;
     }
-    if(total<0.25) return cloudLayer(rd,gl_FragCoord.xy);
-    return sum/total;
+    if(total>0.001) return sum/total;
+    return vec4(0.0);
 }
 #endif

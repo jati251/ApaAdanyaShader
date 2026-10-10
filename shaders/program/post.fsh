@@ -31,35 +31,8 @@ void main(){
         c=(luma(b)<low||luma(b)>high)?a:b;
     }
     #endif
-    #ifdef TAA
-    #ifdef TAA_SHARPENING
-    #if UPSCALE_QUALITY == 0
-    vec3 n=textureScreen(colortex0,clamp(texcoord+vec2(0.0,px.y),px*0.5,1.0-px*0.5)).rgb;
-    vec3 s=textureScreen(colortex0,clamp(texcoord-vec2(0.0,px.y),px*0.5,1.0-px*0.5)).rgb;
-    vec3 e=textureScreen(colortex0,clamp(texcoord+vec2(px.x,0.0),px*0.5,1.0-px*0.5)).rgb;
-    vec3 w=textureScreen(colortex0,clamp(texcoord-vec2(px.x,0.0),px*0.5,1.0-px*0.5)).rgb;
-    vec3 lo=min(c,min(min(n,s),min(e,w))),hi=max(c,max(max(n,s),max(e,w)));
-    float contrast=max(hi.r-lo.r,max(hi.g-lo.g,hi.b-lo.b));
-    float strength=TAA_SHARPEN_STRENGTH*0.35*(1.0-smoothstep(0.15,0.7,contrast));
-    c=clamp(c+(c-(n+s+e+w)*0.25)*strength,lo,hi);
-    #endif
-    #endif
-    #endif
-    #ifdef CHROMATIC_ABERRATION
-    vec2 caDist = (texcoord - 0.5);
-    vec2 caOffset = caDist * (dot(caDist, caDist) * 0.008 * CA_STRENGTH);
-    c.r = textureScreen(colortex0, clamp(texcoord + caOffset, vec2(0.001), vec2(0.999))).r;
-    c.b = textureScreen(colortex0, clamp(texcoord - caOffset, vec2(0.001), vec2(0.999))).b;
-    #endif
     #ifdef MOTION_BLUR
     c=applyMotionBlur(texcoord,c);
-    #endif
-    #ifdef FILM_GRAIN
-    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    // Physical silver halide emulsion response: peak grain in midtones/shadows, fading in bright highlights
-    float grainMask = (1.0 - smoothstep(0.60, 0.98, luma)) * smoothstep(0.01, 0.12, luma + 0.04);
-    float grain = ignDither(gl_FragCoord.xy + vec2(float(frameCounter % 32) * 19.19, float(frameCounter % 32) * 7.73));
-    c += (grain - 0.5) * (FILM_GRAIN_STRENGTH * 0.10) * grainMask;
     #endif
     #ifdef COLOR_DITHERING
     ivec2 fc = ivec2(gl_FragCoord.xy) & 3;

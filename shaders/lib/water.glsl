@@ -2,75 +2,79 @@
 #define AA_WATER
 
 // World-anchored swells with analytic, pixel-filtered normals.
-vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
-    // Crossing swells around the prevailing wind direction.
+vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest, out float unresolvedVariance) {
+    // Long wind swells, crossing wavelets and oblique capillary ripples.
     const vec2 dirs[7] = vec2[7](
-        vec2(0.8660, 0.5000),  // 30 deg: primary rolling ground swell (wind axis)
-        vec2(0.9848, -0.1736),
-        vec2(0.5736, 0.8192),
-        vec2(0.9659, 0.2588),
-        vec2(0.1736, 0.9848),
-        vec2(0.8910, 0.4540),  // 27 deg: capillary ripples (-3 deg)
-        vec2(0.7986, 0.6018)   // 37 deg: liquid micro-sheen (+7 deg)
+        vec2(0.8660, 0.5000),
+        vec2(0.4226, -0.9063),
+        vec2(-0.6428, 0.7660),
+        vec2(0.9781, 0.2079),
+        vec2(-0.3090, -0.9511),
+        vec2(0.7071, -0.7071),
+        vec2(-0.8660, 0.5000)
     );
-    const float freq[7]   = float[7](0.18, 0.34, 0.72, 1.55, 3.80, 8.40, 18.0);
-    const float amp[7]    = float[7](0.48, 0.25, 0.105, 0.042, 0.017, 0.006, 0.0022);
-    const float speeds[7] = float[7](0.52, 0.73, 1.08, 1.56, 2.36, 3.51, 5.15);
+    const float freq[7]   = float[7](0.24, 0.46, 0.94, 2.10, 4.80, 10.8, 23.5);
+    const float amp[7]    = float[7](0.30, 0.19, 0.092, 0.038, 0.014, 0.0048, 0.0018);
+    const float speeds[7] = float[7](0.61, 0.84, 1.21, 1.82, 2.75, 4.10, 6.15);
 
     vec2 slope = vec2(0.0);
     crest = 0.0;
+    unresolvedVariance = 0.0;
+    float crestWeight = 0.0;
     float storm = 1.0 + rainStrength * 0.65;
     #ifndef WIND_SPEED
     #define WIND_SPEED 1.0
     #endif
     float time = frameTimeCounter * (0.85 * WIND_SPEED);
 
-    // Organic swell envelope modulates height over space, preventing rigid repetition
-    float envelopePhase=dot(p,vec2(0.038,0.024))-time*0.18;
-    float swellEnv=0.85+0.15*sin(envelopePhase);
-    vec2 envelopeGradient=0.15*cos(envelopePhase)*vec2(0.038,0.024);
-
     for(int i = 0; i < WATER_OCTAVES; i++) {
         vec2 d = dirs[i];
         vec2 perp = vec2(-d.y, d.x);
         float k = freq[i];
 
-        vec2 pos = p;
         float phaseSpeed = speeds[i] * time;
+        vec2 envelopeAxis=d*(k*0.13)+perp*(k*0.09);
+        float envelopePhase=dot(p,envelopeAxis)-phaseSpeed*0.17+float(i)*3.71;
+        vec2 envelopePixel=vec2(dot(envelopeAxis,dx),dot(envelopeAxis,dy));
+        float envelopeBand=exp(-dot(envelopePixel,envelopePixel)/24.0);
+        float envelope=0.78+0.22*sin(envelopePhase)*envelopeBand;
+        vec2 envelopeGradient=envelopeAxis*(0.22*cos(envelopePhase)*envelopeBand);
 
         // Transverse modulation curves each crest in world space.
-        float phaseLong  = dot(pos, d) * k - phaseSpeed + float(i) * 2.39996;
-        float phaseTrans = dot(pos, perp) * (k * 0.65) - phaseSpeed * 0.70 + float(i) * 1.61803;
+        float phaseLong  = dot(p, d) * k - phaseSpeed + float(i) * 2.39996;
+        float phaseTrans = dot(p, perp) * (k * 0.53) - phaseSpeed * 0.61 + float(i) * 1.61803;
 
         float curve = sin(phaseTrans);
-        float psi = phaseLong + 0.75 * curve;
+        float psi = phaseLong + 0.95 * curve;
 
         // Cubic crests and broad troughs; geometry remains Minecraft fluid mesh.
         float s = sin(psi);
-        float profile = (1.0 + s) * 0.5;
-        float peak = profile * profile * profile;
-
         // Analytical 2D gradient of crescent wave
-        vec2 gradPhase = d * k + perp * (k * (0.65 * 0.75) * cos(phaseTrans));
-        float a = amp[i] * ((i < 2) ? swellEnv : 1.0);
+        vec2 gradPhase = d * k + perp * (k * (0.53 * 0.95) * cos(phaseTrans));
+        float a = amp[i] * envelope;
         // The cubic crest contains three harmonics. Filtering only the base
         // frequency leaves its sharper harmonics aliasing during camera motion.
         vec2 pixelPhase=vec2(dot(gradPhase,dx),dot(gradPhase,dy));
         float variance=dot(pixelPhase,pixelPhase)/12.0;
         float e=exp(-0.5*variance);
-        // Audit quality tradeoff: stop unresolved upper bands, including crests.
-        if(i>=2 && e<0.002) break;
         float e2=e*e,e4=e2*e2;
         vec3 band=vec3(e,e4,e4*e4*e);
         float c=cos(psi);
+        float peak=0.3125+0.46875*s*band.x
+            -0.1875*(1.0-2.0*s*s)*band.y
+            -0.03125*s*(3.0-4.0*s*s)*band.z;
         float derivative=0.46875*c*band.x
             +0.375*(2.0*s*c)*band.y-0.09375*(c*(4.0*c*c-3.0))*band.z;
         vec2 octaveSlope=gradPhase*(a*derivative);
-        if(i < 2) octaveSlope+=envelopeGradient*(amp[i]*peak*band.x);
+        octaveSlope+=envelopeGradient*(amp[i]*peak);
 
         slope += octaveSlope;
-        // Crests follow the retained physical bands; upper bands may be culled.
-        crest += peak * a;
+        crest += max(peak,0.0) * a;
+        crestWeight += a;
+        // Transfer the filtered harmonics into highlight width, not screen noise.
+        vec3 harmonicEnergy=vec3(0.21972656,0.140625,0.00878906);
+        unresolvedVariance+=0.5*a*a*dot(gradPhase,gradPhase)
+            *dot(harmonicEnergy,vec3(1.0)-band*band);
     }
 
     #if !defined(NETHER) && !defined(END)
@@ -102,7 +106,35 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest) {
     }
     #endif
 
-    return slope * (WATER_WAVES * storm);
+    float strength=WATER_WAVES*storm;
+    crest=clamp(crest/max(crestWeight,0.0001),0.0,1.0)*smoothstep(0.0,0.25,WATER_WAVES);
+    unresolvedVariance*=strength*strength;
+    return slope * strength;
+}
+
+vec2 waterSlope(vec2 p,vec2 dx,vec2 dy,out float crest) {
+    float variance;
+    return waterSlope(p,dx,dy,crest,variance);
+}
+
+float waterRoughness(float unresolvedVariance) {
+    return sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS+min(0.08,unresolvedVariance*1.6));
+}
+
+float waterShoreFoam(vec2 p,float depth,float crest,float footprint) {
+    float shoreline=1.0-smoothstep(0.06,0.42,depth);
+    float contact=smoothstep(0.005,0.045,depth);
+    float time=frameTimeCounter*WIND_SPEED;
+    vec2 drift=p+vec2(time*0.07,-time*0.05);
+    // Sparse patches instead of curved contour lines or a constant white base.
+    float patch=noise2D(drift*1.7+vec2(13.2,7.8));
+    float patchMask=smoothstep(0.57,0.79,patch);
+    float bubbles=noise2D(drift*11.0+vec2(3.7,23.1));
+    bubbles=mix(bubbles,0.5,smoothstep(0.035,0.16,footprint));
+    float wash=0.5+0.5*sin(dot(p,vec2(0.31,0.19))-time*0.72);
+    float breakup=smoothstep(0.28,0.72,crest*0.60+wash*0.40+shoreline*0.12);
+    return shoreline*contact*breakup*patchMask*(0.35+0.65*bubbles)
+        *mix(0.16,0.42,rainStrength)*smoothstep(0.0,0.25,WATER_WAVES);
 }
 
 vec3 waterSurfaceNormal(vec3 meshNormal,vec2 slope) {
@@ -127,32 +159,18 @@ float waterFresnel(float nv, bool underwater) {
 }
 
 vec3 waterAbsorption() {
-    // Photorealistic freshwater absorption (natural clarity with organic sediment/tannin depth)
-    return vec3(0.13, 0.09, 0.22) / WATER_CLARITY;
+    // Natural freshwater: retain bed color in shallows, blue-green transmission at depth.
+    return vec3(0.14, 0.085, 0.11) / WATER_CLARITY;
 }
 
 vec3 waterBodyColor(float thickness, float skyLight) {
-    // Photorealistic natural freshwater: translucent mossy shallows into deep peat-riverbed depth
-    vec3 shallow = vec3(0.038, 0.065, 0.048);
-    vec3 deep    = vec3(0.012, 0.025, 0.020);
+    // In-scattered freshwater color; transmitted bed radiance is handled separately.
+    vec3 shallow = vec3(0.035, 0.065, 0.055);
+    vec3 deep    = vec3(0.012, 0.030, 0.028);
     return mix(shallow, deep, smoothstep(1.5, 18.0, thickness))
         * mix(0.15, 1.0, daylight()) * (0.2 + skyLight * 0.8);
 }
 
-// Focused organic cellular caustics
-float waterCaustic(vec2 p, float time) {
-    vec2 p1 = p * 1.25 + vec2(time * 0.38, time * 0.26);
-    vec2 p2 = p * 1.55 - vec2(time * 0.28, -time * 0.35);
-
-    // Cross-advection curves light rays into non-linear cellular loops
-    vec2 d1 = vec2(sin(p2.y * 2.2 + time * 0.8), cos(p2.x * 2.2 - time * 0.7)) * 0.38;
-    vec2 d2 = vec2(cos(p1.y * 2.6 - time * 0.9), sin(p1.x * 2.6 + time * 0.6)) * 0.38;
-
-    float c1 = length(sin(p1 + d1));
-    float c2 = length(cos(p2 + d2));
-
-    float web = pow(clamp(1.0 - (c1 + c2) * 0.44, 0.0, 1.0), 3.5) * 4.2;
-    return web;
-}
+#include "/lib/water_caustics.glsl"
 
 #endif

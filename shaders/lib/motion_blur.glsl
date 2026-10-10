@@ -32,23 +32,34 @@ vec3 getViewPos(vec2 uv, float depth, out bool isSky) {
     return p.xyz / p.w;
 }
 
-vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
-    // -------------------------------------------------------------
-    // Latency Gate 1: Global Movement Guard (Uniform-only cost)
-    // When the camera is stationary, exit immediately with 0 texture
-    // lookups and 0 ALU work across the entire screen.
-    // -------------------------------------------------------------
-    vec3 camDelta = cameraPosition - previousCameraPosition;
-    float camMoveSq = dot(camDelta, camDelta);
-    float rotDelta = abs(gbufferModelView[0][0] - gbufferPreviousModelView[0][0]) +
-                     abs(gbufferModelView[1][1] - gbufferPreviousModelView[1][1]) +
-                     abs(gbufferModelView[2][2] - gbufferPreviousModelView[2][2]) +
-                     abs(gbufferModelView[0][1] - gbufferPreviousModelView[0][1]) +
-                     abs(gbufferModelView[1][0] - gbufferPreviousModelView[1][0]);
-
-    if (camMoveSq < 0.000001 && rotDelta < 0.000005) {
-        return currentRGB;
+// Tap rejection only needs view-space Z, not a full position/sky direction.
+float blurTapViewZ(vec2 uv,float depth,out bool isSky) {
+    isSky=depth>=0.999999;
+    vec4 clip=vec4(uv*2.0-1.0,depth*2.0-1.0,1.0);
+    mat4 inverseProjection=gbufferProjectionInverse;
+    #ifdef DISTANT_HORIZONS
+    if(isSky) {
+        float dh=depthScreen(dhDepthTex0,uv);
+        if(dh<0.999999) {
+            isSky=false;clip.z=dh*2.0-1.0;inverseProjection=dhProjectionInverse;
+        }
     }
+    #endif
+    if(isSky) return 0.0;
+    vec4 rowZ=vec4(inverseProjection[0][2],inverseProjection[1][2],inverseProjection[2][2],inverseProjection[3][2]);
+    vec4 rowW=vec4(inverseProjection[0][3],inverseProjection[1][3],inverseProjection[2][3],inverseProjection[3][3]);
+    return dot(rowZ,clip)/dot(rowW,clip);
+}
+
+vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
+    // Uniform camera guard: exit before sampling any screen texture.
+    vec3 camDelta=cameraPosition-previousCameraPosition;
+    float camMoveSq=dot(camDelta,camDelta);
+    vec3 r0=gbufferModelView[0].xyz-gbufferPreviousModelView[0].xyz;
+    vec3 r1=gbufferModelView[1].xyz-gbufferPreviousModelView[1].xyz;
+    vec3 r2=gbufferModelView[2].xyz-gbufferPreviousModelView[2].xyz;
+    float rotationSq=dot(r0,r0)+dot(r1,r1)+dot(r2,r2);
+    if(camMoveSq<0.000001 && rotationSq<0.0000000001) return currentRGB;
 
     // Safety checks: startup frames, lag spikes, teleports, and FOV snaps
     if (frameCounter < 2 || frameTime <= 0.0 || frameTime > 0.2 || camMoveSq > 256.0) {
@@ -67,15 +78,13 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     // Water's animated reflection/refraction does not share the mesh velocity.
     // Camera-only blur drags the pattern during a jump, then snaps it back.
     if(materialMask>0.20 && materialMask<0.30) return currentRGB;
-    #ifndef MOTION_BLUR_HAND
     if (depth < 0.56 && materialMask > 0.5) {
         return currentRGB;
     }
-    #endif
 
     // -------------------------------------------------------------
-    // Optimized Fast Reprojection (Algebraically Combined Matrix)
-    // Collapses 4 separate matrix-vector multiplications into 1
+    // Center reprojection
+    // Reconstruct only once for the center; sky ignores camera translation.
     // -------------------------------------------------------------
     bool isSky;
     vec3 viewPos = getViewPos(uv, depth, isSky);
@@ -93,35 +102,18 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
 
     // Frame-rate independence: normalized to 60 FPS reference
     float timeFactor = clamp(0.0166667 / max(frameTime, 0.001), 0.25, 3.0);
-    velocity *= MOTION_BLUR_STRENGTH * timeFactor;
+    velocity *= 0.50 * timeFactor;
+
+    // Work in pixels so the threshold/radius are stable across aspect ratios.
+    float speed=length(velocity*vec2(viewWidth,viewHeight));
+    if(speed<0.75) return currentRGB;
+    velocity*=min(1.0,24.0/max(speed,0.001));
+    // Two balanced taps plus the existing center. A fixed kernel removes
+    // post-TAA dither shimmer as well as the four-tap fast-motion path.
+    const int MAX_TAPS=2;
 
     // -------------------------------------------------------------
-    // Latency Gate 3: Per-Pixel Motion Magnitude Threshold
-    // Skip accumulation loop if displacement is sub-pixel or imperceptible
-    // -------------------------------------------------------------
-    float speed = length(velocity);
-    if (speed < 0.0004) {
-        return currentRGB;
-    }
-
-    // Clamp maximum blur radius
-    #ifdef MOTION_BLUR_LOW_LATENCY
-    const float maxSpeed = 0.035;
-    const int SAMPLES = 5;
-    #else
-    const float maxSpeed = 0.06;
-    const int SAMPLES = MOTION_BLUR_SAMPLES;
-    #endif
-
-    if (speed > maxSpeed) {
-        velocity *= maxSpeed / speed;
-    }
-
-    // Interleaved gradient noise for spatial/temporal dither
-    float dither = ignDither(gl_FragCoord.xy);
-
-    // -------------------------------------------------------------
-    // Fast Accumulation Loop (Single-cycle ALU, 1 texture fetch per tap)
+    // Bounded accumulation: reject depth/mask before fetching tap color.
     // -------------------------------------------------------------
     vec3 sum = currentRGB*currentRGB;
     float totalWeight = 1.0;
@@ -129,8 +121,9 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
     ivec2 sceneSize=screenTextureSize(colortex0);
     ivec2 depthSize=screenTextureSize(depthtex0);
 
-    for (int i = 0; i < SAMPLES; i++) {
-        float offset = ((float(i) + dither) / float(SAMPLES)) - 0.5;
+    for (int i = 0; i < MAX_TAPS; i++) {
+        // Gauss nodes for the [-0.5,0.5] shutter interval, with equal weights.
+        float offset = (float(i)-0.5)*0.577350269;
         vec2 sampleUV = uv + velocity * offset;
 
         if (any(lessThan(sampleUV,margin)) || any(greaterThan(sampleUV,1.0-margin))) {
@@ -140,15 +133,13 @@ vec3 applyMotionBlur(vec2 uv, vec3 currentRGB) {
         float tapDepth=depthScreen(depthtex0,sampleUV,depthSize);
         float tapMask=textureScreen(colortex2,sampleUV).a;
         if(tapMask>0.20 && tapMask<0.30) continue;
-        #ifndef MOTION_BLUR_HAND
         if(tapDepth<0.56 && tapMask>0.5) continue;
-        #endif
         bool tapSky;
-        vec3 tapPos=getViewPos(sampleUV,tapDepth,tapSky);
+        float tapZ=blurTapViewZ(sampleUV,tapDepth,tapSky);
         // Prevent bright background/sky trails across dark terrain silhouettes.
         if(tapSky!=isSky) continue;
         float depthWeight=isSky?1.0:1.0-smoothstep(0.04,0.20,
-            abs(tapPos.z-viewPos.z)/max(-viewPos.z,1.0));
+            abs(tapZ-viewPos.z)/max(-viewPos.z,1.0));
         if(depthWeight<0.001) continue;
         // Match the validated depth texel; bilinear color could still borrow bright sky.
         vec3 tap = texelFetch(colortex0,clamp(ivec2(sampleUV*vec2(sceneSize)),ivec2(0),sceneSize-1),0).rgb;

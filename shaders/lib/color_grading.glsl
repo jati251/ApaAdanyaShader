@@ -81,81 +81,7 @@ vec3 tonemapLinear(vec3 c) {
 // Color Grading Profiles (Presets / Variants)
 // =============================================================================
 
-vec3 applyColorProfile(vec3 c) {
-    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
 
-    #if COLOR_PROFILE == 1
-    // --- Profile 1: Vibrant Fantasy ---
-    // Punchy colors, saturated foliage greens, rich skies, golden warmth
-    vec3 satBoost = max(mix(vec3(luma), c, 1.25),vec3(0.0));
-    satBoost.r = pow(satBoost.r, 0.95) * 1.04;
-    satBoost.g = pow(satBoost.g, 0.94) * 1.05;
-    satBoost.b = pow(satBoost.b, 0.97) * 1.02;
-    satBoost += vec3(0.02, 0.015, 0.0) * (1.0 - abs(luma - 0.5) * 2.0);
-    return clamp(satBoost, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 2
-    // --- Profile 2: Cinematic Teal & Orange ---
-    // Deep teal shadows, warm bronze/orange skin/highlights, filmic tone
-    float shadowMask = 1.0 - smoothstep(0.0, 0.65, luma);
-    float highlightMask = smoothstep(0.35, 1.0, luma);
-    c += vec3(-0.03, 0.02, 0.07) * shadowMask * 0.75;
-    c += vec3(0.07, 0.03, -0.04) * highlightMask * 0.70;
-    c = mix(vec3(luma), c, 1.08);
-    return clamp(c, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 3
-    // --- Profile 3: Golden Hour / Warm Sunset ---
-    // Soft romantic warmth, peachy highlights, rich amber glow
-    c.r = pow(c.r, 0.92) * 1.08;
-    c.g = pow(c.g, 0.96) * 1.02;
-    c.b = pow(c.b, 1.06) * 0.90;
-    c += vec3(0.04, 0.02, -0.01) * smoothstep(0.1, 0.8, luma);
-    return clamp(c, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 4
-    // --- Profile 4: Cold Nordic / Boreal ---
-    // Chilly cyan-blue cast, desaturated organic tones, high atmosphere
-    c.r = pow(c.r, 1.05) * 0.92;
-    c.g = pow(c.g, 0.99) * 0.98;
-    c.b = pow(c.b, 0.92) * 1.10;
-    c = mix(vec3(luma), c, 0.88);
-    c += vec3(-0.02, 0.01, 0.05) * (1.0 - luma);
-    return clamp(c, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 5
-    // --- Profile 5: Retro 35mm Analog Film ---
-    // Raised crushed blacks (faded toe), subtle nostalgic warm fade, gentle highlights
-    c = mix(vec3(0.035, 0.03, 0.04), c, 0.92);
-    c.r = pow(c.r, 0.96) * 1.03;
-    c.b = pow(c.b, 1.03) * 0.95;
-    c = mix(vec3(luma), c, 0.95);
-    return clamp(c, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 6
-    // --- Profile 6: Bleach Bypass / Gritty Dark Fantasy ---
-    // High contrast, silver desaturated midtones, intense hard shadows
-    vec3 sCurve = c * c * (3.0 - 2.0 * c);
-    vec3 desat = vec3(luma);
-    c = mix(c, desat, 0.42);
-    c = mix(c, sCurve, 0.65);
-    return clamp(c, 0.0, 1.0);
-
-    #elif COLOR_PROFILE == 7
-    // --- Profile 7: Cyberpunk / Electric Night ---
-    // Deep indigo shadows with vibrant electric magenta and cyan highlights
-    float shadow = 1.0 - smoothstep(0.0, 0.5, luma);
-    float bright = smoothstep(0.5, 1.0, luma);
-    c += vec3(0.02, -0.02, 0.06) * shadow;
-    c += vec3(0.08, -0.01, 0.05) * bright * 0.6;
-    c = mix(vec3(luma), c, 1.20);
-    return clamp(c, 0.0, 1.0);
-
-    #else
-    // --- Profile 0: Standard / Natural ---
-    return c;
-    #endif
-}
 
 // =============================================================================
 // White Balance (Color Temperature & Tint)
@@ -213,33 +139,33 @@ vec3 applyColorGrading(vec3 hdrColor, vec2 uv) {
     vec3 scaledColor = hdrColor * exposure;
 
     // 2. White Balance in Linear HDR space
-    #if defined(COLOR_TEMPERATURE) || defined(COLOR_TINT)
+#if (defined(COLOR_TEMPERATURE) || defined(COLOR_TINT))
     scaledColor = applyWhiteBalance(scaledColor, COLOR_TEMPERATURE, COLOR_TINT);
     #endif
 
     // 3. Tonemapping Operator (HDR -> Display SDR)
     vec3 sdr;
-    #if TONEMAP_OPERATOR == 0
+#if TONEMAP_OPERATOR == 0
     sdr = tonemapACES(scaledColor);
-    #elif TONEMAP_OPERATOR == 1
+#elif TONEMAP_OPERATOR == 1
     sdr = tonemapAgX(scaledColor);
-    #elif TONEMAP_OPERATOR == 2
+#elif TONEMAP_OPERATOR == 2
     sdr = tonemapKhronos(scaledColor);
-    #elif TONEMAP_OPERATOR == 3
+#elif TONEMAP_OPERATOR == 3
     sdr = tonemapHable(scaledColor);
-    #elif TONEMAP_OPERATOR == 4
+#elif TONEMAP_OPERATOR == 4
     sdr = tonemapReinhardJodie(scaledColor);
-    #else
+#else
     sdr = tonemapLinear(scaledColor);
     #endif
 
     // Scene/display sRGB transfer (AgX-style already contains a display curve)
-    #if TONEMAP_OPERATOR != 1
+#if TONEMAP_OPERATOR != 1
     sdr = linearToSrgb(sdr);
     #endif
 
     // 4. Stylized Color Grading Profile / Variant
-    sdr = applyColorProfile(sdr);
+    
 
     // 5. Smart Vibrance & Global Saturation
     sdr = applyVibranceSaturation(sdr, COLOR_SATURATION, COLOR_VIBRANCE);
@@ -262,11 +188,6 @@ vec3 applyColorGrading(vec3 hdrColor, vec2 uv) {
     #endif
 
     // 7. Natural Lens Vignette
-    #ifdef VIGNETTE
-    vec2 vigUV = uv * (1.0 - uv.yx);
-    float vig = vigUV.x * vigUV.y * 15.0;
-    sdr *= clamp(pow(vig, VIGNETTE_STRENGTH), 0.0, 1.0);
-    #endif
 
     return sdr;
 }

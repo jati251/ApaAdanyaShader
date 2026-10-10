@@ -1,32 +1,15 @@
 #ifndef AA_LIGHTING
 #define AA_LIGHTING
 #include "/lib/material.glsl"
-#include "/lib/voxel_trace.glsl"
-uniform sampler2D shadowtex0,colortex8;
+#include "/lib/cloud_shadow.glsl"
+uniform sampler2D shadowtex0;
 #ifdef HARDWARE_PCF
-#if defined(IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS) && SHADOW_SAMPLES >= 8
+#if (defined(IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS) && SHADOW_SAMPLES >= 8)
 #define AA_HARDWARE_PCF
 uniform sampler2DShadow shadowtex0HW;
 const bool shadowHardwareFiltering=true;
 #endif
 #endif
-float cloudShadow(vec3 world){
-    #ifdef CLOUD_SHADOWS
-    #if CLOUDS == 2
-    #if !defined(NETHER) && !defined(END)
-    vec3 ld=worldDirection(shadowLightPosition);
-    vec2 ground=world.xz-ld.xz*(world.y-64.0)/max(ld.y,0.04);
-    vec2 origin=floor(cameraPosition.xz/128.0)*128.0;
-    vec2 uv=(ground-origin)/2048.0+0.5;
-    float fade=smoothstep(0.44,0.50,max(abs(uv.x-0.5),abs(uv.y-0.5)));
-    if(fade>=1.0) return 1.0;
-    float value=texture(colortex8,clamp(uv,vec2(0.002),vec2(0.998))).r;
-    return mix(value,1.0,fade);
-    #endif
-    #endif
-    #endif
-    return 1.0;
-}
 const vec2 poissonDisk8[8] = vec2[8](
     vec2(-0.7071,  0.7071),
     vec2( 0.7071, -0.7071),
@@ -38,7 +21,7 @@ const vec2 poissonDisk8[8] = vec2[8](
     vec2(-1.0000,  0.0000)
 );
 float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool filtered) {
-    #if !defined(SHADOWS) || defined(NETHER) || defined(END)
+#if ((!(defined(SHADOWS)) || defined(NETHER)) || defined(END))
     return 1.0;
     #endif
     if(shadowDistance <= 0.0 || dot(relativeWorld.xz, relativeWorld.xz) > shadowDistance * shadowDistance) return 1.0;
@@ -58,24 +41,27 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     if(!filtered || SHADOW_SAMPLES <= 1) {
         return mix(step(sc.z - bias, texture(shadowtex0, sc.xy).r), 1.0, fade);
     }
-    #if SHADOW_SAMPLES == 2
+#if SHADOW_SAMPLES == 2
     float r = 1.25 * texelSize;
     float s0 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2(r, r)).r);
     float s1 = step(sc.z - bias, texture(shadowtex0, sc.xy - vec2(r, r)).r);
     return mix((s0 + s1) * 0.5, 1.0, fade);
-    #elif SHADOW_SAMPLES <= 4
+#elif SHADOW_SAMPLES <= 4
     float r = 1.35 * texelSize;
     float s0 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2(-r, -r)).r);
     float s1 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2( r, -r)).r);
     float s2 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2(-r,  r)).r);
     float s3 = step(sc.z - bias, texture(shadowtex0, sc.xy + vec2( r,  r)).r);
     return mix((s0 + s1 + s2 + s3) * 0.25, 1.0, fade);
-    #else
+#else
     vec2 radius=vec2(1.65*texelSize);
     #ifdef CONTACT_HARDENING_SHADOWS
     // Directional sun: penumbra = blocker/receiver separation * solar half angle.
     // The orthographic z projection is compressed by 0.2 in distortShadow.
     float searchRadius=5.0*texelSize,blockers=0.0,blockerDepth=0.0;
+    // Include the receiver center: thin blockers between search taps stay dark.
+    float centerDepth=texture(shadowtex0,sc.xy).r;
+    if(centerDepth<sc.z-bias) {blockerDepth=centerDepth;blockers=1.0;}
     for(int i=0;i<4;i++) {
         float d=texture(shadowtex0,clamp(sc.xy+poissonDisk8[i+4]*searchRadius,vec2(0.002),vec2(0.998))).r;
         if(d<sc.z-bias) {blockerDepth+=d;blockers+=1.0;}
@@ -84,7 +70,7 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float separation=max(sc.z-bias-blockerDepth/blockers,0.0)/max(abs(shadowProjection[2][2])*0.1,1e-6);
     float penumbra=separation*0.00465;
     vec3 p=clip.xyz/clip.w;
-    vec3 dp=distortShadow(p);
+    vec3 dp=sc*2.0-1.0;
     vec2 sx=(distortShadow(p+vec3(shadowProjection[0][0]*penumbra,0.0,0.0))-dp).xy*0.5;
     vec2 sy=(distortShadow(p+vec3(0.0,shadowProjection[1][1]*penumbra,0.0))-dp).xy*0.5;
     radius=clamp(vec2(length(sx),length(sy)),vec2(0.75*texelSize),vec2(searchRadius));
@@ -97,7 +83,7 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     for(int i=0;i<4;i++)
         sum+=texture(shadowtex0HW,vec3(clamp(sc.xy+poissonDisk8[i]*radius,vec2(0.002),vec2(0.998)),sc.z-bias));
     return mix(sum*0.25,1.0,fade);
-    #else
+#else
     float sum = 0.0;
     int samples = min(SHADOW_SAMPLES, 8);
     for(int i = 0; i < samples; i++) {
@@ -117,7 +103,7 @@ float filteredRoughness(vec3 N,float roughness) {
     vec3 dx=dFdx(N),dy=dFdy(N);
     float variance=min(0.18,0.5*(dot(dx,dx)+dot(dy,dy)));
     return sqrt(clamp(roughness*roughness+variance,0.002,1.0));
-    #else
+#else
     return roughness;
     #endif
 }
@@ -149,34 +135,43 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     vec3 L=normalize(shadowLightPosition), V=normalize(-vp);
     float nl=max(dot(N,L),0.0);
     float vis=0.0;
-    #if !defined(NETHER) && !defined(END)
+#if (!(defined(NETHER)) && !(defined(END)))
     if((nl>0.0001 || foliage>0.5) && lm.y>0.05) {
         vis=shadowVisibility(rel,nw,nl,true)*smoothstep(0.05,0.8,lm.y);
-        #ifdef AA_VOXELS
-        if(vis>0.01 && nl>0.01 && dot(vp,vp)<1296.0) {
-            vec3 blocker,blockerNormal;uint blockerMaterial;
-            vec3 receiver=rel+cameraPosition;
-            if(traceVoxelWorldRange(receiver+nw*0.08,worldDirection(L),8,2.59,blocker,blockerNormal,blockerMaterial)) {
-                float localOcclusion=1.0-smoothstep(0.0,2.5,length(blocker-receiver));
-                vis*=1.0-localOcclusion*0.85;
-            }
-        }
-        #endif
     }
     #endif
     // Hemispherical irradiance: blue skylight above, subdued ground bounce below.
     // This preserves face orientation without tinting downward surfaces sky blue.
     vec3 skyAmbient=mix(vec3(0.012,0.018,0.030)*NIGHT_BRIGHTNESS,vec3(0.16,0.22,0.31),daylight());
     vec3 groundAmbient=mix(vec3(0.004,0.006,0.009)*NIGHT_BRIGHTNESS,vec3(0.065,0.068,0.073),daylight());
+    float cloudVis=1.0;
+#if (!(defined(NETHER)) && !(defined(END)))
+    #ifdef ATMOSPHERIC_LIGHTING
+    // Warm low sunlight with cool sky fill; rain removes the chromatic split.
+    float twilight=exp(-abs(sunDirection().y)*7.0)*daylight()*(1.0-rainStrength);
+    skyAmbient=mix(skyAmbient,vec3(0.105,0.125,0.205),twilight*0.55);
+    groundAmbient=mix(groundAmbient,vec3(0.095,0.063,0.040),twilight*0.45);
+    skyAmbient=mix(skyAmbient,vec3(dot(skyAmbient,vec3(0.2126,0.7152,0.0722)))*0.85,rainStrength*0.65);
+    #endif
+    #ifdef ATMOSPHERIC_LIGHTING
+    if(lm.y>0.08) cloudVis=cloudShadow(rel+cameraPosition);
+    // Diffuse skylight remains under a cloud; direct sun is attenuated separately.
+    // Apply sky occlusion to shaded/back-facing outdoor surfaces as well.
+    skyAmbient*=mix(0.72,1.0,cloudVis);
+    groundAmbient*=mix(0.86,1.0,cloudVis);
+#else
+    if(vis>0.0001) cloudVis=cloudShadow(rel+cameraPosition);
+    #endif
+    #endif
     vec3 ambient=mix(groundAmbient,skyAmbient,sat(nw.y*0.5+0.5))*pow(lm.y,1.6);
     #ifdef NETHER
     ambient=pow(fogColor,vec3(2.2))*0.45+vec3(0.045,0.013,0.008);
-    #elif defined(END)
+#elif defined(END)
     ambient=vec3(0.06,0.035,0.09);
     #endif
     ambient+=stormFlash()*(lm.y*lm.y*lm.y)*(0.35+0.65*max(nw.y,0.0));
     vec3 torch=vec3(1.65,0.62,0.13)*(lm.x*lm.x*lm.x)*TORCH_BRIGHTNESS;
-    #if !defined(HAND) && !defined(AA_DH_TERRAIN)
+#if (!(defined(HAND)) && !(defined(AA_DH_TERRAIN)))
     int maxHeldLight=max(heldBlockLightValue,heldBlockLightValue2);
     if(maxHeldLight>0){
         float heldStrength=float(maxHeldLight)/15.0;
@@ -193,8 +188,8 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     }
     #endif
     vec3 direct=vec3(0.0);
-    #if !defined(NETHER) && !defined(END)
-    if(vis>0.0001) direct=lightColor()*vis*cloudShadow(rel+cameraPosition);
+#if (!(defined(NETHER)) && !(defined(END)))
+    if(vis>0.0001) direct=lightColor()*vis*cloudVis;
     #endif
     float s=sat(dot(-V,L)); float s2=s*s;
     // Organic leaf forward scattering: wrapped light through thin leaves + forward transmission lobe
@@ -209,13 +204,13 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     float diffuseFactor=1.0;
     if(lodDistance2<16384.0)
         diffuseFactor=mix(burleyDiffuse(N,V,L,roughness),1.0,smoothstep(9216.0,16384.0,lodDistance2));
-    #else
+#else
     if(vis>0.001 && nl>0.0001) specular=specularBRDF(N,V,L,roughness,f0)*direct;
     float diffuseFactor=burleyDiffuse(N,V,L,roughness);
     #endif
     vec3 diffuse=diffuseResponse(albedo,f0,metal);
     vec3 ambientTerm=diffuse*(ambient+torch+vec3(0.008)*CAVE_BRIGHTNESS)*materialAO;
-    #ifndef SSR
+#ifndef SSR
     ambientTerm+=f0*metal*(ambient+torch)*materialAO*0.35;
     #endif
     vec3 emitChroma=albedo/max(max(albedo.r,max(albedo.g,albedo.b)),0.001);

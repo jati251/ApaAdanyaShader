@@ -11,7 +11,7 @@ const int colortex9Format = RGBA16F;
 */
 layout(location=0) out vec4 layer;
 void main() {
-    // March a whole cloud layer only where at least one covered pixel is sky.
+    // March clouds only where the covered screen neighborhood contains sky.
     bool sky=false;
     vec2 size=vec2(screenTextureSize(depthtex0));
     for(int y=0;y<2;y++) {
@@ -30,8 +30,7 @@ void main() {
     if(!sky) return;
     vec3 rd=worldDirection(viewPosition(texcoord,1.0));
     vec2 pixel=texcoord*size;
-    #ifdef TEMPORAL_CLOUDS
-    pixel+=vec2(5.588238)*float(frameCounter%64);
-    #endif
+    // cloudLayer owns frame scrambling; moving this grid as well creates
+    // a second camera-independent jump in the sampling pattern.
     layer=cloudLayer(rd,pixel);
 }

@@ -1,4 +1,6 @@
 #include "/lib/common.glsl"
+// Bound caster submission to the selected shadow distance.
+const float shadowDistanceRenderMul = 1.0;
 #include "/lib/fire.glsl"
 uniform sampler2D gtexture;
 in vec2 texcoord;
@@ -34,16 +36,28 @@ void main(){
     // Outgoing diffuse radiance from the first surface visible to the sun.
     // Block-ID emission is a fallback; the shadow atlas has no LabPBR lightmap.
     float emission=(materialId>1003.5 && materialId<1004.5)?2.0:0.0;
-    color=vec4(albedo*(lightColor()*nl/PI+emission),1.0);
-    if(abs(materialId-1008.0)<0.5) color.rgb=lavaRadiance(texture(gtexture,texcoord).rgb);
+    vec3 directRadiance=albedo*lightColor()*nl/PI;
+    vec3 emittedRadiance=albedo*emission;
+    const vec3 luma=vec3(0.2126,0.7152,0.0722);
+    float directFraction=dot(directRadiance,luma)/max(dot(directRadiance+emittedRadiance,luma),1e-6);
+    directFraction=clamp(directFraction,0.0,1.0);
+    color=vec4(directRadiance+emittedRadiance,1.0);
+    if(abs(materialId-1008.0)<0.5) {
+        color.rgb=lavaRadiance(texture(gtexture,texcoord).rgb);
+        directFraction=0.0;
+    }
     if(abs(materialId-1006.0)<0.5 || abs(materialId-1007.0)<0.5
         || abs(materialId-1009.0)<0.5 || abs(materialId-1010.0)<0.5
-        || abs(materialId-1012.0)<0.5 || abs(materialId-1013.0)<0.5)
+        || abs(materialId-1012.0)<0.5 || abs(materialId-1013.0)<0.5) {
         color.rgb=flameRadiance(texture(gtexture,texcoord).rgb,vec3(0.0),
             abs(materialId-1007.0)<0.5 || abs(materialId-1010.0)<0.5 || abs(materialId-1013.0)<0.5);
-    geometry=vec4(n*0.5+0.5,1.0);
+        directFraction=0.0;
+    }
+    // Preserve opaque color alpha/depth ownership. Geometry alpha remains above
+    // its validity threshold and packs the directly lit share into [0.6,1].
+    geometry=vec4(n*0.5+0.5,0.60+0.40*directFraction);
     #endif
-    #else
+#else
     discard;
     #endif
 }

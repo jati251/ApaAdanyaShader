@@ -1,6 +1,7 @@
 #ifndef AA_LIGHT_SPACE_TRACE
 #define AA_LIGHT_SPACE_TRACE
 #ifdef AA_LIGHT_SPACE
+#include "/lib/cloud_shadow.glsl"
 #ifndef AA_LIGHTING
 uniform sampler2D shadowtex0;
 #endif
@@ -8,7 +9,7 @@ uniform sampler2D shadowcolor0,shadowcolor1;
 
 // A second 2.5D view, not a voxel scene. Only accept a front-surface crossing:
 // a receiver already behind the sun's first layer must not hit that layer.
-bool traceLightSpace(vec3 originV,vec3 directionV,int budget,out vec3 radiance,out float confidence) {
+bool traceLightSpaceRange(vec3 originV,vec3 directionV,int budget,float maxDistance,out vec3 radiance,out float confidence) {
     radiance=vec3(0.0); confidence=0.0;
     vec3 originW=(gbufferModelViewInverse*vec4(originV,1.0)).xyz;
     vec3 directionW=worldDirection(directionV);
@@ -20,6 +21,7 @@ bool traceLightSpace(vec3 originV,vec3 directionV,int budget,out vec3 radiance,o
     ivec2 size=textureSize(shadowtex0,0);
     for(int i=0;i<24;i++) {
         if(i>=budget) break;
+        if(t>maxDistance) break;
         vec4 clip=origin+direction*t;
         vec3 sc=distortShadow(clip.xyz/clip.w)*0.5+0.5;
         if(any(lessThan(sc,vec3(0.002))) || any(greaterThan(sc,vec3(0.998)))) return false;
@@ -45,16 +47,26 @@ bool traceLightSpace(vec3 originV,vec3 directionV,int budget,out vec3 radiance,o
             float front=smoothstep(0.0,0.15,dot(n,-directionW));
             if(geometry.a>0.5 && delta>=0.0 && delta<thickness && front>0.0) {
                 confidence=front*(1.0-smoothstep(0.35,1.0,delta/thickness));
+                confidence*=1.0-smoothstep(maxDistance*0.75,maxDistance,hi);
                 confidence*=1.0-smoothstep(shadowDistance*0.65,shadowDistance*0.9,length((originW+directionW*hi).xz));
-                radiance=texelFetch(shadowcolor0,q,0).rgb;
+                vec4 source=texelFetch(shadowcolor0,q,0);
+                vec3 hitWorld=originW+directionW*hi+cameraPosition;
+                // Geometry alpha packs validity plus the directly lit share.
+                // Color alpha stays opaque, and clouds do not dim emission.
+                float directFraction=clamp((geometry.a-0.60)*2.5,0.0,1.0);
+                radiance=source.rgb*mix(1.0,cloudShadow(hitWorld),directFraction);
                 return confidence>0.001;
             }
         }
         previousDelta=d<0.999999?delta:-1e20;
         previousT=t;
-        t+=0.25+t*0.12;
+        if(t>=maxDistance) break;
+        t=min(t+0.25+t*0.12,maxDistance);
     }
     return false;
+}
+bool traceLightSpace(vec3 originV,vec3 directionV,int budget,out vec3 radiance,out float confidence) {
+    return traceLightSpaceRange(originV,directionV,budget,1e20,radiance,confidence);
 }
 #endif
 #endif

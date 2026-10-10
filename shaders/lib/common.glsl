@@ -1,29 +1,18 @@
 #ifndef AA_COMMON
 #define AA_COMMON
 #include "/lib/settings.glsl"
-#if defined(IRIS_FEATURE_CUSTOM_IMAGES) && defined(IRIS_FEATURE_COMPUTE_SHADERS)
-#define AA_ADVANCED_SUPPORTED
-#if SMOKE_MODE == 1
-#if defined(SHADOWS) && !defined(NETHER) && !defined(END)
-#define AA_SMOKE
-#endif
-#endif
-#ifdef HIZ_TRACING
+#if (defined(IRIS_FEATURE_CUSTOM_IMAGES) && defined(IRIS_FEATURE_COMPUTE_SHADERS))
+#ifdef DEPTH_HIERARCHY
 #define AA_HIZ
 #endif
-#ifdef VOXEL_TRACING
-#ifdef SHADOWS
-#define AA_VOXELS
-#endif
-#endif
 #ifdef SVGF_DENOISER
-#if defined(HALF_RES_LIGHTING) && defined(TEMPORAL_INDIRECT) && defined(SSGI)
+#if ((defined(HALF_RES_LIGHTING) && defined(TEMPORAL_INDIRECT)) && defined(SSGI))
 #define AA_SVGF
 #endif
 #endif
 #endif
 #ifdef LIGHT_SPACE_FALLBACK
-#if defined(SHADOWS) && !defined(NETHER) && !defined(END) && !defined(AA_VOXELS)
+#if ((defined(SHADOWS) && !(defined(NETHER))) && !(defined(END)))
 #define AA_LIGHT_SPACE
 #endif
 #endif
@@ -48,7 +37,7 @@ uniform int heldItemId, heldItemId2;
 #define AA_RENDER_SCALE 1.0
 #endif
 vec4 scaleSceneClip(vec4 clip,vec2 targetFraction) {
-    #if UPSCALE_QUALITY > 0
+#if UPSCALE_QUALITY > 0
     vec2 allocation=max(floor(vec2(viewWidth,viewHeight)*targetFraction),vec2(1.0));
     vec2 scale=max(floor(allocation*AA_RENDER_SCALE),vec2(1.0))/allocation;
     clip.xy=(clip.xy+clip.w)*scale-clip.w;
@@ -59,10 +48,10 @@ ivec2 screenTextureSize(sampler2D source) {
     return max(ivec2(floor(vec2(textureSize(source,0))*AA_RENDER_SCALE)),ivec2(1));
 }
 vec4 textureScreen(sampler2D source,vec2 uv) {
-    #if UPSCALE_QUALITY > 0
+#if UPSCALE_QUALITY > 0
     vec2 allocation=vec2(textureSize(source,0)),activeSize=vec2(screenTextureSize(source));
     return texture(source,clamp(uv*activeSize,vec2(0.5),activeSize-0.5)/allocation);
-    #else
+#else
     return texture(source,uv);
     #endif
 }
@@ -112,18 +101,18 @@ vec3 worldDirection(vec3 v) { return normalize(mat3(gbufferModelViewInverse)*v);
 vec3 sunDirection() { return worldDirection(sunPosition); }
 float daylight() { return smoothstep(-0.10,0.18,sunDirection().y); }
 vec3 solarLightColor() {
-    #if defined(NETHER) || defined(END)
+#if (defined(NETHER) || defined(END))
     return vec3(0.0);
-    #else
+#else
     float elev=sunDirection().y;
     vec3 day=mix(vec3(3.20,1.25,0.32),vec3(2.75,2.70,2.60),smoothstep(0.02,0.38,elev));
     return day*smoothstep(0.0,0.08,elev)*(1.0-rainStrength*0.78);
     #endif
 }
 vec3 lunarLightColor() {
-    #if defined(NETHER) || defined(END)
+#if (defined(NETHER) || defined(END))
     return vec3(0.0);
-    #else
+#else
     return vec3(0.055,0.065,0.09)*NIGHT_BRIGHTNESS
         *smoothstep(0.0,0.08,-sunDirection().y)*(1.0-rainStrength*0.78);
     #endif
@@ -134,17 +123,17 @@ vec3 lightColor() {
     return dot(shadowLightPosition,sunPosition)>=0.0?solarLightColor():lunarLightColor();
 }
 vec3 stormFlash() {
-    #if !defined(NETHER) && !defined(END)
+#if (!(defined(NETHER)) && !(defined(END)))
     float distance2=dot(lightningBoltPosition.xz,lightningBoltPosition.xz);
     return vec3(0.48,0.62,0.85)*(lightningBoltPosition.w/(1.0+distance2*0.000025));
-    #else
+#else
     return vec3(0.0);
     #endif
 }
 vec3 distortShadow(vec3 p) { p.xy/=0.15+length(p.xy)*0.85; p.z*=0.2; return p; }
 vec3 waveOffset(vec3 p, float id, float top) {
     #ifdef WAVING_FOLIAGE
-    #if defined(WAVING_PLANTS) || defined(WAVING_LEAVES)
+#if (defined(WAVING_PLANTS) || defined(WAVING_LEAVES))
     if (id>1000.5 && id<1002.5) {
         float t = frameTimeCounter * WIND_SPEED;
         float wind=sin(p.x*0.43+p.z*0.31+t*1.6)+0.45*sin(p.z*0.91+t*2.5);

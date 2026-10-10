@@ -1,11 +1,21 @@
 #ifdef POM
 #if defined(TERRAIN) && defined(RESOURCE_NORMALS)
 #define AA_POM
+#if MATERIAL_FILTER == 0
 flat in vec4 atlasBounds;
+#endif
 
 vec2 parallaxTileUV(vec2 localUV,vec2 lo,vec2 size,vec2 margin) {
     // Repeat inside this sprite only, never into another block's atlas tile.
     return lo+clamp(fract(localUV)*size,margin,size-margin);
+}
+
+float parallaxHeight(sampler2D heightMap,vec2 uv,vec2 dx,vec2 dy,float lod) {
+    #if MATERIAL_FILTER > 0
+    return 1.0-materialAtlasLod(heightMap,uv,lod).a;
+    #else
+    return 1.0-textureGrad(heightMap,uv,dx,dy).a;
+    #endif
 }
 
 vec2 parallaxUV(sampler2D heightMap,vec2 uv,vec2 dx,vec2 dy,
@@ -20,7 +30,10 @@ vec2 parallaxUV(sampler2D heightMap,vec2 uv,vec2 dx,vec2 dy,
     fade*=1.0-smoothstep(0.06,0.18,footprint);
     if(fade<0.001) return uv;
     if(dot(viewTS.xy,viewTS.xy)<0.000001) return uv;
-    float initialDepth=1.0-textureGrad(heightMap,uv,dx,dy).a;
+    vec2 atlasSize=vec2(textureSize(heightMap,0));
+    float maxLod=max(0.0,min(4.0,floor(log2(max(min(size.x*atlasSize.x,size.y*atlasSize.y),1.0)))-1.0));
+    float lod=clamp(log2(max(1.0,max(length(dx*atlasSize),length(dy*atlasSize)))),0.0,maxLod);
+    float initialDepth=parallaxHeight(heightMap,uv,dx,dy,lod);
     if(initialDepth<0.001) return uv;
     vec2 localUV=(uv-bounds.xy)/size;
     // Keep the bilinear/mip footprint inside the sprite at the chosen LOD.
@@ -36,13 +49,13 @@ vec2 parallaxUV(sampler2D heightMap,vec2 uv,vec2 dx,vec2 dy,
         previous=layer;
         layer+=stepSize;
         vec2 tap=parallaxTileUV(localUV-ray*layer,bounds.xy,size,margin);
-        surface=1.0-textureGrad(heightMap,tap,dx,dy).a;
+        surface=parallaxHeight(heightMap,tap,dx,dy,lod);
     }
     // Refine the first crossing without increasing the full ray budget.
     for(int i=0;i<3;i++) {
         float mid=(previous+layer)*0.5;
         vec2 tap=parallaxTileUV(localUV-ray*mid,bounds.xy,size,margin);
-        float depth=1.0-textureGrad(heightMap,tap,dx,dy).a;
+        float depth=parallaxHeight(heightMap,tap,dx,dy,lod);
         if(mid>=depth) layer=mid; else previous=mid;
     }
     return parallaxTileUV(localUV-ray*((previous+layer)*0.5),bounds.xy,size,margin);

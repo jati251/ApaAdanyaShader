@@ -1,66 +1,69 @@
 # ApaAdanyaShader
 
-Shaderpack untuk Minecraft Java 26.3, Iris 1.11.7 dan Sodium 0.9.2. Renderer memakai GLSL 330 dengan compute GLSL 430 opsional, material LabPBR, pencahayaan langsung, efek screen-space, air, atmosfer dan history temporal. Buffer tambahan memerlukan Iris 1.10.5 atau lebih baru.
+Shaderpack untuk Minecraft Java 26.3, Iris 1.11.7 dan Sodium 0.9.2. Mendukung Distant Horizons, material LabPBR, air dengan gelombang terfilter, awan berlapis, bayangan awan dan cahaya pantul lokal. Rendering utama memakai GLSL 330; optimasi depth dan denoiser GI memakai compute opsional.
 
-Target pemakaian: kualitas visual yang bisa dijangkau beragam kelas GPU melalui profil bertingkat. Pengukuran saat ini memakai Windows dengan RTX 3080 Ti; performa GPU lain belum diukur. Perangkat tanpa optional image/compute tetap memakai jalur GLSL 330.
+## Preset
 
-Optimasi tahap pertama, 8 Oktober: noise awan memakai lattice 3D 512 KiB, Hi-Z dibangun dalam satu pass, akses langit cache voxel dihitung per kolom, dan DDA memakai update sumbu melalui mask vektor. Jumlah sampel/bounce serta profil tidak diturunkan. Pengukuran sebelum/sesudah dan batas klaim FPS: [PERFORMANCE_OPTIMIZATION.md](PERFORMANCE_OPTIMIZATION.md).
+Empat preset menu dan ekspor memiliki pengaturan yang sama:
 
-Optimasi lanjutan: light shaft direkonstruksi berdasarkan kedalaman setelah air/DH, filter bayangan hardware memakai empat tap bilinear dengan blocker search PCSS tetap, ray contact shadow berhenti setelah jarak kontribusinya habis, dan piksel nyala obor/campfire melewati shading yang hasilnya akan diganti. Hasil dan kompromi gambar: [PERFORMANCE_OPTIMIZATION_ROUND2.md](PERFORMANCE_OPTIMIZATION_ROUND2.md).
+| Preset | Shadow map / jarak | Awan / sampel cahaya | GI / refleksi | Air / material |
+|---|---|---|---|---|
+| Lightweight | 512 / 64 blok | 2D | GI dan SSR mati | 3 oktaf, filter 2× |
+| Balanced | 1024 / 96 blok | 12 langkah, 2 lapis / 2 | AO temporal, SSR 16 | 4 oktaf, filter 4× |
+| Detailed | 2048 / 144 blok | 20 langkah, 3 lapis / 4 | GI 2 ray × 24 langkah, SSR 24 | 6 oktaf, filter 4×, LabPBR |
+| Extreme | 4096 / 224 blok | 32 langkah, 3 lapis / 6, resolusi penuh | GI 8 ray × 48 langkah, SSR 64 | 7 oktaf, filter 8×, LabPBR, POM 48 |
 
-## Pemakaian
+**Extreme** memaksimalkan budget kualitas yang tersedia: SSAO 12 sampel, volumetric light 16 sampel, radius GI 16 blok hingga jarak kamera 96 blok, POM hingga 64 blok, dan awan resolusi penuh dengan history temporal. GI tetap memakai rekonstruksi dan denoiser untuk menjaga stabilitas. Intensitas GI tetap 0.65, warna natural dan kekuatan gelombang 0.65; kualitas maksimal tidak berarti semua intensitas dibuat paling besar. Beban GPU dan memori bertambah; FPS belum diukur.
 
-Asap campfire dan blok api sekarang memiliki switch **Partikel → Sumber Asap**: **Shader (3D)** atau **Minecraft / Resource Pack**. Default shader memakai volume yang naik, terbawa angin dengan riwayat gerak dan membelok di sisi blok penghalang; tidak memerlukan Physics Mod. Resource pack kecil **AA-Volumetric-Smoke-Bridge** harus aktif paling atas untuk mengganti hanya billboard campfire; pack sudah dipasang pada instance ini. Ringan memakai asap Minecraft, empat profil lain memakai shader. Struktur, biaya dan batas verifikasi: [VOLUMETRIC_SMOKE.md](VOLUMETRIC_SMOKE.md).
+**FSR 1 tetap tersedia** pada **Performa & FSR**. Semua preset default **Native (100%)**. Ultra Quality, Quality dan Balanced merender sekitar 77%, 67% dan 59% dari lebar/tinggi layar, lalu memakai EASU/RCAS. Ketajaman FSR dapat diubah manual. FSR tidak membuat frame tambahan. Atribusi AMD ada di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Pilih **ApaAdanyaShader** di Iris, lalu pilih profil pada Shader Pack Settings. Instance ini memakai tombol **R** untuk reload shader dan **I** untuk membuka pilihan shader. Memilih profil mengatur ulang seluruh opsi sesuai profil; sesuaikan opsi manual setelahnya. Pengaturan custom aktif ada di file `ApaAdanyaShader.txt` di sebelah folder shaderpack.
+Pilih ulang preset di menu setelah perubahan susunan ini, lalu reload dengan **R**. Memilih preset menerapkan seluruh opsi preset dan mereset tuning custom. Iris yang sedang berjalan dapat menyimpan opsi di memori; ubah FSR atau tuning lain lewat menu untuk sesi aktif. File opsi aktif berada di sebelah folder shaderpack: `../ApaAdanyaShader.txt`. File `presets/*.txt` merupakan ekspor lengkap pilihan yang sama.
 
-Pengaturan air mengikuti profil aktif dan opsi custom dalam ApaAdanyaShader.txt. Saat memindahkan shader ke Windows, salin juga file `ApaAdanyaShader.txt` untuk mempertahankan pengaturan tersebut. Gelombang memakai normal prosedural pada mesh fluida; tidak mengubah simulasi atau tinggi geometri air Minecraft. Pantulan air memakai tujuh arah sampel yang tetap di koordinat dunia, tanpa pemaksaan arah ke horizon. Normal puncak gelombang difilter per harmonik, dan air melewati TAA/motion blur yang tidak memiliki gerak pantulan; antialiasing FXAA tetap berlaku. Posisi optik air kini mengikuti depth permukaan yang dirasterisasi, dengan proyeksi DH tersendiri untuk air LOD. Refraksi mengikuti gelombang dengan batas distorsi yang halus, dan refleksi kasar difilter sesuai roughness/FOV. Perubahan serta regresi gerakan kamera: [WATER_STABILITY.md](WATER_STABILITY.md). Air DH kini hanya mengisi piksel di luar coverage vanilla; pemotongan radius 24 blok yang mengikuti kamera dihapus agar kedua mesh air tidak saling menimpa saat bergerak.
+## Pembersihan 11 Oktober 2026
 
-Lima profil tersedia dalam menu dan sebagai lima file lengkap di `presets/`. Pilih **Tracing Lokal Performa** untuk mempertahankan tuning gameplay yang sudah dipakai pada instance ini. Setiap profil menuliskan semua opsi sehingga berpindah tingkat tidak meninggalkan fitur mahal dari profil sebelumnya.
+Asap volumetrik custom, penangkap sumber api, obstacle/path cache, compute dan buffer asap, serta AA Smoke Bridge dihapus. Asap kembali memakai partikel Minecraft/resource pack yang aktif. Partikel tetap menerima pencahayaan dan soft intersections. Tidak perlu bridge atau mod asap tambahan.
 
-| Profil | Resolusi internal | Bayangan | GI / SSR / awan |
-| --- | --- | --- | --- |
-| Ringan | Native (100%) | 512, PCF 2 | GI/SSR mati, awan 2D |
-| Seimbang | Native (100%) | 1024, PCF 4 | GI mati, AO temporal, SSR 16, awan volumetrik 12 |
-| Detail | Native (100%) | 2048, hardware PCF/PCSS | GI screen-space 2 ray, SSR 24, awan 12 |
-| Tracing Lokal Performa | Native (100%) | 2048, hardware PCF/PCSS | Voxel/reservoir GI 2 ray satu bounce, SSR 24, awan 12 |
-| Tracing Lokal Detail | Native (100%) | 2048, hardware PCF/PCSS | Voxel/reservoir GI 3 ray dua bounce, SSR 32, awan 16 |
+Dua preset tracing diganti satu Extreme. Scene voxel lokal, DDA voxel, cache cahaya voxel, reservoir/ReSTIR, bounce kedua voxel dan history refleksi stokastik khusus voxel dihapus dari renderer, alokasi GPU dan menu. [Catatan peninjauan tracing](TRACING_REVIEW.md) menjelaskan kontribusi dan batas jalur sebelumnya.
 
-Semua profil mematikan DOF, motion blur, film grain, vignette, chromatic aberration dan POM secara default. Efek tetap bisa diatur manual. Profil tracing mempertahankan denoiser/history untuk membatasi noise. Ringan mengurangi efek pencahayaan dan geometri bayangan; tingkat lain mempertahankan warna natural, air serta bayangan lembut. Angka FPS bergantung scene dan perangkat.
+Fitur yang mati di seluruh preset lama dibersihkan: DOF, vignette, chromatic aberration, film grain, penajaman TAA terpisah dan varian color-look. Motion blur ringan, FXAA, TAA, pengaturan warna dasar dan FSR tetap tersedia. POM dipertahankan dan diaktifkan di Extreme. Fixture, benchmark, preview dan generator lama dipindahkan keluar dari shaderpack ke backup instance karena merujuk renderer yang sudah dihapus.
 
-FSR mati secara default pada kelima profil dan konfigurasi bawaan; rendering memakai resolusi Native (100%). FSR 1 tetap bisa dinyalakan manual di menu Performa untuk mengurangi beban shading, dengan kompromi detail halus. Rendering native dapat menurunkan FPS dibanding preset sebelumnya yang memakai FSR. AO/GI, awan dan light shaft memakai rekonstruksi masing-masing bila aktif. Perangkat tanpa image/compute memakai fallback; tracing lokal hanya tersedia ketika fitur GPU didukung.
+Backup sumber sebelum pembersihan: `../../.codex-backups/renderer-cleanup-20261011/`. Backup mencakup shader, preset, artefak pengembangan, opsi Iris aktif dan bridge asap. Perubahan ini **belum dikompilasi, diuji dalam game atau diukur FPS-nya**, sesuai permintaan pengguna.
 
-Filter bayangan hardware memakai empat tap bilinear dan mempertahankan blocker search PCSS pada setting 8 sampel. Setting 1/2/4/6 serta perangkat tanpa sampler terpisah memakai jalur manual. Warna api/lava dan struktur optimasi sebelumnya tetap dipertahankan. Detail tuning: [PERFORMANCE_PRESET.md](PERFORMANCE_PRESET.md).
+## Cahaya pantul dan bayangan
 
-## Material dan realisme
+GI mengambil radiansi permukaan opaque sebelum GI/SSR, memvalidasi depth, normal, hemisphere, radius dan batas layar, lalu menambahkannya melalui respons diffuse penerima. Sumber scene merupakan pendekatan radiansi yang sudah dirender, termasuk komponen specular; ini bukan buffer diffuse terpisah atau full path tracing. Emisi memakai pembatas luminansi yang mempertahankan hue.
 
-Untuk resource pack dengan relief LabPBR seperti ModernArch, aktifkan **Tekstur Timbul (POM)** dan **Normal Map Resource Pack** dari menu **Dunia & Tumbuhan**; aktifkan juga specular PBR untuk karakter material. Kelima profil mematikan POM secara default untuk gameplay ringan. Pengaturan dekat yang hemat: 16 langkah, kedalaman 0.25 dan jarak 16 blok. Memilih profil kembali mereset override ini. POM mengubah tampilan permukaan pada sudut miring, tidak mengubah siluet/geometri blok; bentuk paling mudah diperiksa dekat permukaan batu/bata.
+GI Detailed beradius 8 blok hingga jarak kamera 64 blok. Extreme memperbesar radius dan budget ray. History GI/AO memakai validasi depth/normal dan denoiser variance/a-trous jika compute didukung. Ambient occlusion memengaruhi fraksi ambient; cahaya langsung dan emisi dipertahankan secara pendekatan.
 
-Pembaruan tracing 7 Oktober: Hi-Z konservatif dan denoiser variance/a-trous aktif pada Tinggi ke atas. Ultra, Realistis + Tracing Tinggi dan Sinematik menambahkan voxel lokal 64 kubik, reservoir GI temporal/spatial dan refleksi GGX. Extreme memakai voxel dengan GI penuh tanpa reservoir/denoiser indirect. Perangkat tanpa optional image/compute tetap memakai screen tracing dan LIGHT_SPACE_FALLBACK. Voxel menangkap terrain yang dikirim ke shadow vertex pass sebelum raster/depth test, dengan bentuk blok kasar, radius sekitar 32 blok dan tanpa entity/DH. Warna cahaya matahari/bulan dipisahkan untuk memperbaiki jingga sunset yang berpindah ke bulan. Detail budget, memori dan batas: [RAY_TRACING_AUDIT.md](RAY_TRACING_AUDIT.md).
+**Fallback Pantulan Shadow-View** memakai permukaan pertama yang terlihat matahari ketika coverage layar kurang. GI dibatasi radius yang sama dan maksimal 24 langkah fallback. Jalur ini 2.5D, memiliki keterbatasan geometri dan tidak dipakai untuk refleksi air. Hi-Z sekarang bernama **Optimasi Hierarki Kedalaman**: mempercepat ray depth, bukan efek pencahayaan tambahan. Perangkat tanpa image/compute opsional tetap memakai jalur screen depth dan smoothing dasarnya.
 
-LabPBR membaca normal/AO/height, smoothness, F0 linear, emisi, porositas dan subsurface. Logam ID 230-237 memakai konstanta optik standar dengan tint albedo; logam lain memakai fallback F0 albedo. Porositas memengaruhi permukaan basah. Model pencahayaan memakai GGX/Smith/Schlick serta diffuse Burley; koreksi normal-variance mengurangi kedipan highlight.
+GI tidak mencakup receiver DH jauh atau seluruh dunia. Refleksi SSR dibatasi geometri yang tersedia di layar; cache langit mengisi coverage yang hilang. Material kasar memakai lobe langit yang lebih lebar. Bayangan matahari memakai alpha cutout dan PCSS/hardware PCF pada preset tinggi.
 
-GI memakai respons material linear, sehingga tidak mengalikan warna yang sudah terkena pencahayaan. AO meredupkan fraksi ambient secara pendekatan, menjaga cahaya langsung dan emisi. Refleksi menambah lobe specular, dengan cache langit tersaring untuk permukaan kasar. Exposure mengukur luminansi HDR dan beradaptasi bertahap.
+## Awan dan atmosfer
 
-Instance saat refactor memilih resource pack vanilla. Shader tidak dapat menciptakan normal, height atau detail material yang tidak ada. Untuk tekstur timbul dan detail fotoreal, gunakan resource pack LabPBR yang cocok. POM menggeser koordinat tekstur; tidak mengubah siluet atau geometri blok.
+Cumulus volumetrik memiliki dasar/puncak bervariasi dan ketebalan maksimum 240 blok. Lapisan tengah berada +310 blok dan cirrus +720 blok dari ketinggian dasar. Lapisan atas memakai opacity analitik dan angin yang sama. Cahaya awan memakai 2/4/6 sampel self-shadow dan pendekatan multiple scattering. Bayangan awan berbagi atlas 4096 blok dengan terrain, air dan volumetric light.
 
-Batas arsitektur: renderer dapat menelusuri voxel lokal di luar layar; cakupannya belum seluruh dunia dan bukan hardware RTX/full path tracing. Tidak ada janji FPS maupun persetujuan visual fotoreal dari tes sintetis.
+Fix pola garis/bintik berlaku di kode semua preset. Efek debu buatan dengan tiga sampel IGN dihapus. Dither awan memakai hash tanpa pola diagonal IGN. Pada budget 12 langkah ke atas, ray cumulus jauh beradaptasi hingga 80 langkah dengan interval target 32 blok; noise subpiksel memudar menuju rata-ratanya. History menerima anchor sampai 22 km dan menangani wrap waktu delapan detik. Cache refleksi delapan langkah tetap memakai budget terpisah.
 
-## Upscaling
+Detailed/Balanced memakai cache awan setengah lebar/tinggi scene. Extreme memakai ukuran scene penuh dan history yang sama; aktif-region FSR mengikuti ukuran cache. Pencahayaan atmosfer mengubah sky/ground fill menurut waktu, cuaca dan bayangan awan. Tidak ada klaim visual atau FPS baru dari tes sintetis lama.
 
-FSR 1 EASU/RCAS tersedia pada menu Performa & Rekonstruksi. Native memakai dimensi asli; Ultra Quality sekitar 77%, Quality 67%, Balanced 59% dari lebar/tinggi layar. Resolusi rendah mengurangi pekerjaan shading dengan kompromi detail. Geometry, shadow map, sebagian alokasi buffer dan pekerjaan CPU tetap memiliki biaya. RCAS menajamkan hasil setelah upscale; nol mematikannya. FSR ini tidak menghasilkan frame tambahan.
+## Air dan material
 
-Gunakan **Video Settings → Quality → Texel Interpolation: Nearest** untuk mempertahankan piksel tekstur yang tajam, terutama pada vanilla dan pack 16×. Linear merupakan pilihan tambahan untuk pack resolusi tinggi yang ingin tampilan lebih halus; pengaturan ini juga mengaburkan piksel dekat, sehingga jangan diterapkan secara umum untuk mengatasi kedipan. Mipmap Levels: 4 tetap membantu detail jauh; Texture Filtering: Anisotropic dan Max Anisotropy: 4× dapat dicoba untuk permukaan miring. FSR kini mati secara default. Jika menyalakannya manual, gunakan **Performa & Rekonstruksi → Ketajaman FSR RCAS: 0.20** untuk membatasi penguatan detail kecil. Game yang masih berjalan menyimpan pengaturan di memori, jadi terapkan Texel Interpolation lewat menu untuk sesi aktif. Memilih profil shader kembali mereset ketajaman custom.
+Spektrum air terdiri dari swell silang, wavelet dan riak kapiler hingga tujuh oktaf. Turunan analitik dan filter per harmonik mengurangi aliasing; energi normal yang tidak teresolusi menjadi lebar highlight. Vanilla dan DH memakai spektrum yang sama. Mesh dan simulasi fluida Minecraft mengikuti engine.
 
-## Validasi dan struktur
+Refraksi memvalidasi depth dan memudar di batas geometri. Absorpsi mempertahankan dasar air dangkal dan transmisi biru-hijau di air dalam. Kaustik dibatasi ke dasar yang menghadap atas dan kontinu; buih memakai patch tipis tanpa pita kontur pada dinding. Refleksi air memakai SSR dan cache langit terfilter, dengan pemeriksaan shoreline dan kontak permukaan.
 
-Jalankan `python -B tools/validate.py --static` untuk konsistensi profil, file preset, terjemahan, entry point dimensi dan directive Iris. Jalankan tanpa `--static` untuk kompilasi/tautan native GPU dan fixture render; `--images-only` menjalankan fixture saja. Tambahkan `--advanced` untuk kompilasi image/compute dan fixture tracing advanced. Tambahkan `--write-previews` untuk menyimpan gambar diagnostik; secara default preview tidak dibuat. Windows/Linux memerlukan GLFW; macOS menggunakan CGL. Pemeriksaan ini tidak menggantikan pemuatan shader dalam Iris.
+Kaustik memakai gambar grayscale hasil generasi dengan dua lapisan animasi, mirror continuation dan filtering footprint. Asset tidak memerlukan resource pack tambahan; sumber dan prompt ada di [catatan asset](shaders/textures/water-caustics-asset.md). Ini mask artistik, bukan simulasi penuh fokus cahaya.
 
-- `shaders/`: kode renderer, menu dan terjemahan.
-- `presets/`: lima preset lengkap yang mengikuti profil menu.
-- `tools/`: validator, fixture regresi dan pembuat resource pack efek yang dapat dipakai kembali.
-- `artifacts/validation.log`: catatan validasi terakhir yang dipertahankan.
-- [VOLUMETRIC_SMOKE.md](VOLUMETRIC_SMOKE.md): arsitektur asap environmental volumetrik 3D dan bridge partikel.
-- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md): atribusi pihak ketiga.
+Filter albedo menjaga texel dekat tetap tajam lalu beralih ke anisotropic bilinear/trilinear pada detail subpiksel. Normal/AO dan specular memakai maksimum dua tap anisotropic; POM menggunakan interpolasi height yang kontinu. Batas sprite per mip mencegah kebocoran atlas.
 
-Preview, cache Python, log uji antara dan catatan pengembangan yang sudah digabung tidak disertakan. Backup pemulihan di `.codex-backups/` pada instance dipertahankan.
+LabPBR membaca normal/AO/height, smoothness, F0, emisi, porositas dan subsurface. **POM memerlukan height map resource pack**; Extreme tidak menciptakan relief yang tidak ada dalam tekstur. POM menggeser koordinat tekstur tanpa mengubah siluet/geometri blok. Perubahan pada vanilla/Ashen_16x dapat lebih kecil daripada pack dengan data PBR lengkap.
+
+## Struktur
+
+- `shaders/`: renderer, menu, terjemahan, tekstur awan dan asset kaustik.
+- `presets/`: empat ekspor yang sesuai profil menu.
+- `tools/export_presets.py`: regenerasi ekspor jika deklarasi profil diubah; bukan compiler atau tes GPU.
+- `TRACING_REVIEW.md`: peninjauan kode tracing sebelum pembersihan.
+
+Jalankan `python tools/export_presets.py` ketika perlu memperbarui ekspor preset. Fixture pengembangan sebelumnya tersedia di backup dan merujuk renderer sebelumnya; hasilnya tidak membuktikan versi baru ini.

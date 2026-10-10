@@ -9,7 +9,7 @@ layout(location=0) out vec4 color;
 #if UPSCALE_QUALITY > 0
 #define FSR_EASU_F 1
 #include "/lib/vendor/fsr1/fsr1_fp32.glsl"
-vec4 cachedA, cachedB, cachedC, cachedD;
+vec4 cachedA=vec4(0.0), cachedB=vec4(0.0), cachedC=vec4(0.0), cachedD=vec4(0.0);
 vec2 cachedP = vec2(-99999.0);
 vec4 gatherChannel(vec2 uv,int component) {
     if(uv != cachedP) {

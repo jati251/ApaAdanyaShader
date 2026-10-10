@@ -1,7 +1,3 @@
-#ifdef MC_GL_ARB_shader_image_load_store
-#extension GL_ARB_shader_image_load_store : enable
-#endif
-#define AA_RESERVOIR_PASS
 #include "/lib/common.glsl"
 #include "/lib/trace.glsl"
 uniform sampler2D colortex0,colortex1,colortex2,depthtex0;
@@ -35,9 +31,6 @@ const int colortex12Format = RGBA16F;
 */
 layout(location=0) out vec4 indirect;
 void main() {
-    #ifdef AA_RESTIR
-    clearReservoirGI(texcoord);
-    #endif
     float d=depthScreen(depthtex0,texcoord);
     vec4 mat=textureScreen(colortex2,texcoord);
     indirect=vec4(0.0,0.0,0.0,-1.0);

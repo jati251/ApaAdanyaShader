@@ -4,7 +4,6 @@ screen.SHADOWS=Konfigurasi Bayangan
 screen.SKY=Langit & Awan
 screen.WATER=Air & Refleksi
 screen.WORLD=Dunia & Tumbuhan
-screen.POST=Pasca-Proses & Kamera
 
 # Profil
 
@@ -13,8 +12,7 @@ option.SSAO=Screen-Space Ambient Occlusion
 option.SSAO.comment=Oklusi screen-space meredupkan fraksi ambient tersimpan, sehingga cahaya langsung dan emisi kira-kira tetap terjaga. Mode setengah resolusi dapat memakai history temporal tersendiri.
 option.SSAO_SAMPLES=Jumlah Sampel SSAO
 option.SSAO_SAMPLES.comment=Banyaknya sampel kedalaman untuk menghitung oklusi. Nilai rendah lebih ramah untuk perangkat kentang.
-option.SSGI=Screen-Space Indirect Light
-option.SSGI.comment=Bounce diffuse dengan respons material dan validasi hit. Fallback light-space opsional menambah permukaan luar layar yang terlihat matahari; bukan path tracing multi-bounce.
+option.SSGI=Cahaya Pantul Diffuse
 option.GI_SAMPLES=Jumlah Ray Cahaya
 option.GI_STRENGTH=Kekuatan Pantulan Cahaya
 option.VOLUMETRIC_LIGHT=Berkas Cahaya (God Rays)
@@ -57,14 +55,16 @@ option.FOG_DENSITY=Kepadatan Kabut
 option.WATER_REFRACTION=Pembiasan Cahaya di Bawah Air
 option.WATER_REFRACTION.comment=Membias permukaan di bawah air. Matikan pada perangkat kentang untuk menghindari pembacaan ganda buffer kedalaman.
 option.WATER_CAUSTICS=Pola Kaustik Dasar Air
-option.WATER_CAUSTICS.comment=Pola gelombang pantulan sinar matahari di dasar sungai dan laut.
+option.WATER_CAUSTICS.comment=Tekstur kaustik halus hasil generasi dengan dua lapis animasi, filter piksel dan bayangan terrain/awan. Memerlukan Iris.
 option.SSR=Refleksi Screen-Space
 option.SSR.comment=Pantulan layar dengan fallback light-space opsional pada permukaan yang terlihat matahari. Material matte memakai langit lebar. Bukan geometri dunia penuh.
 option.SSR_STEPS=Langkah Ray Refleksi
 option.WATER_OCTAVES=Oktaf Gelombang Air
-option.WATER_OCTAVES.comment=Banyaknya frekuensi gelombang air. Gunakan 2 oktaf untuk FPS maksimal pada perangkat kentang.
+option.WATER_OCTAVES.comment=Gelombang silang, riak kecil dan riak mikro. 6/7 lapis juga memperhalus filter pantulan. Detail subpiksel menjadi lebar highlight.
+option.WATER_WAVES.comment=Kekuatan gelombang silang, riak hujan dan buih tepian. Mengubah normal optik, bukan geometri fluida.
 option.WATER_WAVES=Kekuatan Riak Gelombang Air
 option.WATER_CLARITY=Kejernihan Air
+option.WATER_ROUGHNESS.comment=Lebar dasar highlight dan pantulan. Riak kecil menambah roughness tersaring; 0.10 menjaga pantulan dekat lebih tajam.
 option.WATER_ROUGHNESS=Kekasaran Permukaan Air
 
 # Opsi Dunia & Tumbuhan
@@ -77,16 +77,6 @@ option.RAIN_PUDDLES.comment=Membuat genangan basah mengkilap saat hujan. Matikan
 option.RESOURCE_NORMALS=Normal Map Resource Pack
 
 # Opsi Pasca-Proses & Color Grading
-option.COLOR_PROFILE=Gaya Warna / Varian (Color Look)
-value.COLOR_PROFILE.0=Alami (Natural / Balanced)
-value.COLOR_PROFILE.1=Fantasi Cerah (Vibrant Fantasy)
-value.COLOR_PROFILE.2=Sinematik Teal & Oranye (Hollywood)
-value.COLOR_PROFILE.3=Golden Hour (Senja Hangat)
-value.COLOR_PROFILE.4=Nordik Dingin (Boreal / Salju)
-value.COLOR_PROFILE.5=Film Analog Retro 35mm
-value.COLOR_PROFILE.6=Bleach Bypass (Kontras Gelap)
-value.COLOR_PROFILE.7=Cyberpunk (Neon Elektrik)
-option.COLOR_PROFILE.comment=Pilihan varian gaya grading warna. Mengubah palet warna keseluruhan, atmosfer suasana, dan nuansa pencahayaan.
 option.TONEMAP_OPERATOR=Kurva Tonemapping
 value.TONEMAP_OPERATOR.0=ACES Filmic
 value.TONEMAP_OPERATOR.1=Gaya AgX (Pendekatan)
@@ -111,34 +101,13 @@ option.TAA=Stabilisasi Temporal
 option.TAA.comment=History HDR dengan validasi depth, clipping warna, dan reproyeksi kamera. Gunakan bersama FXAA untuk tepi geometri; tidak memakai jitter.
 option.TAA_BLEND=Akumulasi Temporal TAA
 option.TAA_BLEND.comment=Bobot akumulasi riwayat frame sebelumnya. Nilai lebih tinggi memberikan stabilitas maksimal; nilai lebih rendah meningkatkan responsivitas gerakan.
-option.TAA_SHARPENING=Penajaman Adaptif Kontras (CAS)
-option.TAA_SHARPENING.comment=Menerapkan filter penajam kontras adaptif untuk mengembalikan kejernihan tekstur saat perpaduan temporal aktif.
-option.TAA_SHARPEN_STRENGTH=Kekuatan Ketajaman TAA
-option.TAA_SHARPEN_STRENGTH.comment=Mengontrol intensitas filter penajam. Nilai tinggi menghasilkan tekstur sangat tajam; nilai rendah memberikan gambar sinematik yang lembut.
 option.FXAA=Penghalusan Tepi (FXAA)
 option.FXAA.comment=Filter penghalus tepi berbasis screen-space. Bekerja bersama TAA untuk memberikan tepi halus tanpa getaran kamera.
-option.VIGNETTE=Vignette Lensa
-option.VIGNETTE_STRENGTH=Kekuatan Vignette
-option.CHROMATIC_ABERRATION=Aberasi Kromatik (Lensa)
-option.CHROMATIC_ABERRATION.comment=Mensimulasikan pembiasan optik lensa fisik kamera pada pinggiran dan sudut layar.
-option.CA_STRENGTH=Kekuatan Aberasi Lensa
-option.FILM_GRAIN=Film Grain 35mm
-option.FILM_GRAIN.comment=Menambahkan butiran film analog organik untuk meningkatkan kesan sinematik dan mencegah garis pita warna (banding).
-option.FILM_GRAIN_STRENGTH=Intensitas Film Grain
 option.COLOR_DITHERING=Dithering Warna Teratur
 
-screen.CAMERA=Kamera & Efek Gerakan
 screen.PARTICLES=Partikel & Cuaca
-option.MOTION_BLUR=Motion Blur (Kabur Gerakan)
-option.MOTION_BLUR.comment=Mensimulasikan efek blur rana kamera sinematik saat bergerak dan memutar pandangan.
-option.MOTION_BLUR_LOW_LATENCY=Motion Blur Ringan
-option.MOTION_BLUR_LOW_LATENCY.comment=Membatasi blur ke 5 sampel dan memperpendek jejak. Hanya bekerja saat motion blur aktif; tidak mengatur latensi input atau layar.
-option.MOTION_BLUR_STRENGTH=Kekuatan Motion Blur
-option.MOTION_BLUR_STRENGTH.comment=Mengatur panjang jejak blur gerakan. 0.50 setara dengan sudut rana sinematik 180 derajat.
-option.MOTION_BLUR_SAMPLES=Sampel Motion Blur
-option.MOTION_BLUR_SAMPLES.comment=Jumlah sampel di sepanjang lintasan blur. Sampel lebih tinggi menghasilkan jejak lebih mulus dengan sedikit beban GPU tambahan.
-option.MOTION_BLUR_HAND=Blur Tangan & Item
-option.MOTION_BLUR_HAND.comment=Menerapkan motion blur pada tangan dan item yang dipegang. Matikan agar tangan tetap tajam saat kamera berputar.
+option.MOTION_BLUR=Motion Blur Ringan
+option.MOTION_BLUR.comment=Satu switch dengan 2 sampel seimbang tanpa dither. Melewati kamera diam, tangan, air dan batas depth; jejak blur dibatasi.
 option.RESOURCE_SPECULAR=Kilap & Emisi LabPBR
 option.RESOURCE_SPECULAR.comment=LabPBR 1.3: F0 linear, konstanta logam ID 230-237 dengan tint albedo, fallback F0 albedo untuk logam lain, emisi dan subsurface. Porositas mengatur penggelapan basah serta genangan.
 option.SPECULAR_AA=Kurangi Kedipan Kilap
@@ -148,16 +117,6 @@ option.SOFT_PARTICLES.comment=Memudarkan partikel transparan saat menyentuh blok
 option.PARTICLE_SOFTNESS=Jarak Pudar Partikel
 option.PARTICLE_LIGHTING=Cahaya & Bayangan Partikel
 option.WEATHER_OPACITY=Kepekatan Hujan & Salju
-option.DOF=Kedalaman Fokus (DOF)
-option.DOF.comment=Blur lensa sebelum pemetaan warna. Area fokus melewati proses blur. Matikan untuk gambar tajam dan beban GPU lebih rendah.
-option.DOF_AUTOFOCUS=Fokus Otomatis
-option.DOF_AUTOFOCUS.comment=Mengikuti jarak bidikan dengan transisi halus. Matikan untuk memilih jarak fokus tetap.
-option.DOF_FOCUS_DISTANCE=Jarak Fokus Manual (Blok)
-option.DOF_FOCAL_LENGTH=Panjang Fokus Lensa (mm)
-option.DOF_FSTOP=Bukaan Lensa (f-number)
-option.DOF_FSTOP.comment=Nilai kecil membuat latar lebih kabur. Tidak mengubah pencahayaan kamera.
-option.DOF_SAMPLES=Sampel Bokeh
-option.DOF_MAX_RADIUS=Radius Blur Maksimum (Piksel)
 
 option.POM=Tekstur Timbul (POM)
 option.POM.comment=Kedalaman dari alpha normal map LabPBR. Memerlukan Normal Map Resource Pack. Daun, tanaman dan LOD jauh dilewati. Tidak mengubah siluet atau kedalaman geometri.
@@ -168,28 +127,11 @@ option.POM_DEPTH.comment=Kedalaman relatif terhadap satu ubin tekstur. Standar L
 option.POM_DISTANCE=Jarak Parallax (Blok)
 option.POM_DISTANCE.comment=Mulai memudar pada 65% jarak ini. Penelusuran tinggi dilewati setelah batas jarak.
 
-screen.PERFORMANCE=Performa & Rekonstruksi
 option.CLOUD_RECONSTRUCTION=Rekonstruksi Awan Volumetrik
-option.CLOUD_RECONSTRUCTION.comment=Hitung awan pada setengah lebar/tinggi; langit tetap resolusi asli. Matikan untuk pembanding resolusi penuh.
 option.TEMPORAL_CLOUDS=Riwayat Awan
 option.TEMPORAL_CLOUDS.comment=Proyeksikan ulang dan batasi sampel awan sebelumnya. Perlu rekonstruksi awan. Matikan jika terlihat jejak.
 option.HALF_RES_LIGHTING=Rekonstruksi Pencahayaan
 option.HALF_RES_LIGHTING.comment=AO/GI dan light shaft setengah resolusi dengan penjaga tepi. Light shaft memakai dua kali sampel per ray; tepi kedalaman sulit tetap dihitung penuh.
-option.HALF_RES_DOF=Rekonstruksi Blur Lensa
-option.HALF_RES_DOF.comment=Hitung bokeh besar pada setengah lebar/tinggi. Fokus, tangan, dan tepi kedalaman tetap ditangani pada resolusi asli.
-
-option.UPSCALE_QUALITY=Upscaling AMD FSR 1
-option.UPSCALE_QUALITY.comment=Upscaling spatial untuk Windows dan macOS. Resolusi internal lebih rendah menghemat shading, dengan kompromi detail halus. Tidak membuat frame tambahan.
-value.UPSCALE_QUALITY.0=Native (100%)
-value.UPSCALE_QUALITY.1=Ultra Quality (77%)
-value.UPSCALE_QUALITY.2=Quality (67%)
-value.UPSCALE_QUALITY.3=Balanced (59%)
-option.UPSCALE_SHARPNESS=Ketajaman FSR RCAS
-option.UPSCALE_SHARPNESS.comment=Penajaman adaptif AMD RCAS setelah upscale. Nol menonaktifkan penajaman.
-
-
-screen.RAYTRACING=Tracing Hibrida
-screen.RAYTRACING.comment=Ray layar dengan fallback opsional geometri luar layar yang terlihat matahari. Bukan hardware RT atau path tracing dunia penuh.
 
 option.CONTACT_HARDENING_SHADOWS=Bayangan matahari kontak
 option.CONTACT_HARDENING_SHADOWS.comment=Empat sampel penghalang memperkirakan penumbra matahari, dibatasi lima texel. Memerlukan bayangan dengan 6 atau 8 sampel filter; menambah kerja GPU.
@@ -202,31 +144,7 @@ option.TEMPORAL_INDIRECT.comment=Reproyeksi GI/AO memeriksa kedalaman dan normal
 
 option.EXPOSURE.comment=Pengali exposure manual. Saat exposure adaptif aktif, mengalikan hasil pengukuran; jika mati, memakai baseline siang/malam.
 
-
-
-
-
-
-
 option.FOG_DENSITY.comment=Kepadatan haze jarak jauh. Udara cerah tidak meredupkan 12 blok terdekat; haze horizon tetap ada. Extinction hujan dan bawah air ditangani terpisah.
-
-option.LIGHT_SPACE_FALLBACK=Fallback Geometri di Luar Layar
-option.LIGHT_SPACE_FALLBACK.comment=Telusuri geometri shadow map yang terlihat matahari saat cakupan layar hilang. GI 12 langkah / pantulan 24 langkah; memori bayangan tambahan. Memerlukan bayangan; bukan geometri dunia penuh.
-
-option.HIZ_TRACING=Tracing Kedalaman Hierarkis
-option.HIZ_TRACING.comment=Empat tingkat min/max konservatif dalam satu atlas. Memerlukan dukungan image/compute OpenGL 4.3.
-
-option.VOXEL_TRACING=Tracing Voxel Dunia Lokal
-option.VOXEL_TRACING.comment=Geometri blok 64 kubik dari terrain yang dikirim sebelum raster/depth test bayangan. Bentuk blok kasar; tidak mencakup entitas dan DH.
-
-option.VOXEL_STEPS=Batas Langkah Voxel
-option.VOXEL_STEPS.comment=Jumlah maksimum sel DDA per ray. Batas lebih tinggi menelusuri bagian volume yang lebih luas.
-
-option.GI_BOUNCES=Bounce GI Voxel
-option.GI_BOUNCES.comment=Satu atau dua bounce diffuse pada kandidat reservoir baru. Dua bounce menambah satu ray voxel.
-
-option.RESTIR_GI=Reservoir GI Spasiotemporal
-option.RESTIR_GI.comment=Reuse path ala ReSTIR dengan validasi visibilitas saat ini. Memerlukan voxel, GI temporal dan lighting setengah resolusi.
 
 option.SVGF_DENOISER=Denoiser GI Berbasis Varians
 option.SVGF_DENOISER.comment=Momen luminansi temporal dan tiga pass a-trous berpenjaga tepi. Memerlukan GI temporal setengah resolusi dan compute OpenGL.
@@ -234,27 +152,58 @@ option.SVGF_DENOISER.comment=Momen luminansi temporal dan tiga pass a-trous berp
 option.HARDWARE_PCF=Filter Bayangan Hardware
 option.HARDWARE_PCF.comment=Empat tap hardware PCF untuk bayangan kualitas tinggi, dengan pencarian blocker PCSS tetap aktif. Tepi sedikit berubah. Matikan untuk filter delapan tap semula; Iris lama memakai fallback otomatis.
 
-# Five optimized gameplay profiles
-profile.comment=Lima tingkat kualitas gameplay. Semua tanpa blur lensa; pengaturan efek tetap dapat diubah manual.
-profile.POTATO=Ringan
-profile.POTATO.comment=Native (100%), bayangan 512 dan awan 2D. Tanpa GI, SSR atau efek blur; gameplay paling ringan.
-profile.MEDIUM=Seimbang
-profile.MEDIUM.comment=Native (100%), bayangan 1024, AO temporal, SSR 16 dan awan 12 langkah. Tanpa GI/blur.
-profile.HIGH=Detail
-profile.HIGH.comment=Native (100%), bayangan 2048, GI screen-space 2 ray, SSR 24 dan awan 12 langkah. Material dan air tetap detail, tanpa voxel atau blur.
-profile.REALISM_FAST=Tracing Lokal Performa
-profile.REALISM_FAST.comment=Preset gameplay ringan yang dipertahankan: Native (100%), voxel/reservoir, GI 2 ray satu bounce, SSR 24, awan 12. Bayangan 2048, tanpa DOF/motion blur/POM.
-profile.ULTRA=Tracing Lokal Detail
-profile.ULTRA.comment=Native (100%), voxel/reservoir GI 3 ray dua bounce, SSR 32 dan awan 16. Lebih detail daripada Performa; bayangan tetap 2048 dan efek blur mati.
+# Four gameplay profiles
 
-option.SMOKE_MODE=Sumber Asap
-option.SMOKE_MODE.comment=Shader: asap campfire dan api 3D dengan aliran naik, angin dan tabrakan blok. AA Smoke Bridge mengganti billboard campfire. Minecraft mengembalikan asap asli. Tidak memerlukan Physics Mod.
-option.SMOKE_STEPS=Langkah Asap
-option.SMOKE_STEPS.comment=Sampel per volume asap yang terkena ray. 8 paling ringan; 12/16 memperhalus bentuk dari dekat.
-option.SMOKE_DISTANCE=Jarak Sumber Asap
-option.SMOKE_DISTANCE.comment=Radius sumber campfire dan api dalam blok, memudar halus di batas jarak.
-option.SMOKE_DENSITY=Kepekatan Asap
-option.SMOKE_DENSITY.comment=Ketebalan volume asap.
+option.MATERIAL_FILTER=Filter Tekstur Halus
+option.MATERIAL_FILTER.comment=Menjaga piksel tekstur dekat tetap tajam. Filter adaptif hanya meratakan detail subpiksel/jauh dan sudut miring; 0 mengikuti filter game.
+value.MATERIAL_FILTER.0=Filter Game
 
-value.SMOKE_MODE.0=Minecraft / Resource Pack
-value.SMOKE_MODE.1=Shader (3D)
+# Layered atmosphere
+option.ATMOSPHERIC_LIGHTING=Pencahayaan Atmosfer
+option.ATMOSPHERIC_LIGHTING.comment=Warna cahaya langit dan pantulan tanah mengikuti ketinggian matahari, hujan dan bayangan awan.
+option.CLOUD_LAYERS=Lapisan Awan
+option.CLOUD_LAYERS.comment=1: cumulus volumetrik. 2: tambah lembaran awan tengah. 3: tambah cirrus tinggi memanjang. Lapisan tambahan memakai opacity analitik, bukan raymarch volume penuh.
+option.CLOUD_LIGHT_SAMPLES=Kualitas Bayangan Dalam Awan
+option.CLOUD_LIGHT_SAMPLES.comment=2/4/6 sampel densitas menuju cahaya. Nilai tinggi menambah kedalaman bayangan awan dan biaya GPU.
+option.CLOUD_SHADOW_STRENGTH=Kekuatan Bayangan Awan
+option.CLOUD_SHADOW_STRENGTH.comment=Batas pengurangan cahaya langsung di bawah awan. Semua lapisan memakai peta bergerak 4096 blok untuk terrain, air dan berkas cahaya.
+option.GI_SAMPLES.comment=Ray berbobot cosine per piksel. Ray temporal menjelajah lapisan elevasi. Profil Detail memakai 2 ray.
+option.GI_STRENGTH.comment=Kekuatan pantulan berwarna material melalui respons diffuse penerima. Profil Detail memakai 0.65.
+option.GI_RADIUS=Radius Pantulan
+option.GI_RADIUS.comment=Panjang maksimum tiap ray diffuse lokal dalam blok. Radius lebih luas menjangkau lebih banyak geometri dan menambah biaya tracing.
+option.GI_TRACE_STEPS=Langkah Ray Diffuse
+option.GI_DISTANCE=Jarak Cahaya Pantul
+option.GI_DISTANCE.comment=Jarak GI lokal dari kamera dalam blok, memudar di wilayah luar. LOD jauh mempertahankan ambient dasar.
+
+option.UPSCALE_QUALITY=Upscaling AMD FSR 1
+option.UPSCALE_QUALITY.comment=Upscaling spatial untuk Windows dan macOS. Resolusi internal lebih rendah menghemat shading, dengan kompromi detail halus. Tidak membuat frame tambahan.
+value.UPSCALE_QUALITY.0=Native (100%)
+value.UPSCALE_QUALITY.1=Ultra Quality (77%)
+value.UPSCALE_QUALITY.2=Quality (67%)
+value.UPSCALE_QUALITY.3=Balanced (59%)
+option.UPSCALE_SHARPNESS=Ketajaman FSR RCAS
+option.UPSCALE_SHARPNESS.comment=Penajaman adaptif AMD RCAS setelah upscale. Nol menonaktifkan penajaman.
+
+# Current renderer and profiles
+screen.POST=Warna & Gambar
+screen.INDIRECT=Cahaya Pantul
+screen.INDIRECT.comment=Pantulan diffuse lokal beserta smoothing. Depth layar dan shadow-view terbatas; tanpa scene voxel.
+screen.PERFORMANCE=Performa & FSR
+option.DEPTH_HIERARCHY=Optimasi Hierarki Kedalaman
+option.DEPTH_HIERARCHY.comment=Mempercepat ray layar dengan min/max depth konservatif. Memerlukan image/compute opsional; optimasi ini bukan efek cahaya tambahan.
+option.CLOUD_FULL_RES=Awan Resolusi Penuh
+option.CLOUD_FULL_RES.comment=Render awan beserta history pada resolusi scene asli. Memerlukan rekonstruksi awan; aktif di Extreme. Beban GPU dan memori lebih tinggi.
+option.CLOUD_RECONSTRUCTION.comment=Cache awan terpisah dengan reproyeksi temporal. Biasanya setengah resolusi; Awan Resolusi Penuh mengganti ukuran buffer.
+option.SSGI.comment=Pantulan diffuse berwarna material dari depth layar dan fallback shadow-view yang terlihat matahari. Cakupan terbatas, tanpa tracing seluruh dunia.
+option.GI_TRACE_STEPS.comment=Budget langkah depth layar per ray. Fallback shadow-view dibatasi 24 langkah dan Radius Pantulan yang sama.
+option.LIGHT_SPACE_FALLBACK=Fallback Pantulan Shadow-View
+option.LIGHT_SPACE_FALLBACK.comment=Geometri shadow-map yang terlihat matahari mengisi GI/refleksi terrain di luar layar. Cakupan 2.5D terbatas; refleksi air tidak memakai jalur ini.
+profile.comment=Empat tingkat kualitas. FSR tetap tersedia dan default Native. Asap memakai partikel Minecraft.
+profile.POTATO=Lightweight
+profile.POTATO.comment=Bayangan 512, awan 2D, filter tekstur 2x dan 3 lapis gelombang. Tanpa GI atau refleksi.
+profile.MEDIUM=Balanced
+profile.MEDIUM.comment=Bayangan 1024, awan 12 langkah, AO temporal, refleksi 16 langkah dan 4 lapis gelombang.
+profile.HIGH=Detailed
+profile.HIGH.comment=Bayangan 2048, awan 20 langkah, GI 2 ray, refleksi 24 langkah, 6 lapis gelombang dan PBR resource pack. POM bisa dinyalakan manual.
+profile.EXTREME=Extreme
+profile.EXTREME.comment=Bayangan 4096 hingga 224 blok; awan resolusi penuh 32 langkah/6 sampel cahaya; GI 8 ray/48 langkah; refleksi 64 langkah, 7 lapis gelombang dan POM 48 langkah. Budget kualitas maksimum; berat.

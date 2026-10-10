@@ -39,8 +39,8 @@ void main(){
     if (depthScreen(depthtex0,uv) < 1.0) discard;
 
     // Capture derivatives before discard; shade only surviving fragments.
-    float crest;
-    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,crest);
+    float crest,unresolvedVariance;
+    vec2 slope=waterSlope(worldPos.xz,waveDx,waveDy,crest,unresolvedVariance);
 
     vec3 V = normalize(-surfacePos);
 
@@ -63,9 +63,7 @@ void main(){
 
     // Direct sun / moon specular highlight matching vanilla water
     vec3 L = normalize(shadowLightPosition);
-    float footprint=max(length(waveDx),length(waveDy));
-    float roughness=filteredRoughness(N,sqrt(WATER_ROUGHNESS*WATER_ROUGHNESS
-        +0.012*smoothstep(0.15,2.0,footprint)));
+    float roughness=filteredRoughness(N,waterRoughness(unresolvedVariance));
     float reflectionSpread=waterReflectionSpread(R,roughness);
     float fresnel=waterFresnel(NdotV,isEyeInWater==1)*waterFacetVisibility(NdotV,roughness,isEyeInWater==1);
     vec3 skyReflect=vec3(0.0);
@@ -101,5 +99,5 @@ void main(){
     #if defined(SSAO) || defined(SSGI) || defined(SSR) || defined(RESOURCE_SPECULAR)
     normalData = vec4(N * 0.5 + 0.5, 1.0);
     #endif
-    materialData = vec4(WATER_ROUGHNESS, skyLight, 0.0, 0.25);
+    materialData = vec4(roughness, skyLight, 0.0, 0.25);
 }

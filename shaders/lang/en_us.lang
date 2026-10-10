@@ -4,7 +4,6 @@ screen.SHADOWS=Shadow Configuration
 screen.SKY=Sky & Clouds
 screen.WATER=Water & Reflections
 screen.WORLD=World & Vegetation
-screen.POST=Post-Processing & Camera
 
 # Profiles
 
@@ -13,8 +12,7 @@ option.SSAO=Screen-Space Ambient Occlusion
 option.SSAO.comment=Screen-space occlusion attenuates the stored ambient fraction, preserving direct light and emission approximately. Half-resolution mode can use its own temporal history.
 option.SSAO_SAMPLES=SSAO Sample Count
 option.SSAO_SAMPLES.comment=Number of depth samples used to compute ambient occlusion. Lower values give more performance on potato devices.
-option.SSGI=Screen-Space Indirect Light
-option.SSGI.comment=Diffuse bounce with material response and hit validation. Optional light-space fallback adds sun-visible off-screen surfaces; no multi-bounce path tracing.
+option.SSGI=Indirect Diffuse Lighting
 option.GI_SAMPLES=Indirect Light Rays
 option.GI_STRENGTH=Indirect Light Intensity
 option.VOLUMETRIC_LIGHT=Volumetric God Rays
@@ -57,14 +55,16 @@ option.FOG_DENSITY=Fog Density
 option.WATER_REFRACTION=Underwater Optical Refraction
 option.WATER_REFRACTION.comment=Refracts light passing through water surfaces. Disable on potato devices to avoid double depth buffer sampling.
 option.WATER_CAUSTICS=Underwater Caustics
-option.WATER_CAUSTICS.comment=Animated dancing sunlight patterns on riverbeds and ocean floors.
+option.WATER_CAUSTICS.comment=Generated fine caustic texture with two animated layers, pixel filtering and terrain/cloud shadow attenuation. Requires Iris.
 option.SSR=Screen-Space Reflections
 option.SSR.comment=Screen reflections with optional sun-visible light-space fallback. Matte surfaces use broad sky lighting. No full-world geometry.
 option.SSR_STEPS=Reflection Ray Steps
 option.WATER_OCTAVES=Wave Detail Octaves
-option.WATER_OCTAVES.comment=Number of wave frequencies computed for water normals. Set to 2 for maximum FPS on potato devices.
+option.WATER_OCTAVES.comment=Crossing swells, wavelets and capillary ripples. 6/7 bands also enable finer reflection filtering. Unresolved detail becomes highlight width.
+option.WATER_WAVES.comment=Strength of crossing surface waves, rain ripples and shoreline wash. Changes optical normals, not fluid geometry.
 option.WATER_WAVES=Wave Height & Strength
 option.WATER_CLARITY=Water Clarity
+option.WATER_ROUGHNESS.comment=Base highlight and reflection width. Small waves add their own filtered roughness; 0.10 keeps nearby reflections crisp.
 option.WATER_ROUGHNESS=Water Surface Roughness
 
 # World & Materials Options
@@ -77,16 +77,6 @@ option.RAIN_PUDDLES.comment=Creates glossy water puddles on ground blocks during
 option.RESOURCE_NORMALS=Resource Pack Normal Maps
 
 # Post-Processing & Color Grading Options
-option.COLOR_PROFILE=Color Look / Variant
-value.COLOR_PROFILE.0=Natural (Balanced)
-value.COLOR_PROFILE.1=Vibrant Fantasy
-value.COLOR_PROFILE.2=Cinematic Teal & Orange
-value.COLOR_PROFILE.3=Golden Hour (Warm)
-value.COLOR_PROFILE.4=Cold Nordic (Boreal)
-value.COLOR_PROFILE.5=Retro 35mm Film
-value.COLOR_PROFILE.6=Bleach Bypass (Gritty)
-value.COLOR_PROFILE.7=Cyberpunk (Electric Neon)
-option.COLOR_PROFILE.comment=Stylistic color grading variants. Changes overall color palette, mood, and atmospheric toning.
 option.TONEMAP_OPERATOR=Tonemapping Curve
 value.TONEMAP_OPERATOR.0=ACES Filmic
 value.TONEMAP_OPERATOR.1=AgX-style (Approximation)
@@ -111,34 +101,13 @@ option.TAA=Temporal Stabilization
 option.TAA.comment=Depth-validated HDR history with neighborhood clipping and camera reprojection. Pair with FXAA for geometry edges; this mode does not jitter geometry.
 option.TAA_BLEND=TAA Temporal Accumulation
 option.TAA_BLEND.comment=Weight of previous frame accumulation. Higher values give maximum temporal stability; lower values increase camera responsiveness.
-option.TAA_SHARPENING=TAA Contrast-Adaptive Sharpening
-option.TAA_SHARPENING.comment=Sharpens the current resolved image without feeding sharpening into temporal history. Replaced by RCAS when FSR 1 is active.
-option.TAA_SHARPEN_STRENGTH=TAA Sharpness
-option.TAA_SHARPEN_STRENGTH.comment=Controls the intensity of the sharpening filter. Higher values produce extra crisp edges; lower values give a softer, cinematic image.
 option.FXAA=Fast Approximate Anti-Aliasing (FXAA)
 option.FXAA.comment=Screen-space edge smoothing filter. Works alongside TAA to deliver clean geometric anti-aliasing without screen shaking.
-option.VIGNETTE=Camera Lens Vignette
-option.VIGNETTE_STRENGTH=Vignette Intensity
-option.CHROMATIC_ABERRATION=Chromatic Aberration
-option.CHROMATIC_ABERRATION.comment=Simulates physical camera lens optical dispersion towards screen edges.
-option.CA_STRENGTH=Aberration Strength
-option.FILM_GRAIN=35mm Film Grain
-option.FILM_GRAIN.comment=Adds subtle, organic analog film grain to enhance cinematic realism and break color banding.
-option.FILM_GRAIN_STRENGTH=Film Grain Intensity
 option.COLOR_DITHERING=Ordered Color Dithering
 
-screen.CAMERA=Camera & Motion Effects
 screen.PARTICLES=Particles & Weather
-option.MOTION_BLUR=Motion Blur
-option.MOTION_BLUR.comment=Simulates camera shutter exposure blur during movement and rotation.
-option.MOTION_BLUR_LOW_LATENCY=Reduced Motion Blur
-option.MOTION_BLUR_LOW_LATENCY.comment=Caps blur at 5 samples and reduces trail radius. Only affects enabled motion blur; does not control input or display latency.
-option.MOTION_BLUR_STRENGTH=Motion Blur Strength
-option.MOTION_BLUR_STRENGTH.comment=Controls the duration of motion trails. 0.50 corresponds to a cinematic 180-degree shutter angle.
-option.MOTION_BLUR_SAMPLES=Motion Blur Samples
-option.MOTION_BLUR_SAMPLES.comment=Number of samples gathered along the motion trail. Higher counts produce smoother trails at slightly higher GPU cost.
-option.MOTION_BLUR_HAND=Blur Hand & Held Item
-option.MOTION_BLUR_HAND.comment=Applies motion blur to the first-person hand and held item. Turn off to keep the hand crisp during camera rotation.
+option.MOTION_BLUR=Lightweight Motion Blur
+option.MOTION_BLUR.comment=One switch with 2 balanced taps, no dither. Skips stationary views, hands, water and depth boundaries; bounded blur trails.
 option.RESOURCE_SPECULAR=LabPBR Specular & Emission
 option.RESOURCE_SPECULAR.comment=LabPBR 1.3: linear F0, conductor constants for metal IDs 230-237 with albedo tint, albedo-F0 fallback for other metals, emission and subsurface data. Porosity affects rain darkening and puddles.
 option.SPECULAR_AA=Filter Specular Shimmer
@@ -148,16 +117,6 @@ option.SOFT_PARTICLES.comment=Fades translucent particles against opaque terrain
 option.PARTICLE_SOFTNESS=Particle Fade Distance
 option.PARTICLE_LIGHTING=Particle Sunlight & Shadows
 option.WEATHER_OPACITY=Rain & Snow Opacity
-option.DOF=Depth of Field
-option.DOF.comment=Lens blur before tone mapping. Focused pixels skip the blur loop. Disable for the sharpest gameplay and lower GPU cost.
-option.DOF_AUTOFOCUS=Autofocus
-option.DOF_AUTOFOCUS.comment=Uses smoothed crosshair depth. Disable to set a fixed focus distance.
-option.DOF_FOCUS_DISTANCE=Manual Focus Distance (Blocks)
-option.DOF_FOCAL_LENGTH=Focal Length (mm)
-option.DOF_FSTOP=Aperture (f-number)
-option.DOF_FSTOP.comment=Lower values produce more background blur. This controls blur independently of camera exposure.
-option.DOF_SAMPLES=Bokeh Samples
-option.DOF_MAX_RADIUS=Maximum Blur Radius (Pixels)
 
 option.POM=Parallax Occlusion Mapping (POM)
 option.POM.comment=Terrain relief from LabPBR normal-map alpha. Requires Resource Pack Normal Maps. Leaves, plants and distant LODs are excluded. Does not change silhouettes or geometry depth.
@@ -168,28 +127,11 @@ option.POM_DEPTH.comment=Maximum relief relative to a texture tile. LabPBR stand
 option.POM_DISTANCE=Parallax Distance (Blocks)
 option.POM_DISTANCE.comment=Fades out starting at 65% of this distance and skips height tracing beyond it.
 
-screen.PERFORMANCE=Performance & Reconstruction
 option.CLOUD_RECONSTRUCTION=Reconstruct Volumetric Clouds
-option.CLOUD_RECONSTRUCTION.comment=March clouds at half width/height; preserve the native-resolution sky. Disable for the full-resolution reference.
 option.TEMPORAL_CLOUDS=Cloud History
 option.TEMPORAL_CLOUDS.comment=Reproject and clamp previous cloud samples. Requires cloud reconstruction. Disable if trails are visible.
 option.HALF_RES_LIGHTING=Reconstruct Lighting
 option.HALF_RES_LIGHTING.comment=Half-resolution AO/GI and depth-aware light shafts. Shafts use twice as many samples per ray; unsupported depth edges retain full-resolution tracing.
-option.HALF_RES_DOF=Reconstruct Lens Blur
-option.HALF_RES_DOF.comment=Gather large bokeh at half width/height. Focus, hands and depth edges retain full-resolution handling.
-
-option.UPSCALE_QUALITY=AMD FSR 1 Upscaling
-option.UPSCALE_QUALITY.comment=Spatial upscaling, available on Windows and macOS. Native preserves original resolution. Lower render resolution trades fine detail for GPU time. Does not generate frames.
-value.UPSCALE_QUALITY.0=Native (100%)
-value.UPSCALE_QUALITY.1=Ultra Quality (77%)
-value.UPSCALE_QUALITY.2=Quality (67%)
-value.UPSCALE_QUALITY.3=Balanced (59%)
-option.UPSCALE_SHARPNESS=FSR RCAS Sharpness
-option.UPSCALE_SHARPNESS.comment=Sharpen the upscaled image with AMD RCAS. Zero disables sharpening.
-
-
-screen.RAYTRACING=Hybrid Tracing
-screen.RAYTRACING.comment=Screen rays with optional sun-visible off-screen fallback. No hardware RT or full-world path tracing.
 
 option.CONTACT_HARDENING_SHADOWS=Contact-hardening sun shadows
 option.CONTACT_HARDENING_SHADOWS.comment=Four blocker taps estimate solar penumbra, capped at five texels. Requires shadows with 6 or 8 filter samples; adds GPU work.
@@ -202,31 +144,7 @@ option.TEMPORAL_INDIRECT.comment=Reprojects GI/AO with per-tap depth and world-n
 
 option.EXPOSURE.comment=Manual exposure multiplier. With adaptive exposure enabled it scales the metered result; otherwise uses the day/night baseline.
 
-
-
-
-
-
-
 option.FOG_DENSITY.comment=Distance haze density. Clear air leaves the first 12 blocks unattenuated; horizon haze remains. Rain and underwater extinction are handled separately.
-
-option.LIGHT_SPACE_FALLBACK=Off-screen Light-Space Fallback
-option.LIGHT_SPACE_FALLBACK.comment=Trace sun-visible shadow-map geometry when screen coverage is missing. Bounded 12-step GI / 24-step reflections; extra shadow memory. Requires shadows; no full world geometry.
-
-option.HIZ_TRACING=Hierarchical Depth Tracing
-option.HIZ_TRACING.comment=Four conservative min/max levels in one atlas. Requires optional OpenGL 4.3 image/compute support.
-
-option.VOXEL_TRACING=Local World Voxel Tracing
-option.VOXEL_TRACING.comment=64-cubed block occupancy captured before raster/depth tests from submitted terrain. Coarse full-block geometry; excludes entities and DH.
-
-option.VOXEL_STEPS=Voxel Traversal Budget
-option.VOXEL_STEPS.comment=Maximum DDA cells per ray. Higher budgets cover more of the local volume.
-
-option.GI_BOUNCES=Voxel GI Bounces
-option.GI_BOUNCES.comment=One or two diffuse bounces for fresh reservoir candidates. Two costs an additional voxel ray.
-
-option.RESTIR_GI=Spatiotemporal GI Reservoirs
-option.RESTIR_GI.comment=Bounded ReSTIR-style path reuse with current visibility tests. Requires voxel tracing, temporal GI and half-resolution lighting.
 
 option.SVGF_DENOISER=Variance-Guided GI Denoiser
 option.SVGF_DENOISER.comment=Temporal luminance moments and three edge-aware a-trous passes. Requires temporal half-resolution GI and OpenGL compute.
@@ -234,27 +152,58 @@ option.SVGF_DENOISER.comment=Temporal luminance moments and three edge-aware a-t
 option.HARDWARE_PCF=Hardware Shadow Filter
 option.HARDWARE_PCF.comment=Four hardware PCF taps for high-quality shadows, preserving PCSS blocker search. Edges change slightly. Disable for the original eight-tap filter; older Iris falls back automatically.
 
-# Five optimized gameplay profiles
-profile.comment=Five gameplay quality tiers. Lens blur is off in every profile; individual effects remain configurable.
+# Four gameplay profiles
+
+option.MATERIAL_FILTER=Smooth Texture Filtering
+option.MATERIAL_FILTER.comment=Keeps resolved nearby texels sharp. Adaptive filtering smooths only subpixel/distant and oblique footprints; 0 follows the game filter.
+value.MATERIAL_FILTER.0=Game Filter
+
+# Layered atmosphere
+option.ATMOSPHERIC_LIGHTING=Atmospheric Sky Fill
+option.ATMOSPHERIC_LIGHTING.comment=Adjusts sky/ground fill with sun elevation, rain and cloud cover. Direct shadows stay separate from ambient occlusion.
+option.CLOUD_LAYERS=Cloud Layers
+option.CLOUD_LAYERS.comment=1: volumetric cumulus. 2: adds a mid-altitude sheet. 3: adds high wind-stretched cirrus. Extra sheets use analytic opacity, not full volumetric marching.
+option.CLOUD_LIGHT_SAMPLES=Cloud Self-Shadow Quality
+option.CLOUD_LIGHT_SAMPLES.comment=2/4/6 sun-path density samples. Higher values resolve deep cloud shading at additional GPU cost.
+option.CLOUD_SHADOW_STRENGTH=Cloud Shadow Strength
+option.CLOUD_SHADOW_STRENGTH.comment=Maximum sunlight attenuation under clouds. All layers share a moving 4096-block map with terrain, water and light shafts.
+option.GI_SAMPLES.comment=Cosine-weighted rays per pixel. Each temporal ray explores an elevation stratum. 2 rays are the Detail preset baseline.
+option.GI_STRENGTH.comment=Amount of material-colored bounce added through the receiver diffuse response. 0.65 is the Detail preset baseline.
+option.GI_RADIUS=Bounce Radius
+option.GI_RADIUS.comment=Maximum length in world blocks per local diffuse ray. Wider ranges reach more geometry and increase tracing cost.
+option.GI_TRACE_STEPS=Diffuse Ray Steps
+option.GI_DISTANCE=Indirect Lighting Distance
+option.GI_DISTANCE.comment=Camera distance in blocks for local GI, with a gradual fade in the outer region. Distant LOD retains its base ambient lighting.
+
+option.UPSCALE_QUALITY=AMD FSR 1 Upscaling
+option.UPSCALE_QUALITY.comment=Spatial upscaling, available on Windows and macOS. Native preserves original resolution. Lower render resolution trades fine detail for GPU time. Does not generate frames.
+value.UPSCALE_QUALITY.0=Native (100%)
+value.UPSCALE_QUALITY.1=Ultra Quality (77%)
+value.UPSCALE_QUALITY.2=Quality (67%)
+value.UPSCALE_QUALITY.3=Balanced (59%)
+option.UPSCALE_SHARPNESS=FSR RCAS Sharpness
+option.UPSCALE_SHARPNESS.comment=Sharpen the upscaled image with AMD RCAS. Zero disables sharpening.
+
+# Current renderer and profiles
+screen.POST=Color & Image
+screen.INDIRECT=Indirect Lighting
+screen.INDIRECT.comment=Local diffuse bounce and smoothing. Screen depth plus optional sun-visible shadow view; no voxel scene.
+screen.PERFORMANCE=Performance & FSR
+option.DEPTH_HIERARCHY=Depth Hierarchy Optimization
+option.DEPTH_HIERARCHY.comment=Conservative min/max depth acceleration for screen rays. Requires optional image/compute support; this is an optimization, not an additional lighting effect.
+option.CLOUD_FULL_RES=Full-Resolution Clouds
+option.CLOUD_FULL_RES.comment=Keep cloud rendering and its history at native scene resolution. Requires cloud reconstruction; Extreme enables it. Higher GPU and memory cost.
+option.CLOUD_RECONSTRUCTION.comment=Cache volumetric clouds separately, preserving temporal reprojection. Normally half resolution; Full-Resolution Clouds overrides the buffer size.
+option.SSGI.comment=Local material-colored diffuse bounce from screen depth and optional sun-visible shadow-view fallback. Coverage is limited; no full-world tracing.
+option.GI_TRACE_STEPS.comment=Screen-depth step budget per ray. Shadow-view fallback is capped at 24 steps and the same Bounce Radius.
+option.LIGHT_SPACE_FALLBACK=Shadow-View Bounce Fallback
+option.LIGHT_SPACE_FALLBACK.comment=Use sun-visible shadow-map geometry for missing screen GI and terrain reflections. Limited 2.5D geometry; excludes water reflections.
+profile.comment=Four quality tiers. FSR remains configurable and defaults to Native. Smoke uses Minecraft particles.
 profile.POTATO=Lightweight
-profile.POTATO.comment=Native (100%), 512 shadows and 2D clouds. No GI, SSR or lens blur; the lightest gameplay profile.
+profile.POTATO.comment=512 shadows, fast 2D clouds, 2x texture filtering and 3 water bands. No indirect lighting or reflections.
 profile.MEDIUM=Balanced
-profile.MEDIUM.comment=Native (100%), 1024 shadows, temporal AO, 16 SSR and 12 cloud steps. No GI or lens blur.
+profile.MEDIUM.comment=1024 shadows, 12 cloud steps, temporal AO, 16 reflection steps and 4 water bands.
 profile.HIGH=Detailed
-profile.HIGH.comment=Native (100%), 2048 shadows, 2 screen-space GI rays, 24 SSR and 12 cloud steps. Detailed materials and water, no voxel tracing or lens blur.
-profile.REALISM_FAST=Local Tracing Performance
-profile.REALISM_FAST.comment=Retains the lighter gameplay preset: Native (100%), voxel/reservoir, 2 one-bounce GI rays, 24 SSR, 12 cloud steps and 2048 shadows. No DOF, motion blur or POM.
-profile.ULTRA=Local Tracing Detail
-profile.ULTRA.comment=Native (100%), voxel/reservoir with 3 two-bounce GI rays, 32 SSR and 16 cloud steps. More detail than Performance; 2048 shadows and lens blur remains off.
-
-option.SMOKE_MODE=Smoke Source
-option.SMOKE_MODE.comment=Shader: 3D campfire and fire smoke with rising flow, wind and block collision. AA Smoke Bridge replaces campfire billboards. Minecraft restores original smoke. No Physics Mod required.
-option.SMOKE_STEPS=Smoke Steps
-option.SMOKE_STEPS.comment=Samples per intersected plume. 8 is fastest; 12/16 improve close-up billows.
-option.SMOKE_DISTANCE=Smoke Source Distance
-option.SMOKE_DISTANCE.comment=Campfire and fire source radius in blocks, with smooth fade near the boundary.
-option.SMOKE_DENSITY=Smoke Density
-option.SMOKE_DENSITY.comment=Thickness of the volumetric smoke.
-
-value.SMOKE_MODE.0=Minecraft / Resource Pack
-value.SMOKE_MODE.1=Shader (3D)
+profile.HIGH.comment=2048 shadows, 20 cloud steps, 2 GI rays, 24 reflection steps, 6 water bands and resource PBR. POM can be enabled manually.
+profile.EXTREME=Extreme
+profile.EXTREME.comment=4096 shadows to 224 blocks; full-resolution 32-step clouds, 6 cloud light samples; 8 GI rays/48 steps; 64 reflection steps, 7 water bands and 48-step POM. Maximum quality budgets; expensive.

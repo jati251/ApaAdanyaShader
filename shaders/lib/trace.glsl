@@ -30,7 +30,7 @@ float traceSurfaceDepth(sampler2D depths,ivec2 depthSize,vec2 uv,out bool valid)
 float traceSurfaceDepth(sampler2D depths,vec2 uv,out bool valid) {
     return traceSurfaceDepth(depths,screenTextureSize(depths),uv,valid);
 }
-bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int count,out vec2 hitUV,out float confidence) {
+bool traceScreenRange(sampler2D depths,vec3 origin,vec3 direction,float stride,int count,float maxDistance,out vec2 hitUV,out float confidence) {
     confidence=0.0;
     hitUV=vec2(0.0);
     ivec2 depthSize=screenTextureSize(depths),dhDepthSize=traceDHDepthSize();
@@ -40,6 +40,7 @@ bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int co
     vec4 clipDirection=gbufferProjection*vec4(direction,0.0);
     for(int i=0;i<96;i++) {
         if(i>=count) break;
+        if(t>maxDistance) break;
         float rayZ=origin.z+direction.z*t;
         if(rayZ>=-near) return false;
         vec4 clip=clipOrigin+clipDirection*t;
@@ -78,9 +79,13 @@ bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int co
         #ifdef AA_HIZ
         nextT=hizAdvance(clipOrigin,clipDirection,origin,direction,uv,t,nextT,depthSize);
         #endif
-        t=nextT;
+        if(t>=maxDistance) break;
+        t=min(nextT,maxDistance);
     }
     return false;
+}
+bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int count,out vec2 hitUV,out float confidence) {
+    return traceScreenRange(depths,origin,direction,stride,count,1e20,hitUV,confidence);
 }
 bool traceScreen(sampler2D depths,vec3 origin,vec3 direction,float stride,int count,out vec2 hitUV) {
     float confidence;

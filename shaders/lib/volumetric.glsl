@@ -55,6 +55,8 @@ float volumetricVisibility(vec3 rd,float dist,vec2 pixel) {
             }
         }
         #endif
+        // The same moving cloud field occludes terrain, water and air scattering.
+        visibility*=cloudShadow(cameraPosition+rd*distance);
         sum+=visibility*extinction;total+=extinction;
     }
     return sum/max(total,0.001);
@@ -78,8 +80,10 @@ float reconstructVolumetric(vec2 uv,vec3 rd,float dist,vec3 vp,float depth,bool 
         w*=1.0-smoothstep(0.005,0.02,abs(tap.a+vp.z)/max(-vp.z,1.0));
         sum+=tap.r*w;total+=w;
     }
-    if(total<0.5) return volumetricVisibility(rd,dist,gl_FragCoord.xy);
-    return sum/total;
+    if(total>=0.50) return sum/total;
+    // A hard half/full switch popped at silhouettes as camera depth changed.
+    float local=volumetricVisibility(rd,dist,gl_FragCoord.xy);
+    return mix(local,sum/max(total,.00001),smoothstep(0.10,0.50,total));
 }
 #endif
 #endif

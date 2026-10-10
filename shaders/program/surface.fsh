@@ -3,6 +3,7 @@
 #define AA_RESOURCE_NORMALS
 #endif
 #include "/lib/lighting.glsl"
+#include "/lib/material_filter.glsl"
 #include "/lib/parallax.glsl"
 #include "/lib/fire.glsl"
 uniform sampler2D gtexture;
@@ -56,7 +57,7 @@ void main(){
     }
     #endif
     #endif
-    vec4 tex=textureGrad(gtexture,materialUV,uvDx,uvDy);
+    vec4 tex=sampleMaterial(gtexture,materialUV,uvDx,uvDy);
     float materialAO=1.0;
     #ifdef TERRAIN
     tex.rgb*=glcolor.rgb;
@@ -73,7 +74,9 @@ void main(){
     albedo=mix(albedo,srgbToLinear(entityColor.rgb),entityColor.a);
     #endif
     #if defined(RESOURCE_NORMALS) && defined(TERRAIN)
-    vec4 normalMap=textureGrad(normals,materialUV,uvDx,uvDy);
+    // Normal/AO and specular maps need the same footprint as the albedo;
+    // nearest PBR samples otherwise sparkle even when the color is filtered.
+    vec4 normalMap=sampleMaterialData(normals,materialUV,uvDx,uvDy);
     vec3 tn=normalMap.xyz*2.0-1.0;
     tn.z=sqrt(max(1.0-dot(tn.xy,tn.xy),0.001));
     materialAO*=normalMap.b;
@@ -90,7 +93,7 @@ void main(){
     float porosity=0.5;
     if(materialId>1004.5 && materialId<1005.5) roughness=0.18;
     #if defined(RESOURCE_SPECULAR) && defined(TERRAIN)
-    vec4 spec=textureGrad(specular,materialUV,uvDx,uvDy);
+    vec4 spec=sampleMaterialData(specular,materialUV,uvDx,uvDy);
     if(any(greaterThan(spec.rgb,vec3(0.0))) || (spec.a>0.0 && spec.a<0.999)) {
         decodeLabPBR(spec,albedo,roughness,f0,metal,emission,foliage,porosity);
     }
@@ -174,8 +177,7 @@ void main(){
                          || (isSoul && albedo.b>0.30 && albedo.g>0.25)
                          || isRedstone
                          || (maxVal>0.70);
-        if(warmFixture) isFlamePixel=tex.r>0.70 && tex.g>0.45 && tex.r>tex.b*1.3;
-        if(soulFixture) isFlamePixel=tex.g>0.50 && tex.b>0.55;
+        if(warmFixture || soulFixture) isFlamePixel=fixtureRadiance;
         if(isFlamePixel){
             // Saturated chromatic glow: rich golden amber fire, cyan soul fire, ruby redstone (never pale white!)
             vec3 chroma=albedo/max(maxVal,0.001);

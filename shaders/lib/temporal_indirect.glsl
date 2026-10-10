@@ -2,9 +2,7 @@
 #define AA_TEMPORAL_INDIRECT
 #ifdef TEMPORAL_INDIRECT
 uniform sampler2D colortex17;
-#ifndef AA_RESTIR
 uniform sampler2D colortex18;
-#endif
 #ifndef AA_PREVIOUS_INDIRECT_UNIFORMS
 #define AA_PREVIOUS_INDIRECT_UNIFORMS
 uniform mat4 gbufferPreviousModelView,gbufferPreviousProjection;

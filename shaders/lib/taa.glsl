@@ -86,8 +86,14 @@ vec3 applyTAA(vec2 uv,vec3 currentRGB,out float historyDepth) {
     vec3 clipped=clamp(old,lo,hi);
     float reactive=sat(abs(old.x-now.x)/max(max(old.x,now.x),0.05));
     float movement=length((uv-historyUV)*vec2(size));
-    float blend=pow(TAA_BLEND,clamp(frameTime*60.0,0.25,4.0))*exp(-movement*0.025);
-    blend*=1.0-smoothstep(0.05,0.35,reactive);
+    float blend=pow(TAA_BLEND,clamp(frameTime*60.0,0.25,4.0));
+    // Static terrain already passed depth validation and neighborhood clipping.
+    // Alternating fine-texture samples are aliasing, not per-object motion.
+    // Reuse existing taps/history; no raster jitter or extra texture reads.
+    if(mask>0.1) {
+        blend*=exp(-movement*0.025);
+        blend*=1.0-smoothstep(0.05,0.35,reactive);
+    }
     // Water, translucent surfaces and entities lack per-object motion vectors.
     if(mask>0.1) blend=min(blend,0.15);
     return temporalDecode(mix(now,clipped,blend));

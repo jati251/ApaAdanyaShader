@@ -25,9 +25,11 @@ void main() {
     if(abs(gbufferProjection[1][1]-gbufferPreviousProjection[1][1])>0.02) return;
     vec3 rd=worldDirection(viewPosition(texcoord,1.0));
     if(abs(rd.y)<0.015) return;
-    float anchor=(CLOUD_ALTITUDE+55.0-cameraPosition.y)/rd.y;
+    float anchor=(CLOUD_ALTITUDE+75.0-cameraPosition.y)/rd.y;
     // A single plane cannot reproject a cloud volume reliably from inside it.
-    if(anchor<110.0 || anchor>5500.0) return;
+    // Upper/distant layers extend to 22 km. They still need temporal filtering;
+    // the old 5.5 km cutoff exposed the raw ray pattern at the horizon.
+    if(anchor<110.0 || anchor>22000.0) return;
     vec3 relative=rd*anchor+cameraPosition-previousCameraPosition;
     relative+=vec3(1.15,0.0,0.48)*frameTime;
     vec4 previous=gbufferPreviousProjection*(gbufferPreviousModelView*vec4(relative,1.0));
@@ -39,10 +41,13 @@ void main() {
     vec4 meta=texelFetch(colortex11,q,0);
     float previousTag=float((frameCounter-1)%1024+1);
     if(abs(meta.a-previousTag)>0.1 || abs(meta.r-metadata.r)>0.005 || abs(meta.g-rainStrength)>0.02) return;
-    // Includes the counter wrap, shader reloads and long gaps between renders.
-    if(abs(metadata.b-meta.b-frameTime)>0.15) return;
+    // Time is stored modulo eight in half-float metadata. Unwrap it so the
+    // normal counter wrap does not expose raw noise every eight seconds.
+    float elapsed=mod(metadata.b-meta.b+8.0,8.0);
+    if(abs(elapsed-frameTime)>0.15) return;
     vec4 lo=now,hi=now;
     for(int y=-1;y<=1;y++) for(int x=-1;x<=1;x++) {
+        if(x==0 && y==0) continue; // now already supplied the center bounds
         vec4 tap=texelFetch(colortex9,clamp(pixel+ivec2(x,y),ivec2(0),size-1),0);
         if(tap.a<0.0) continue;
         lo=min(lo,tap); hi=max(hi,tap);
@@ -65,5 +70,9 @@ void main() {
     float movement=length((uv-texcoord)*vec2(size));
     // Stabilized confidence: maintains temporal filtering across camera pans to avoid flashing raw noise
     float confidence=clamp(0.88*exp(-movement*0.035),0.25,0.88)*(1.0-smoothstep(0.06,0.38,abs(old.a-now.a)));
+    #if CLOUD_LAYERS >= 2
+    // Distinct altitudes have parallax; reduce reuse while translating the camera.
+    confidence*=exp(-length(cameraPosition-previousCameraPosition)*0.30);
+    #endif
     history=mix(now,clamp(old,lo,hi),confidence);
 }
