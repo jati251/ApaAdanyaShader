@@ -11,3 +11,6 @@ PASS: HIGH, with/without DH
 PASS: REALISM_FAST, with/without DH
 PASS: ULTRA, with/without DH
 PASS: DEFAULT, with/without DH
+PASS: MANUAL_FOCUS, with/without DH
+PASS: ACTIVE_INSTANCE, with/without DH
+PASS: POM_NO_NORMALS, with/without DH
