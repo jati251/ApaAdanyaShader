@@ -1,6 +1,12 @@
 #ifndef AA_WATER
 #define AA_WATER
 
+// Small wave budgets without screen reflections use a cheaper optical path.
+// Derived from existing quality controls; no additional preset switch is needed.
+#if WATER_OCTAVES <= 4 && !defined(SSR)
+#define AA_WATER_FAST
+#endif
+
 // World-anchored swells with analytic, pixel-filtered normals.
 vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest, out float unresolvedVariance) {
     // Long wind swells, crossing wavelets and oblique capillary ripples.
@@ -33,6 +39,24 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest, out float unresolvedV
         float k = freq[i];
 
         float phaseSpeed = speeds[i] * time;
+        #ifdef AA_WATER_FAST
+        // Two crossing phases curve the crests without the full envelope/cubic model.
+        float crossPhase=dot(p,perp)*(k*0.53)-phaseSpeed*0.61+float(i)*1.61803;
+        float crossSin=sin(crossPhase),crossCos=cos(crossPhase);
+        float phase=dot(p,d)*k-phaseSpeed+float(i)*2.39996+0.65*crossSin;
+        vec2 gradPhase=d*k+perp*(k*0.53*0.65*crossCos);
+        vec2 pixelPhase=vec2(dot(gradPhase,dx),dot(gradPhase,dy));
+        float e=exp(-dot(pixelPhase,pixelPhase)/24.0);
+        float e2=e*e,e4=e2*e2;
+        float s=sin(phase),c=cos(phase);
+        float a=amp[i]*0.78;
+        slope+=gradPhase*a*(0.55*c*e+0.32*s*c*e4);
+        crest+=(0.5+0.5*s*e)*a;
+        crestWeight+=a;
+        // Pixel filtering transfers missing ripple energy to the specular width.
+        unresolvedVariance+=0.5*a*a*dot(gradPhase,gradPhase)
+            *(0.3025*(1.0-e2)+0.0256*(1.0-e4*e4));
+        #else
         vec2 envelopeAxis=d*(k*0.13)+perp*(k*0.09);
         float envelopePhase=dot(p,envelopeAxis)-phaseSpeed*0.17+float(i)*3.71;
         vec2 envelopePixel=vec2(dot(envelopeAxis,dx),dot(envelopeAxis,dy));
@@ -75,6 +99,7 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest, out float unresolvedV
         vec3 harmonicEnergy=vec3(0.21972656,0.140625,0.00878906);
         unresolvedVariance+=0.5*a*a*dot(gradPhase,gradPhase)
             *dot(harmonicEnergy,vec3(1.0)-band*band);
+        #endif
     }
 
     #if !defined(NETHER) && !defined(END)
@@ -84,7 +109,12 @@ vec2 waterSlope(vec2 p, vec2 dx, vec2 dy, out float crest, out float unresolvedV
         float rippleScale = 2.6;
         vec2 ripGrad = vec2(0.0);
         float pixelFootprint=max(length(dx),length(dy));
-        for(int r = 0; r < 2; r++) {
+        #ifdef AA_WATER_FAST
+        const int rainLayers=1;
+        #else
+        const int rainLayers=2;
+        #endif
+        for(int r = 0; r < rainLayers; r++) {
             // Smaller layers only increase the footprint; every remaining band is zero.
             float rippleBand=1.0-smoothstep(0.7,2.8,pixelFootprint*rippleScale*31.4159);
             if(rippleBand<=0.0) break;
@@ -160,13 +190,22 @@ float waterFresnel(float nv, bool underwater) {
 
 vec3 waterAbsorption() {
     // Natural freshwater: retain bed color in shallows, blue-green transmission at depth.
+    #ifdef AA_WATER_FAST
+    return vec3(0.13,0.065,0.048)/WATER_CLARITY;
+    #else
     return vec3(0.14, 0.085, 0.11) / WATER_CLARITY;
+    #endif
 }
 
 vec3 waterBodyColor(float thickness, float skyLight) {
     // In-scattered freshwater color; transmitted bed radiance is handled separately.
+    #ifdef AA_WATER_FAST
+    vec3 shallow = vec3(0.040,0.073,0.070);
+    vec3 deep    = vec3(0.011,0.038,0.049);
+    #else
     vec3 shallow = vec3(0.035, 0.065, 0.055);
     vec3 deep    = vec3(0.012, 0.030, 0.028);
+    #endif
     return mix(shallow, deep, smoothstep(1.5, 18.0, thickness))
         * mix(0.15, 1.0, daylight()) * (0.2 + skyLight * 0.8);
 }

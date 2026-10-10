@@ -17,15 +17,6 @@ vec3 waterReflectionRay(vec3 ray,float spread,int tap) {
 
 float waterReflectionTapWeight(int tap) { return tap==0?0.4:0.1; }
 
-vec3 waterEnvironmentReflection(vec3 ray,float spread) {
-    vec3 result=vec3(0);
-    for(int tap=0;tap<7;tap++) {
-        vec3 direction=waterReflectionRay(ray,spread,tap);
-        result+=environmentRadiance(direction)*waterReflectionTapWeight(tap);
-    }
-    return result;
-}
-
 // Four fixed world-space tetrahedral taps preserve zero mean and the seven-tap
 // cone's second moment. No camera-dependent tangent-axis switch or sharp one-tap mirror.
 vec3 waterLODEnvironmentReflection(vec3 ray,float spread) {
@@ -37,6 +28,20 @@ vec3 waterLODEnvironmentReflection(vec3 ray,float spread) {
         result+=environmentRadiance(normalize(ray+offset*spread));
     }
     return result*0.25;
+}
+
+vec3 waterEnvironmentReflection(vec3 ray,float spread) {
+    #ifdef AA_WATER_FAST
+    // Same stable cone as distant water; four cache taps instead of seven.
+    return waterLODEnvironmentReflection(ray,spread);
+    #else
+    vec3 result=vec3(0);
+    for(int tap=0;tap<7;tap++) {
+        vec3 direction=waterReflectionRay(ray,spread,tap);
+        result+=environmentRadiance(direction)*waterReflectionTapWeight(tap);
+    }
+    return result;
+    #endif
 }
 
 float waterFacetVisibility(float normalView,float roughness,bool underwater) {

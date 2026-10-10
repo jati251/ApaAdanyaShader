@@ -157,6 +157,13 @@ vec3 shadeMaterial(vec3 albedo,vec3 N,vec3 vp,vec2 lm,float roughness,float emis
     skyAmbient=mix(skyAmbient,vec3(0.105,0.125,0.205),twilight*0.55);
     groundAmbient=mix(groundAmbient,vec3(0.095,0.063,0.040),twilight*0.45);
     skyAmbient=mix(skyAmbient,vec3(dot(skyAmbient,vec3(0.2126,0.7152,0.0722)))*0.85,rainStrength*0.65);
+    #if CLOUDS == 1 && !defined(SSGI)
+    // Fast-cloud profiles have no sampled bounce light; lift only their daylight fill.
+    // Keep directional shadows, night lighting and the expensive GI path unchanged.
+    float daylightFill=daylight();
+    skyAmbient*=mix(1.0,1.12,daylightFill);
+    groundAmbient*=mix(1.0,1.25,daylightFill);
+    #endif
     #endif
     #ifdef ATMOSPHERIC_LIGHTING
     if(lm.y>0.08) cloudVis=cloudShadow(rel+cameraPosition);

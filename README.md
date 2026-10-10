@@ -8,12 +8,12 @@ Empat preset menu dan ekspor memiliki pengaturan yang sama:
 
 | Preset | Shadow map / jarak | Awan / sampel cahaya | GI / refleksi | Air / material | FSR default |
 |---|---|---|---|---|---|
-| Lightweight (Potato) | 1024 / 48 blok, 4 tap | 2D dengan shading + atlas bayangan 128² | GI, AO dan SSR mati | 3 oktaf, filter 2× | Balanced (59%) |
+| Lightweight (Potato) | 1024 / 48 blok, 4 tap | 2D dengan shading + atlas bayangan 128² | GI, AO dan SSR mati | 4 wave band ringan, refraksi tipis, filter 2× | Balanced (59%) |
 | Balanced | 1024 / 96 blok | 12 langkah, 2 lapis / 2 | AO temporal, SSR 16 | 4 oktaf, filter 4× | Quality (67%) |
 | Detailed | 2048 / 144 blok | 20 langkah, 3 lapis / 4 | GI 2 ray × 24 langkah, SSR 24 | 6 oktaf, filter 4×, LabPBR | Ultra Quality (77%) |
 | Extreme | 4096 / 224 blok | 32 langkah, 3 lapis / 6, resolusi penuh | GI 8 ray × 48 langkah, SSR 64 | 7 oktaf, filter 8×, LabPBR, POM 48 | Ultra Quality (77%) |
 
-**Lightweight/Potato** mengutamakan bayangan dekat: 1024 texel pada jarak 48 blok, empat perbandingan depth tetangga dengan bobot bilinear untuk tepi yang tajam dan kontinu. Awan 2D memakai formasi kecil dengan celah lebih lebar, empat oktaf terfilter, dua sampel arah cahaya dan silver lining. Pola, coverage dan anginnya sama dengan atlas cloud shadow 128×128, sehingga terrain menerima bayangan awan tanpa raymarch per pixel. Pencahayaan atmosfer aktif; GI, AO, SSR, bloom dan volumetric light tetap mati. Tidak memakai history TAA; FXAA menjaga tepi layar dengan biaya rendah. FPS belum diukur.
+**Lightweight/Potato** mengutamakan bayangan dekat: 1024 texel pada jarak 48 blok, empat perbandingan depth tetangga dengan bobot bilinear untuk tepi yang tajam dan kontinu. Awan 2D memakai formasi kecil dengan celah lebih lebar, empat oktaf terfilter, dua sampel arah cahaya dan silver lining. Pola, coverage dan anginnya sama dengan atlas cloud shadow 128×128, sehingga terrain menerima bayangan awan tanpa raymarch per pixel. Pencahayaan atmosfer dan auto exposure aktif; metering memakai satu pixel dengan 64 sampel scene. Ambient siang pada jalur awan 2D tanpa GI dinaikkan 12% untuk sky fill dan 25% untuk ground fill, sehingga area teduh lebih terbaca tanpa menghapus shadow. Malam mempertahankan skala ambient asal. GI, AO, SSR, bloom dan volumetric light tetap mati. Tidak memakai history TAA; FXAA menjaga tepi layar dengan biaya rendah. FPS belum diukur.
 
 **Extreme** memaksimalkan budget kualitas yang tersedia: SSAO 12 sampel, volumetric light 16 sampel, radius GI 16 blok hingga jarak kamera 96 blok, POM hingga 64 blok, dan awan resolusi penuh dengan history temporal. GI tetap memakai rekonstruksi dan denoiser untuk menjaga stabilitas. Intensitas GI tetap 0.65, warna natural dan kekuatan gelombang 0.65; kualitas maksimal tidak berarti semua intensitas dibuat paling besar. Beban GPU dan memori bertambah; FPS belum diukur.
 
@@ -50,6 +50,8 @@ Fix pola garis/bintik berlaku di kode semua preset. Efek debu buatan dengan tiga
 Detailed/Balanced memakai cache awan setengah lebar/tinggi scene. Extreme memakai ukuran scene penuh dan history yang sama; aktif-region FSR mengikuti ukuran cache. Pencahayaan atmosfer mengubah sky/ground fill menurut waktu, cuaca dan bayangan awan. Tidak ada klaim visual atau FPS baru dari tes sintetis lama.
 
 ## Air dan material
+
+**Air Potato** memakai empat wave band dengan dua harmonik terfilter dan gradien analitik yang lebih sederhana. Riak tetap melengkung dan bersilang; satu lapis riak hujan menggantikan dua. Refleksi langit/awan memakai empat tap cache stabil yang sama dengan air DH, dibanding tujuh tap jalur utama. Refraksi memakai offset normal kecil (maksimal 0.8% tinggi layar), dengan validasi sisi bidang air, depth dan kontinuitas dasar untuk menjaga tepi terrain. Kejernihan 1.5, roughness 0.10, serta absorption dan warna hamburan biru-hijau menjaga dasar dangkal terlihat. SSR dan caustics tetap mati. Jalur ini dipilih otomatis untuk budget hingga empat band tanpa SSR; preset lain mempertahankan jalur utama. Belum ada pengukuran FPS atau tes GPU.
 
 Spektrum air terdiri dari swell silang, wavelet dan riak kapiler hingga tujuh oktaf. Turunan analitik dan filter per harmonik mengurangi aliasing; energi normal yang tidak teresolusi menjadi lebar highlight. Vanilla dan DH memakai spektrum yang sama. Mesh dan simulasi fluida Minecraft mengikuti engine.
 

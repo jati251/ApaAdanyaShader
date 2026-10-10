@@ -164,6 +164,33 @@ void main(){
     vec2 refractUV=screenUV;
     float refractWeight=0.0;
     #ifdef WATER_REFRACTION
+    #ifdef AA_WATER_FAST
+    // A small projected slope offset avoids two refract/projection pairs.
+    vec2 distortion=(N.xy-meshN.xy)*abs(vec2(gbufferProjection[0][0],gbufferProjection[1][1]))
+        *(0.09*min(thickness,2.0)/max(-surfacePos.z,1.0));
+    vec2 aspect=vec2(viewWidth/viewHeight,1.0);
+    distortion*=min(1.0,0.008/max(length(distortion*aspect),0.0001));
+    vec2 candidate=screenUV+distortion;
+    if(all(greaterThan(candidate,vec2(0.001))) && all(lessThan(candidate,vec2(0.999)))) {
+        bool validRefracted;
+        vec3 refractPos=opaquePosition(candidate,validRefracted);
+        // The facing mesh plane separates foreground banks from the water column.
+        float clearance=dot(surfacePos-refractPos,meshN);
+        float waterDepth=worldUpDelta(surfacePos-refractPos);
+        if((!validRefracted && underwater) || (validRefracted && clearance>0.02
+            && (underwater || waterDepth>0.01))) {
+            refractUV=candidate;
+            refractWeight=edgeFade(candidate)*smoothstep(0.02,0.30,clearance)
+                *(underwater?1.0:smoothstep(0.01,0.30,waterDepth))
+                *smoothstep(0.0,0.50,thickness);
+            if(validRefracted && validBehind) {
+                float planeError=abs(dot(refractPos-behind,bedNormal));
+                refractWeight*=bedContinuity*(1.0-smoothstep(0.08,0.35,planeError));
+                thickness=mix(thickness,clamp(length(refractPos-surfacePos),0.0,80.0),refractWeight);
+            }
+        }
+    }
+    #else
     vec3 incident=normalize(surfacePos);
     vec3 refracted=refract(incident,N,isEyeInWater==1?1.333:0.7502);
     float opticalTravel=min(thickness,2.8);
@@ -201,6 +228,7 @@ void main(){
             }
         }
     }
+    #endif
     #endif
     // Water dispersion is tiny; one validated lookup avoids colored foreground leaks.
     vec3 transmitted=mix(textureScreen(colortex6,screenUV).rgb,
