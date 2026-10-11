@@ -77,7 +77,12 @@ void main(){
         scene = renderClouds(rd, sky, gl_FragCoord.xy);
         #endif
 #elif ((CLOUDS == 1 && !(defined(NETHER))) && !(defined(END)))
+        #ifdef CLOUD_RECONSTRUCTION
+        vec4 layer=reconstructClouds(texcoord,rd);
+        scene=sky*(1.0-layer.a)+layer.rgb;
+        #else
         scene = renderFastClouds(rd, sky);
+        #endif
 #else
         scene = sky;
         #endif

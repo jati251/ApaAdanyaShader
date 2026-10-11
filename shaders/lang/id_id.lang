@@ -127,7 +127,7 @@ option.POM_DEPTH.comment=Kedalaman relatif terhadap satu ubin tekstur. Standar L
 option.POM_DISTANCE=Jarak Parallax (Blok)
 option.POM_DISTANCE.comment=Mulai memudar pada 65% jarak ini. Penelusuran tinggi dilewati setelah batas jarak.
 
-option.CLOUD_RECONSTRUCTION=Rekonstruksi Awan Volumetrik
+option.CLOUD_RECONSTRUCTION=Rekonstruksi Awan
 option.TEMPORAL_CLOUDS=Riwayat Awan
 option.TEMPORAL_CLOUDS.comment=Proyeksikan ulang dan batasi sampel awan sebelumnya. Perlu rekonstruksi awan. Matikan jika terlihat jejak.
 option.HALF_RES_LIGHTING=Rekonstruksi Pencahayaan
@@ -150,7 +150,7 @@ option.SVGF_DENOISER=Denoiser GI Berbasis Varians
 option.SVGF_DENOISER.comment=Momen luminansi temporal dan tiga pass a-trous berpenjaga tepi. Memerlukan GI temporal setengah resolusi dan compute OpenGL.
 
 option.HARDWARE_PCF=Filter Bayangan Hardware
-option.HARDWARE_PCF.comment=Empat tap hardware PCF untuk bayangan kualitas tinggi, dengan pencarian blocker PCSS tetap aktif. Tepi sedikit berubah. Matikan untuk filter delapan tap semula; Iris lama memakai fallback otomatis.
+option.HARDWARE_PCF.comment=Bayangan 4 sampel memakai satu lookup hardware bilinear; 8 sampel memakai empat lookup dan mempertahankan pencarian blocker PCSS. Tepi sedikit berubah. Iris tanpa dukungan memakai filter manual.
 
 # Four gameplay profiles
 
@@ -193,16 +193,16 @@ option.DEPTH_HIERARCHY=Optimasi Hierarki Kedalaman
 option.DEPTH_HIERARCHY.comment=Mempercepat ray layar dengan min/max depth konservatif. Memerlukan image/compute opsional; optimasi ini bukan efek cahaya tambahan.
 option.CLOUD_FULL_RES=Awan Resolusi Penuh
 option.CLOUD_FULL_RES.comment=Render awan beserta history pada resolusi scene asli. Memerlukan rekonstruksi awan; aktif di Extreme. Beban GPU dan memori lebih tinggi.
-option.CLOUD_RECONSTRUCTION.comment=Cache awan terpisah dengan reproyeksi temporal. Biasanya setengah resolusi; Awan Resolusi Penuh mengganti ukuran buffer.
+option.CLOUD_RECONSTRUCTION.comment=Cache awan 2D atau volumetrik pada setengah resolusi. Bentuk dan warna tetap; tepi bisa sedikit lebih lembut. History temporal hanya untuk awan volumetrik. Awan Resolusi Penuh mengganti ukuran buffer.
 option.SSGI.comment=Pantulan diffuse berwarna material dari depth layar dan fallback shadow-view yang terlihat matahari. Cakupan terbatas, tanpa tracing seluruh dunia.
 option.GI_TRACE_STEPS.comment=Budget langkah depth layar per ray. Fallback shadow-view dibatasi 24 langkah dan Radius Pantulan yang sama.
 option.LIGHT_SPACE_FALLBACK=Fallback Pantulan Shadow-View
 option.LIGHT_SPACE_FALLBACK.comment=Geometri shadow-map yang terlihat matahari mengisi GI/refleksi terrain di luar layar. Cakupan 2.5D terbatas; refleksi air tidak memakai jalur ini.
 profile.comment=Empat tingkat kualitas dengan FSR aktif secara default. Asap memakai partikel Minecraft.
 profile.POTATO=Lightweight
-profile.POTATO.comment=Bayangan tajam 1024 hingga 48 blok; awan 2D dengan cloud shadows; pencahayaan atmosfer dengan ambient siang dan auto exposure; 4 lapis gelombang ringan, refraksi tipis dan FSR Balanced. GI, AO, SSR, caustics dan volumetric light mati.
+profile.POTATO.comment=Bayangan 256 hingga 48 blok; awan 2D ber-cache dan pencahayaan atmosfer; 4 lapis gelombang ringan, refraksi lebih jernih dan pola cahaya di dasar air; FSR Ultra Quality. Motion blur, GI, AO, SSR dan volumetric light mati.
 profile.MEDIUM=Balanced
-profile.MEDIUM.comment=FSR Quality; bayangan 1024, awan 12 langkah, AO temporal, refleksi 16 langkah dan 4 lapis gelombang.
+profile.MEDIUM.comment=FSR Ultra Quality; bayangan 1024, awan 12 langkah, AO temporal, refleksi 16 langkah dan 4 lapis gelombang.
 profile.HIGH=Detailed
 profile.HIGH.comment=FSR Ultra Quality; bayangan 2048, awan 20 langkah, GI 2 ray, refleksi 24 langkah, 6 lapis gelombang dan PBR resource pack. POM bisa dinyalakan manual.
 profile.EXTREME=Extreme

@@ -6,14 +6,9 @@
 #include "/lib/lighting.glsl"
 #include "/lib/water.glsl"
 #include "/lib/volumetric.glsl"
-uniform sampler2D colortex0;
-in vec2 texcoord;
-/* RENDERTARGETS: 0 */
-layout(location=0) out vec4 color;
-void main(){
-    vec3 c=textureScreen(colortex0,texcoord).rgb;
+vec3 applySceneFog(vec2 uv,vec3 c){
     vec3 vp,rd;float dist,depth;bool hand,isDH;
-    volumetricScene(texcoord,vp,rd,dist,depth,hand,isDH);
+    volumetricScene(uv,vp,rd,dist,depth,hand,isDH);
     if(isEyeInWater==1){
         // Absorption along the eye-to-surface path in murky natural freshwater
         vec3 trans=exp(-waterAbsorption()*dist);
@@ -65,7 +60,7 @@ void main(){
         float lightFactor=volumetricFactor(rd,dist);
         if(lightFactor>0.0005) {
             #ifdef HALF_RES_LIGHTING
-            float visibility=reconstructVolumetric(texcoord,rd,dist,vp,depth,isDH);
+            float visibility=reconstructVolumetric(uv,rd,dist,vp,depth,isDH);
 #else
             float visibility=volumetricVisibility(rd,dist,gl_FragCoord.xy);
             #endif
@@ -73,5 +68,12 @@ void main(){
         }
         #endif
     }
-    color=vec4(max(c,vec3(0.0)),1.0);
+    return max(c,vec3(0.0));
 }
+#ifndef AA_FOG_LIBRARY
+uniform sampler2D colortex0;
+in vec2 texcoord;
+/* RENDERTARGETS: 0 */
+layout(location=0) out vec4 color;
+void main(){color=vec4(applySceneFog(texcoord,textureScreen(colortex0,texcoord).rgb),1.0);}
+#endif

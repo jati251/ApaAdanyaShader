@@ -3,6 +3,10 @@
 uniform sampler2D colortex0,colortex4;
 #include "/lib/color_grading.glsl"
 #include "/lib/taa.glsl"
+#if !defined(BLOOM) && !defined(TAA)
+#define AA_FOG_LIBRARY
+#include "/program/composite.fsh"
+#endif
 in vec2 texcoord;
 // TAA-off profiles do not write or retain a full-resolution history target.
 #ifdef TAA
@@ -18,6 +22,9 @@ layout(location=1) out vec4 history;
 layout(location=0) out vec4 color;
 void main(){
     vec3 c=textureScreen(colortex0,texcoord).rgb;
+    #if !defined(BLOOM) && !defined(TAA)
+    c=applySceneFog(texcoord,c);
+    #endif
     #ifdef TAA
     float historyDepth=0.0;
     c=applyTAA(texcoord,c,historyDepth);

@@ -370,11 +370,13 @@ vec3 renderClouds(vec3 rd, vec3 background, vec2 pixel) {
     return background * (1.0 - layer.a) + layer.rgb;
 }
 
-vec3 renderFastClouds(vec3 rd, vec3 background) {
+vec4 fastCloudLayer(vec3 rd) {
     #if !defined(NETHER) && !defined(END)
-    if (rd.y < 0.02) return background;
+    if (rd.y < 0.02) return vec4(0.0);
     float planeDist = (CLOUD_ALTITUDE - cameraPosition.y) / max(rd.y, 0.02);
-    if (planeDist < 0.0) return background;
+    if (planeDist < 0.0 || planeDist >= 3600.0) return vec4(0.0);
+    float fade = smoothstep(0.02, 0.12, rd.y) * (1.0 - smoothstep(1200.0, 3600.0, planeDist));
+    if (fade <= 0.0) return vec4(0.0);
     vec2 world = cameraPosition.xz + rd.xz * planeDist;
     vec2 pos = fastCloudCoordinates(world);
     // Projected footprint includes the oblique cloud plane and FSR render size.
@@ -403,12 +405,16 @@ vec3 renderFastClouds(vec3 rd, vec3 background) {
         float sunset = exp(-abs(sd.y) * 8.0) * horizon * smoothstep(-0.04,0.04,sd.y);
         cloudCol = mix(cloudCol, vec3(1.15, 0.45, 0.12), sunset * 0.70);
 
-        // Horizon distance fade
-        float fade = smoothstep(0.02, 0.12, rd.y) * (1.0 - smoothstep(1200.0, 3600.0, planeDist));
-        return mix(background, cloudCol, min(density * fade, 0.90));
+        float opacity = min(density * fade, 0.90);
+        return vec4(cloudCol * opacity, opacity);
     }
     #endif
-    return background;
+    return vec4(0.0);
+}
+
+vec3 renderFastClouds(vec3 rd, vec3 background) {
+    vec4 layer = fastCloudLayer(rd);
+    return background * (1.0 - layer.a) + layer.rgb;
 }
 
 #endif

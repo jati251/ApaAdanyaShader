@@ -4,7 +4,7 @@
 #include "/lib/cloud_shadow.glsl"
 uniform sampler2D shadowtex0;
 #ifdef HARDWARE_PCF
-#if (defined(IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS) && SHADOW_SAMPLES >= 8)
+#if (defined(IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS) && (SHADOW_SAMPLES == 4 || SHADOW_SAMPLES >= 8))
 #define AA_HARDWARE_PCF
 uniform sampler2DShadow shadowtex0HW;
 const bool shadowHardwareFiltering=true;
@@ -47,6 +47,10 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float s1 = step(sc.z - bias, texture(shadowtex0, sc.xy - vec2(r, r)).r);
     return mix((s0 + s1) * 0.5, 1.0, fade);
 #elif SHADOW_SAMPLES <= 4
+    #ifdef AA_HARDWARE_PCF
+    // Same four neighboring comparisons and bilinear weights, in one filtered lookup.
+    return mix(texture(shadowtex0HW,vec3(sc.xy,sc.z-bias)),1.0,fade);
+    #else
     // Bilinear comparisons: four adjacent texels give continuous, crisp edges.
     // Filtering the depth itself would invent blockers at a silhouette.
     ivec2 size=textureSize(shadowtex0,0);
@@ -58,6 +62,7 @@ float shadowVisibility(vec3 relativeWorld, vec3 normalWorld, float ndl, bool fil
     float s2=step(sc.z-bias,texelFetch(shadowtex0,base+ivec2(0,1),0).r);
     float s3=step(sc.z-bias,texelFetch(shadowtex0,base+ivec2(1,1),0).r);
     return mix(mix(mix(s0,s1,f.x),mix(s2,s3,f.x),f.y),1.0,fade);
+    #endif
 #else
     vec2 radius=vec2(1.65*texelSize);
     #ifdef CONTACT_HARDENING_SHADOWS

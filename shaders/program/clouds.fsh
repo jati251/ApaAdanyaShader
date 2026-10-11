@@ -29,8 +29,13 @@ void main() {
     layer=vec4(0.0,0.0,0.0,-1.0);
     if(!sky) return;
     vec3 rd=worldDirection(viewPosition(texcoord,1.0));
+    #if CLOUDS == 1
+    // Keep the scene footprint in fastCloudLayer; caching must not erase extra octaves.
+    layer=fastCloudLayer(normalize(rd));
+    #else
     vec2 pixel=texcoord*size;
     // cloudLayer owns frame scrambling; moving this grid as well creates
     // a second camera-independent jump in the sampling pattern.
     layer=cloudLayer(rd,pixel);
+    #endif
 }

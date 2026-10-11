@@ -1,5 +1,10 @@
-#if defined(CLOUD_RECONSTRUCTION) && CLOUDS == 2 && !defined(NETHER) && !defined(END)
+#if defined(CLOUD_RECONSTRUCTION) && CLOUDS > 0 && !defined(NETHER) && !defined(END)
+#if CLOUDS == 2
 #ifdef TEMPORAL_CLOUDS
+#define AA_USE_CLOUD_HISTORY
+#endif
+#endif
+#ifdef AA_USE_CLOUD_HISTORY
 uniform sampler2D colortex10;
 #define AA_CLOUD_BUFFER colortex10
 #else
@@ -21,6 +26,11 @@ vec4 reconstructClouds(vec2 uv,vec3 rd) {
         total+=weight;
     }
     if(total>0.001) return sum/total;
+    #if CLOUDS == 1
+    // Tiny sky holes may miss every cache sample; retain their analytic clouds.
+    return fastCloudLayer(rd);
+    #else
     return vec4(0.0);
+    #endif
 }
 #endif

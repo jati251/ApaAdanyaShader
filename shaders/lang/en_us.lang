@@ -127,7 +127,7 @@ option.POM_DEPTH.comment=Maximum relief relative to a texture tile. LabPBR stand
 option.POM_DISTANCE=Parallax Distance (Blocks)
 option.POM_DISTANCE.comment=Fades out starting at 65% of this distance and skips height tracing beyond it.
 
-option.CLOUD_RECONSTRUCTION=Reconstruct Volumetric Clouds
+option.CLOUD_RECONSTRUCTION=Reconstruct Clouds
 option.TEMPORAL_CLOUDS=Cloud History
 option.TEMPORAL_CLOUDS.comment=Reproject and clamp previous cloud samples. Requires cloud reconstruction. Disable if trails are visible.
 option.HALF_RES_LIGHTING=Reconstruct Lighting
@@ -150,7 +150,7 @@ option.SVGF_DENOISER=Variance-Guided GI Denoiser
 option.SVGF_DENOISER.comment=Temporal luminance moments and three edge-aware a-trous passes. Requires temporal half-resolution GI and OpenGL compute.
 
 option.HARDWARE_PCF=Hardware Shadow Filter
-option.HARDWARE_PCF.comment=Four hardware PCF taps for high-quality shadows, preserving PCSS blocker search. Edges change slightly. Disable for the original eight-tap filter; older Iris falls back automatically.
+option.HARDWARE_PCF.comment=Four-sample shadows use one hardware bilinear lookup; eight-sample shadows use four lookups with PCSS blocker search. Edges change slightly. Iris without support uses manual filtering.
 
 # Four gameplay profiles
 
@@ -193,16 +193,16 @@ option.DEPTH_HIERARCHY=Depth Hierarchy Optimization
 option.DEPTH_HIERARCHY.comment=Conservative min/max depth acceleration for screen rays. Requires optional image/compute support; this is an optimization, not an additional lighting effect.
 option.CLOUD_FULL_RES=Full-Resolution Clouds
 option.CLOUD_FULL_RES.comment=Keep cloud rendering and its history at native scene resolution. Requires cloud reconstruction; Extreme enables it. Higher GPU and memory cost.
-option.CLOUD_RECONSTRUCTION.comment=Cache volumetric clouds separately, preserving temporal reprojection. Normally half resolution; Full-Resolution Clouds overrides the buffer size.
+option.CLOUD_RECONSTRUCTION.comment=Cache 2D or volumetric clouds at half resolution. Shape and color are retained; edges may soften slightly. Temporal history applies only to volumetric clouds. Full-Resolution Clouds overrides the buffer size.
 option.SSGI.comment=Local material-colored diffuse bounce from screen depth and optional sun-visible shadow-view fallback. Coverage is limited; no full-world tracing.
 option.GI_TRACE_STEPS.comment=Screen-depth step budget per ray. Shadow-view fallback is capped at 24 steps and the same Bounce Radius.
 option.LIGHT_SPACE_FALLBACK=Shadow-View Bounce Fallback
 option.LIGHT_SPACE_FALLBACK.comment=Use sun-visible shadow-map geometry for missing screen GI and terrain reflections. Limited 2.5D geometry; excludes water reflections.
 profile.comment=Four quality tiers with FSR enabled by default. Smoke uses Minecraft particles.
 profile.POTATO=Lightweight
-profile.POTATO.comment=Crisp 1024 shadows to 48 blocks; shaded 2D clouds with cloud shadows; atmospheric lighting with daylight fill and auto exposure; 4 lightweight water bands, subtle refraction and FSR Balanced. GI, AO, SSR, caustics and volumetric light are off.
+profile.POTATO.comment=256 shadows to 48 blocks; cached 2D clouds and atmospheric lighting; 4 lightweight water bands, clearer refraction and seabed caustics; FSR Ultra Quality. Motion blur, GI, AO, SSR and volumetric light are off.
 profile.MEDIUM=Balanced
-profile.MEDIUM.comment=FSR Quality; 1024 shadows, 12 cloud steps, temporal AO, 16 reflection steps and 4 water bands.
+profile.MEDIUM.comment=FSR Ultra Quality; 1024 shadows, 12 cloud steps, temporal AO, 16 reflection steps and 4 water bands.
 profile.HIGH=Detailed
 profile.HIGH.comment=FSR Ultra Quality; 2048 shadows, 20 cloud steps, 2 GI rays, 24 reflection steps, 6 water bands and resource PBR. POM can be enabled manually.
 profile.EXTREME=Extreme
